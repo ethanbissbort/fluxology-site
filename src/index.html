@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Fluxology Inc. - Canadian Controlled Private Corporation operating diverse businesses including fabrication, 3D printing, greenhouse production, and orchards.">
+  <meta name="keywords" content="welding, fabrication, 3D printing, greenhouse, orchard, metalworking">
+  <meta name="author" content="Fluxology Inc.">
+
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Google Fonts - All Required Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Space+Grotesk:wght@700&family=DM+Sans:wght@400;500&family=Fira+Code:wght@400;500&family=Sora:wght@600;700&family=Nunito:wght@400;500;600&family=Quicksand:wght@500&family=Outfit:wght@500;600;700&family=Open+Sans:wght@400;500;600&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="styles/reset.css">
+  <link rel="stylesheet" href="styles/variables.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/themes.css">
+  <link rel="stylesheet" href="styles/transitions.css">
+  <link rel="stylesheet" href="styles/responsive.css">
+
+  <title>Fluxology Inc. - Diverse Business Solutions</title>
+</head>
+<body>
+  <!-- Skip to content link for accessibility -->
+  <a href="#main-content" class="skip-to-content">Skip to main content</a>
+
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loadingScreen" aria-hidden="true">
+    <div class="loading-animation">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Fluxology</p>
+    </div>
+  </div>
+
+  <!-- Scroll Progress Indicator -->
+  <div class="scroll-progress" role="progressbar" aria-label="Page scroll progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+    <div class="scroll-progress-bar" id="scrollProgressBar"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="main-nav" id="mainNav" role="navigation" aria-label="Main navigation">
+    <div class="nav-container">
+      <div class="nav-logo" id="navLogo">
+        <span class="logo-text">Fluxology</span>
+        <span class="logo-inc">Inc.</span>
+      </div>
+
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        <span class="nav-toggle-line"></span>
+        <span class="nav-toggle-line"></span>
+        <span class="nav-toggle-line"></span>
+      </button>
+
+      <ul class="nav-links" id="navLinks" role="list">
+        <li><a href="#hero" class="nav-link active" data-section="hero">Home</a></li>
+        <li><a href="#about" class="nav-link" data-section="about">About</a></li>
+        <li><a href="#fabrication" class="nav-link" data-section="fabrication">Fabrication</a></li>
+        <li><a href="#3d-lab" class="nav-link" data-section="3d-lab">3D Lab</a></li>
+        <li><a href="#greenhouse" class="nav-link" data-section="greenhouse">Greenhouse</a></li>
+        <li><a href="#orchard" class="nav-link" data-section="orchard">Orchard</a></li>
+        <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main id="main-content">
+
+    <!-- Hero Section -->
+    <section class="section hero-section" id="hero" data-theme="corporate">
+      <div class="background-layer">
+        <div class="parallax-bg" data-speed="0.5"></div>
+      </div>
+
+      <div class="content-layer">
+        <div class="container">
+          <h1 class="hero-title">
+            <span class="hero-title-main">Fluxology Inc.</span>
+            <span class="hero-title-sub">Innovation Across Industries</span>
+          </h1>
+
+          <p class="hero-description">
+            A Canadian Controlled Private Corporation driving excellence through four distinct business divisions, combining traditional craftsmanship with cutting-edge technology and sustainable agriculture.
+          </p>
+
+          <div class="hero-cta-group">
+            <a href="#about" class="cta-button cta-primary">Explore Our Businesses</a>
+            <a href="#contact" class="cta-button cta-secondary">Get in Touch</a>
+          </div>
+
+          <div class="hero-scroll-indicator" aria-label="Scroll down">
+            <span class="scroll-arrow"></span>
+            <span class="scroll-text">Scroll to discover</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="accent-layer" id="heroParticles"></div>
+    </section>
+
+    <!-- About Section -->
+    <section class="section about-section" id="about" data-theme="corporate">
+      <div class="background-layer">
+        <div class="parallax-bg" data-speed="0.3"></div>
+      </div>
+
+      <div class="content-layer">
+        <div class="container">
+          <header class="section-header">
+            <h2 class="section-title">About Fluxology Inc.</h2>
+            <p class="section-subtitle">Building the future through diversity and innovation</p>
+          </header>
+
+          <div class="about-content">
+            <div class="about-text">
+              <p class="about-paragraph">
+                Fluxology Inc. is a Canadian Controlled Private Corporation (CCPC) that operates at the intersection of traditional industry, advanced technology, and sustainable agriculture. Our diverse portfolio of businesses allows us to leverage synergies across sectors while maintaining specialized excellence in each domain.
+              </p>
+
+              <p class="about-paragraph">
+                From precision metalworking and cutting-edge 3D printing to sustainable greenhouse production and perennial food forestry, we are committed to innovation, quality, and environmental stewardship. Our integrated approach creates value for our clients while building a sustainable future.
+              </p>
+            </div>
+
+            <div class="about-values">
+              <h3 class="values-title">Our Core Values</h3>
+              <ul class="values-list" role="list">
+                <li class="value-item">
+                  <strong>Excellence:</strong> Uncompromising quality in every project
+                </li>
+                <li class="value-item">
+                  <strong>Innovation:</strong> Embracing new technologies and methods
+                </li>
+                <li class="value-item">
+                  <strong>Sustainability:</strong> Environmental responsibility in all operations
+                </li>
+                <li class="value-item">
+                  <strong>Integrity:</strong> Honest, transparent business practices
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="about-stats">
+            <div class="stat-card">
+              <span class="stat-number">4</span>
+              <span class="stat-label">Business Divisions</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number">CCPC</span>
+              <span class="stat-label">Canadian Corporation</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number">100%</span>
+              <span class="stat-label">Commitment to Quality</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accent-layer" id="aboutParticles"></div>
+    </section>
+
+    <!-- Fabrication & Welding Section -->
+    <section class="section dba-section" id="fabrication" data-theme="industrial">
+      <div class="background-layer">
+        <div class="parallax-bg industrial-texture" data-speed="0.4"></div>
+        <div class="parallax-pattern" data-speed="0.6"></div>
+      </div>
+
+      <div class="content-layer">
+        <div class="container">
+          <div class="dba-header">
+            <h2 class="dba-name">Fluxology Fabrication & Welding</h2>
+            <p class="dba-naics">NAICS 332710 - Machine Shops</p>
+          </div>
+
+          <div class="dba-description">
+            <p>
+              Precision metalworking and fabrication services delivering custom solutions for industrial, commercial, and residential applications. Our experienced team combines traditional craftsmanship with modern techniques to create durable, high-quality metal products.
+            </p>
+          </div>
+
+          <div class="services-grid">
+            <article class="service-card">
+              <div class="service-icon">⚙️</div>
+              <h3 class="service-title">Custom Fabrication</h3>
+              <p class="service-description">
+                Bespoke metal fabrication tailored to your exact specifications, from concept to completion.
+              </p>
+            </article>
+
+            <article class="service-card">
+              <div class="service-icon">🔥</div>
+              <h3 class="service-title">Precision Welding</h3>
+              <p class="service-description">
+                Expert welding services including MIG, TIG, and stick welding for all types of metals.
+              </p>
+            </article>
+
+            <article class="service-card">
+              <div class="service-icon">🔧</div>
+              <h3 class="service-title">Metal Repair</h3>
+              <p class="service-description">
+                Professional repair and restoration services for damaged metal components and structures.
+              </p>
+            </article>
+
+            <article class="service-card">
+              <div class="service-icon">⚒️</div>
+              <h3 class="service-title">Parts Manufacturing</h3>
+              <p class="service-description">
+                Production of custom metal parts and components for industrial machinery and equipment.
+              </p>
+            </article>
+          </div>
+
+          <div class="dba-showcase">
+            <!-- E-COMMERCE INTEGRATION: Product gallery/carousel would go here -->
+            <div class="showcase-placeholder">
+              <!-- Ideal image: 1200x600px - Welding sparks in motion -->
+              <div class="showcase-image" role="img" aria-label="Welding fabrication showcase"></div>
+            </div>
+          </div>
+
+          <button class="cta-button industrial-cta">Request a Quote</button>
+        </div>
+      </div>
+
+      <div class="accent-layer" id="fabricationParticles"></div>
+    </section>
+
+    <!-- 3D Lab Section -->
+    <section class="section dba-section" id="3d-lab" data-theme="tech">
+      <div class="background-layer">
+        <div class="parallax-bg tech-gradient" data-speed="0.4"></div>
+        <div class="parallax-wireframe" data-speed="0.7"></div>
+      </div>
+
+      <div class="content-layer">
+        <div class="container">
+          <div class="dba-header">
+            <h2 class="dba-name">Fluxology 3D Lab</h2>
+            <p class="dba-naics">NAICS 541990 - All Other Professional, Scientific and Technical Services</p>
+          </div>
+
+          <div class="dba-description">
+            <p>
+              State-of-the-art 3D printing and digital fabrication services bringing your ideas to life with precision and speed. From rapid prototyping to artistic creations, we leverage advanced additive manufacturing technologies to deliver exceptional results.
+            </p>
+          </div>
+
+          <div class="services-grid">
+            <article class="service-card tech-card">
+              <div class="service-icon">🖨️</div>
+              <h3 class="service-title">3D Printing Services</h3>
+              <p class="service-description">
+                Professional-grade FDM and resin printing for functional prototypes and finished products.
+              </p>
+            </article>
+
+            <article class="service-card tech-card">
+              <div class="service-icon">⚡</div>
+              <h3 class="service-title">Rapid Prototyping</h3>
+              <p class="service-description">
+                Fast-turnaround prototype development to accelerate your product development cycle.
+              </p>
+            </article>
+
+            <article class="service-card tech-card">
+              <div class="service-icon">📐</div>
+              <h3 class="service-title">3D Scanning</h3>
+              <p class="service-description">
+                High-precision 3D scanning services for reverse engineering and digital archiving.
+              </p>
+            </article>
+
+            <article class="service-card tech-card">
+              <div class="service-icon">🎨</div>
+              <h3 class="service-title">Resin Art</h3>
+              <p class="service-description">
+                Custom artistic pieces and decorative objects created with advanced resin printing techniques.
+              </p>
+            </article>
+          </div>
+
+          <div class="dba-showcase">
+            <!-- E-COMMERCE INTEGRATION: Product gallery would go here -->
+            <div class="showcase-placeholder tech-showcase">
+              <!-- Ideal image: 1200x600px - 3D printing process or finished products -->
+              <div class="showcase-image" role="img" aria-label="3D printing showcase"></div>
+            </div>
+          </div>
+
+          <button class="cta-button tech-cta">Start Your Project</button>
+        </div>
+      </div>
+
+      <div class="accent-layer" id="labParticles"></div>
+    </section>
+
+    <!-- Greenhouse Section -->
+    <section class="section dba-section" id="greenhouse" data-theme="natural">
+      <div class="background-layer">
+        <div class="parallax-bg natural-texture" data-speed="0.3"></div>
+        <div class="parallax-foliage" data-speed="0.6"></div>
+      </div>
+
+      <div class="content-layer">
+        <div class="container">
+          <div class="dba-header">
+            <h2 class="dba-name">Fluxology Greenhouse</h2>
+            <p class="dba-naics">NAICS 111419 - Other Food Crops Grown Under Cover</p>
+          </div>
+
+          <div class="dba-description">
+            <p>
+              Sustainable greenhouse production specializing in exotic and specialty crops. Our controlled-environment agriculture ensures year-round production of premium quality ginger, coffee, cocoa, and other high-value food crops.
+            </p>
+          </div>
+
+          <div class="services-grid">
+            <article class="service-card natural-card">
+              <div class="service-icon">🫚</div>
+              <h3 class="service-title">Ginger Production</h3>
+              <p class="service-description">
+                Premium fresh ginger grown in optimal greenhouse conditions for superior flavor and quality.
+              </p>
+            </article>
+
+            <article class="service-card natural-card">
+              <div class="service-icon">☕</div>
+              <h3 class="service-title">Coffee Cultivation</h3>
+              <p class="service-description">
+                Specialty coffee plants producing unique beans with exceptional terroir characteristics.
+              </p>
+            </article>
+
+            <article class="service-card natural-card">
+              <div class="service-icon">🍫</div>
+              <h3 class="service-title">Cocoa Growing</h3>
+              <p class="service-description">
+                Small-batch cocoa production with focus on flavor and sustainable farming practices.
+              </p>
+            </article>
+
+            <article class="service-card natural-card">
+              <div class="service-icon">🌱</div>
+              <h3 class="service-title">Specialty Crops</h3>
+              <p class="service-description">
+                Diverse selection of exotic and hard-to-find food crops grown in controlled environments.
+              </p>
+            </article>
+          </div>
+
+          <div class="dba-showcase">
+            <!-- E-COMMERCE INTEGRATION: Product shop would go here -->
+            <div class="showcase-placeholder natural-showcase">
+              <!-- Ideal image: 1200x600px - Lush greenhouse interior with plants -->
+              <div class="showcase-image" role="img" aria-label="Greenhouse production showcase"></div>
+            </div>
+          </div>
+
+          <button class="cta-button natural-cta">Explore Our Crops</button>
+        </div>
+      </div>
+
+      <div class="accent-layer" id="greenhouseParticles"></div>
+    </section>
+
+    <!-- Orchard & Food Forest Section -->
+    <section class="section dba-section" id="orchard" data-theme="natural">
+      <div class="background-layer">
+        <div class="parallax-bg orchard-landscape" data-speed="0.4"></div>
+        <div class="parallax-trees" data-speed="0.5"></div>
+      </div>
+
+      <div class="content-layer">
+        <div class="container">
+          <div class="dba-header">
+            <h2 class="dba-name">Fluxology Orchard & Food Forest</h2>
+            <p class="dba-naics">NAICS 111330 - Noncitrus Fruit and Tree Nut Farming</p>
+          </div>
+
+          <div class="dba-description">
+            <p>
+              Regenerative agriculture through perennial food production systems. Our orchard and food forest combine traditional fruit and nut cultivation with permaculture principles to create biodiverse, sustainable ecosystems that produce abundant harvests.
+            </p>
+          </div>
+
+          <div class="services-grid">
+            <article class="service-card natural-card">
+              <div class="service-icon">🍎</div>
+              <h3 class="service-title">Fruit Tree Production</h3>
+              <p class="service-description">
+                Diverse selection of fruit trees producing fresh, seasonal harvests throughout the year.
+              </p>
+            </article>
+
+            <article class="service-card natural-card">
+              <div class="service-icon">🌰</div>
+              <h3 class="service-title">Nut Cultivation</h3>
+              <p class="service-description">
+                Premium nut varieties grown using sustainable practices for maximum flavor and nutrition.
+              </p>
+            </article>
+
+            <article class="service-card natural-card">
+              <div class="service-icon">🌿</div>
+              <h3 class="service-title">Perennial Crops</h3>
+              <p class="service-description">
+                Long-lived food crops that provide consistent yields with minimal environmental impact.
+              </p>
+            </article>
+
+            <article class="service-card natural-card">
+              <div class="service-icon">🌳</div>
+              <h3 class="service-title">Food Forest Systems</h3>
+              <p class="service-description">
+                Multi-layered edible ecosystems designed for biodiversity and sustainable food production.
+              </p>
+            </article>
+          </div>
+
+          <div class="dba-showcase">
+            <!-- E-COMMERCE INTEGRATION: Product shop would go here -->
+            <div class="showcase-placeholder orchard-showcase">
+              <!-- Ideal image: 1200x600px - Wide orchard landscape -->
+              <div class="showcase-image" role="img" aria-label="Orchard and food forest showcase"></div>
+            </div>
+          </div>
+
+          <button class="cta-button natural-cta">Visit the Orchard</button>
+        </div>
+      </div>
+
+      <div class="accent-layer" id="orchardParticles"></div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="section contact-section" id="contact" data-theme="corporate">
+      <div class="background-layer">
+        <div class="parallax-bg" data-speed="0.3"></div>
+      </div>
+
+      <div class="content-layer">
+        <div class="container">
+          <header class="section-header">
+            <h2 class="section-title">Get In Touch</h2>
+            <p class="section-subtitle">We'd love to hear from you</p>
+          </header>
+
+          <div class="contact-content">
+            <div class="contact-info">
+              <div class="info-block">
+                <h3 class="info-title">Address</h3>
+                <p class="info-text">
+                  [Street Address]<br>
+                  [City, Province, Postal Code]<br>
+                  Canada
+                </p>
+              </div>
+
+              <div class="info-block">
+                <h3 class="info-title">Contact</h3>
+                <p class="info-text">
+                  Email: <a href="mailto:info@fluxology.ca">info@fluxology.ca</a><br>
+                  Phone: <a href="tel:+1234567890">(123) 456-7890</a>
+                </p>
+              </div>
+
+              <div class="info-block">
+                <h3 class="info-title">Business Hours</h3>
+                <p class="info-text">
+                  Monday - Friday: 8:00 AM - 6:00 PM<br>
+                  Saturday: 9:00 AM - 4:00 PM<br>
+                  Sunday: Closed
+                </p>
+              </div>
+
+              <div class="info-block">
+                <h3 class="info-title">Follow Us</h3>
+                <div class="social-links">
+                  <a href="#" class="social-link" aria-label="Facebook">
+                    <span class="social-icon">📘</span>
+                  </a>
+                  <a href="#" class="social-link" aria-label="Instagram">
+                    <span class="social-icon">📷</span>
+                  </a>
+                  <a href="#" class="social-link" aria-label="LinkedIn">
+                    <span class="social-icon">💼</span>
+                  </a>
+                  <a href="#" class="social-link" aria-label="Twitter">
+                    <span class="social-icon">🐦</span>
+                  </a>
+                  <a href="#" class="social-link" aria-label="YouTube">
+                    <span class="social-icon">📹</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <form class="contact-form" id="contactForm" novalidate>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="companyName" class="form-label">Company Name <span class="optional">(Optional)</span></label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    name="companyName"
+                    class="form-input"
+                    placeholder="Your Company">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="fullName" class="form-label">Full Name <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    class="form-input"
+                    required
+                    aria-required="true"
+                    placeholder="John Doe">
+                  <span class="form-error" role="alert"></span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email" class="form-label">Email Address <span class="required">*</span></label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    class="form-input"
+                    required
+                    aria-required="true"
+                    placeholder="john@example.com">
+                  <span class="form-error" role="alert"></span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="phone" class="form-label">Phone Number <span class="optional">(Optional)</span></label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    class="form-input"
+                    placeholder="(123) 456-7890">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="serviceInterest" class="form-label">Service Interest <span class="required">*</span></label>
+                  <select
+                    id="serviceInterest"
+                    name="serviceInterest"
+                    class="form-select"
+                    required
+                    aria-required="true">
+                    <option value="">Select a service...</option>
+                    <option value="fabrication">Fabrication & Welding</option>
+                    <option value="3d-lab">3D Lab</option>
+                    <option value="greenhouse">Greenhouse</option>
+                    <option value="orchard">Orchard & Food Forest</option>
+                    <option value="multiple">Multiple Services</option>
+                    <option value="general">General Inquiry</option>
+                  </select>
+                  <span class="form-error" role="alert"></span>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="message" class="form-label">Message <span class="required">*</span></label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    class="form-textarea"
+                    rows="6"
+                    required
+                    aria-required="true"
+                    placeholder="Tell us about your project or inquiry..."></textarea>
+                  <span class="form-error" role="alert"></span>
+                </div>
+              </div>
+
+              <button type="submit" class="cta-button cta-primary form-submit">Send Message</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="accent-layer" id="contactParticles"></div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <h3 class="footer-logo">Fluxology Inc.</h3>
+          <p class="footer-tagline">Innovation Across Industries</p>
+        </div>
+
+        <div class="footer-links">
+          <div class="footer-column">
+            <h4 class="footer-heading">Business Divisions</h4>
+            <ul class="footer-list" role="list">
+              <li><a href="#fabrication">Fabrication & Welding</a></li>
+              <li><a href="#3d-lab">3D Lab</a></li>
+              <li><a href="#greenhouse">Greenhouse</a></li>
+              <li><a href="#orchard">Orchard & Food Forest</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-column">
+            <h4 class="footer-heading">Company</h4>
+            <ul class="footer-list" role="list">
+              <li><a href="#about">About Us</a></li>
+              <li><a href="#contact">Contact</a></li>
+              <li><a href="#">Privacy Policy</a></li>
+              <li><a href="#">Terms of Service</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="footer-copyright">
+          &copy; <span id="currentYear"></span> Fluxology Inc. All rights reserved. Canadian Controlled Private Corporation.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <span class="back-to-top-arrow">↑</span>
+  </button>
+
+  <!-- Scripts -->
+  <script src="scripts/main.js" type="module"></script>
+  <script src="scripts/scroll-controller.js" type="module"></script>
+  <script src="scripts/theme-manager.js" type="module"></script>
+  <script src="scripts/animations.js" type="module"></script>
+  <script src="scripts/form-handler.js" type="module"></script>
+</body>
+</html>

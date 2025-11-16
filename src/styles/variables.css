@@ -1,0 +1,189 @@
+/* CSS Custom Properties - Design System */
+
+:root {
+  /* ========================================
+     TYPOGRAPHY SCALE - Major Third (1.250)
+     ======================================== */
+  --font-size-xs: 0.8rem;      /* 12.8px */
+  --font-size-sm: 1rem;        /* 16px - base */
+  --font-size-md: 1.25rem;     /* 20px */
+  --font-size-lg: 1.563rem;    /* 25px */
+  --font-size-xl: 1.953rem;    /* 31.25px */
+  --font-size-2xl: 2.441rem;   /* 39px */
+  --font-size-3xl: 3.052rem;   /* 48.8px */
+  --font-size-4xl: 3.815rem;   /* 61px */
+
+  /* Line Heights */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.6;
+  --line-height-loose: 1.8;
+
+  /* Letter Spacing */
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+
+  /* ========================================
+     FONT FAMILIES
+     ======================================== */
+  /* Industrial (Fabrication & Welding) */
+  --font-industrial-heading: 'Rajdhani', sans-serif;
+  --font-industrial-body: 'Inter', sans-serif;
+  --font-industrial-technical: 'JetBrains Mono', monospace;
+
+  /* Tech-Forward (3D Lab) */
+  --font-tech-heading: 'Space Grotesk', sans-serif;
+  --font-tech-body: 'DM Sans', sans-serif;
+  --font-tech-technical: 'Fira Code', monospace;
+
+  /* Natural (Greenhouse & Orchard) */
+  --font-natural-heading: 'Sora', sans-serif;
+  --font-natural-body: 'Nunito', sans-serif;
+  --font-natural-accent: 'Quicksand', sans-serif;
+
+  /* Corporate (Hero, About, Contact) */
+  --font-corporate-heading: 'Outfit', sans-serif;
+  --font-corporate-body: 'Open Sans', sans-serif;
+  --font-corporate-accent: 'Poppins', sans-serif;
+
+  /* Font Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* ========================================
+     CORPORATE THEME (Hero, About, Contact)
+     ======================================== */
+  --corporate-primary-navy: #1B3A4B;
+  --corporate-primary-slate: #2E5266;
+  --corporate-primary-steel: #476072;
+  --corporate-accent-blue: #3A86FF;
+  --corporate-accent-silver: #A8DADC;
+  --corporate-accent-platinum: #F1FAEE;
+  --corporate-neutral-white: #FFFFFF;
+  --corporate-neutral-gray: #E9ECEF;
+  --corporate-neutral-medium: #6C757D;
+  --corporate-neutral-charcoal: #212529;
+
+  /* ========================================
+     INDUSTRIAL THEME (Fabrication & Welding)
+     ======================================== */
+  --industrial-primary-charcoal: #2C3440;
+  --industrial-primary-steel: #4A5F7F;
+  --industrial-primary-gunmetal: #3D4451;
+  --industrial-accent-orange: #FF6B35;
+  --industrial-accent-amber: #FFA559;
+  --industrial-accent-red: #E63946;
+  --industrial-neutral-white: #F8F9FA;
+  --industrial-neutral-silver: #C9CDD1;
+  --industrial-neutral-shadow: #1A1D23;
+
+  /* ========================================
+     TECH THEME (3D Lab)
+     ======================================== */
+  --tech-primary-black: #0A0E27;
+  --tech-primary-navy: #1B2845;
+  --tech-primary-slate: #2D4059;
+  --tech-accent-cyan: #00D9FF;
+  --tech-accent-magenta: #FF006E;
+  --tech-accent-purple: #8338EC;
+  --tech-neutral-white: #FFFFFF;
+  --tech-neutral-gray: #E8EAF0;
+  --tech-neutral-soft: #9BA3B4;
+
+  /* ========================================
+     NATURAL THEME (Greenhouse & Orchard)
+     ======================================== */
+  --natural-primary-forest: #2D4A2B;
+  --natural-primary-sage: #6B8E6B;
+  --natural-primary-moss: #8BA888;
+  --natural-accent-terracotta: #C77D58;
+  --natural-accent-gold: #D4A574;
+  --natural-accent-clay: #A67C52;
+  --natural-neutral-cream: #F5F1E8;
+  --natural-neutral-white: #FDFBF7;
+  --natural-neutral-bark: #4A3F35;
+  --natural-neutral-soil: #3E342E;
+
+  /* ========================================
+     SPACING SYSTEM
+     ======================================== */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  --spacing-2xl: 3rem;     /* 48px */
+  --spacing-3xl: 4rem;     /* 64px */
+  --spacing-4xl: 6rem;     /* 96px */
+  --spacing-5xl: 8rem;     /* 128px */
+
+  /* ========================================
+     LAYOUT
+     ======================================== */
+  --container-max-width: 1440px;
+  --container-padding: var(--spacing-xl);
+  --section-padding-y: var(--spacing-5xl);
+  --section-padding-y-mobile: var(--spacing-3xl);
+
+  /* ========================================
+     Z-INDEX LAYERS
+     ======================================== */
+  --z-background: -1;
+  --z-base: 0;
+  --z-content: 1;
+  --z-accent: 2;
+  --z-navigation: 100;
+  --z-modal: 200;
+  --z-tooltip: 300;
+
+  /* ========================================
+     TRANSITIONS & ANIMATIONS
+     ======================================== */
+  --transition-fast: 150ms;
+  --transition-base: 300ms;
+  --transition-slow: 600ms;
+  --transition-theme: 800ms;
+
+  --ease-in-quad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-in-out-quad: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  --ease-in-cubic: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ========================================
+     BORDER RADIUS
+     ======================================== */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ========================================
+     SHADOWS
+     ======================================== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ========================================
+     DYNAMIC THEME VARIABLES
+     (These will be updated by JavaScript)
+     ======================================== */
+  --current-bg-primary: var(--corporate-primary-navy);
+  --current-bg-secondary: var(--corporate-primary-slate);
+  --current-text-primary: var(--corporate-neutral-white);
+  --current-text-secondary: var(--corporate-neutral-gray);
+  --current-accent-primary: var(--corporate-accent-blue);
+  --current-accent-secondary: var(--corporate-accent-silver);
+  --current-font-heading: var(--font-corporate-heading);
+  --current-font-body: var(--font-corporate-body);
+}

@@ -1,0 +1,448 @@
+/* Scroll Animations and Theme Transitions */
+
+/* ========================================
+   SMOOTH SCROLL TRANSITIONS
+   ======================================== */
+.section {
+  transition: background-color var(--transition-theme) var(--ease-in-out-cubic);
+}
+
+/* Fade-in animations for content */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity var(--transition-slow) var(--ease-out-cubic),
+              transform var(--transition-slow) var(--ease-out-cubic);
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger animation delays for service cards */
+.services-grid .service-card:nth-child(1) {
+  transition-delay: 0ms;
+}
+
+.services-grid .service-card:nth-child(2) {
+  transition-delay: 100ms;
+}
+
+.services-grid .service-card:nth-child(3) {
+  transition-delay: 200ms;
+}
+
+.services-grid .service-card:nth-child(4) {
+  transition-delay: 300ms;
+}
+
+/* ========================================
+   PARALLAX EFFECTS
+   ======================================== */
+.parallax-bg,
+.parallax-pattern,
+.parallax-wireframe,
+.parallax-foliage,
+.parallax-trees {
+  will-change: transform;
+  transition: transform 0.1s linear;
+}
+
+/* ========================================
+   THEME TRANSITION EFFECTS
+   ======================================== */
+/* Smooth color transitions for all theme properties */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: var(--transition-theme);
+  transition-timing-function: var(--ease-in-out-cubic);
+}
+
+/* Exclude elements that need faster transitions */
+button,
+a,
+.cta-button,
+.nav-link,
+.form-input,
+.form-select,
+.form-textarea {
+  transition-duration: var(--transition-base);
+}
+
+/* ========================================
+   PARTICLE ANIMATIONS
+   ======================================== */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  animation: particle-float var(--duration, 4s) var(--delay, 0s) infinite var(--ease-in-out-cubic);
+}
+
+@keyframes particle-float {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--start-x, 0), var(--start-y, 0), 0) scale(0);
+  }
+  10% {
+    opacity: var(--opacity, 0.6);
+  }
+  90% {
+    opacity: var(--opacity, 0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--end-x, 0), var(--end-y, 0), 0) scale(1);
+  }
+}
+
+/* Industrial sparks animation */
+.spark-particle {
+  background: var(--industrial-accent-orange);
+  box-shadow: 0 0 10px var(--industrial-accent-orange);
+  animation: spark-fall var(--duration, 3s) var(--delay, 0s) infinite linear;
+}
+
+@keyframes spark-fall {
+  0% {
+    opacity: 1;
+    transform: translate3d(var(--start-x, 0), 0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--end-x, 0), 100vh, 0) scale(0.5);
+  }
+}
+
+/* Tech digital particles */
+.digital-particle {
+  width: 2px;
+  height: 2px;
+  background: var(--tech-accent-cyan);
+  box-shadow: 0 0 5px var(--tech-accent-cyan);
+  animation: digital-pulse var(--duration, 2s) var(--delay, 0s) infinite ease-in-out;
+}
+
+@keyframes digital-pulse {
+  0%, 100% {
+    opacity: 0.2;
+    transform: translate3d(var(--x, 0), var(--y, 0), 0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate3d(var(--x, 0), var(--y, 0), 0) scale(1.5);
+  }
+}
+
+/* Natural floating leaves */
+.leaf-particle {
+  width: 8px;
+  height: 12px;
+  background: rgba(107, 142, 107, 0.4);
+  border-radius: 0 50% 50% 0;
+  animation: leaf-float var(--duration, 8s) var(--delay, 0s) infinite ease-in-out;
+}
+
+@keyframes leaf-float {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--start-x, 0), -20px, 0) rotate(0deg);
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--end-x, 0), 100vh, 0) rotate(360deg);
+  }
+}
+
+/* ========================================
+   CURSOR EFFECTS (Desktop Only)
+   ======================================== */
+@media (hover: hover) and (pointer: fine) {
+  .custom-cursor {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--current-accent-primary);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: var(--z-tooltip);
+    transition: width var(--transition-fast) var(--ease-out-cubic),
+                height var(--transition-fast) var(--ease-out-cubic),
+                border-color var(--transition-theme) var(--ease-in-out-cubic);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
+
+  .custom-cursor.active {
+    opacity: 1;
+  }
+
+  .custom-cursor.hover {
+    width: 40px;
+    height: 40px;
+  }
+
+  body.custom-cursor-enabled {
+    cursor: none;
+  }
+
+  body.custom-cursor-enabled a,
+  body.custom-cursor-enabled button {
+    cursor: none;
+  }
+}
+
+/* ========================================
+   SCROLL-TRIGGERED ANIMATIONS
+   ======================================== */
+.section-header,
+.dba-header,
+.about-content,
+.services-grid,
+.dba-showcase,
+.contact-content,
+.about-stats {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity var(--transition-slow) var(--ease-out-cubic),
+              transform var(--transition-slow) var(--ease-out-cubic);
+}
+
+.section-header.in-view,
+.dba-header.in-view,
+.about-content.in-view,
+.services-grid.in-view,
+.dba-showcase.in-view,
+.contact-content.in-view,
+.about-stats.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Service cards animate in sequence */
+.services-grid.in-view .service-card {
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+  animation: card-appear var(--transition-slow) var(--ease-out-cubic) forwards;
+}
+
+@keyframes card-appear {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.services-grid.in-view .service-card:nth-child(1) {
+  animation-delay: 100ms;
+}
+
+.services-grid.in-view .service-card:nth-child(2) {
+  animation-delay: 200ms;
+}
+
+.services-grid.in-view .service-card:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+.services-grid.in-view .service-card:nth-child(4) {
+  animation-delay: 400ms;
+}
+
+/* ========================================
+   NAVIGATION THEME TRANSITIONS
+   ======================================== */
+.main-nav {
+  transition: background var(--transition-theme) var(--ease-in-out-cubic);
+}
+
+.nav-logo {
+  transition: color var(--transition-theme) var(--ease-in-out-cubic);
+}
+
+/* Navigation logo color changes based on current section */
+.main-nav[data-current-theme="corporate"] .nav-logo {
+  color: var(--corporate-accent-blue);
+}
+
+.main-nav[data-current-theme="industrial"] .nav-logo {
+  color: var(--industrial-accent-orange);
+}
+
+.main-nav[data-current-theme="tech"] .nav-logo {
+  color: var(--tech-accent-cyan);
+}
+
+.main-nav[data-current-theme="natural"] .nav-logo {
+  color: var(--natural-accent-terracotta);
+}
+
+/* ========================================
+   LOADING ANIMATIONS
+   ======================================== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-title-main {
+  animation: fadeInUp 1s var(--ease-out-cubic) 0.2s backwards;
+}
+
+.hero-title-sub {
+  animation: fadeInUp 1s var(--ease-out-cubic) 0.4s backwards;
+}
+
+.hero-description {
+  animation: fadeInUp 1s var(--ease-out-cubic) 0.6s backwards;
+}
+
+.hero-cta-group {
+  animation: fadeInUp 1s var(--ease-out-cubic) 0.8s backwards;
+}
+
+.hero-scroll-indicator {
+  animation: fadeInUp 1s var(--ease-out-cubic) 1s backwards;
+}
+
+/* ========================================
+   HOVER EFFECTS WITH PERFORMANCE
+   ======================================== */
+/* Use will-change sparingly for elements that will animate */
+.service-card,
+.cta-button,
+.stat-card {
+  will-change: transform;
+}
+
+.service-card:hover,
+.stat-card:hover {
+  will-change: transform, box-shadow;
+}
+
+/* Remove will-change after animation completes */
+.service-card:not(:hover),
+.cta-button:not(:hover),
+.stat-card:not(:hover) {
+  will-change: auto;
+}
+
+/* ========================================
+   REDUCED MOTION SUPPORT
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .parallax-bg,
+  .parallax-pattern,
+  .parallax-wireframe,
+  .parallax-foliage,
+  .parallax-trees {
+    transform: none !important;
+  }
+
+  .particle,
+  .spark-particle,
+  .digital-particle,
+  .leaf-particle {
+    display: none !important;
+  }
+
+  .hero-scroll-indicator {
+    animation: none !important;
+  }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+/* Hardware acceleration for smooth animations */
+.parallax-bg,
+.parallax-pattern,
+.parallax-wireframe,
+.parallax-foliage,
+.parallax-trees,
+.particle,
+.service-card,
+.cta-button,
+.nav-link {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize repaints */
+.section {
+  isolation: isolate;
+}
+
+/* ========================================
+   BLUR-UP IMAGE LOADING
+   ======================================== */
+.lazy-image {
+  filter: blur(10px);
+  transform: scale(1.05);
+  transition: filter var(--transition-slow) var(--ease-out-cubic),
+              transform var(--transition-slow) var(--ease-out-cubic);
+}
+
+.lazy-image.loaded {
+  filter: blur(0);
+  transform: scale(1);
+}
+
+/* ========================================
+   INTERSECTION OBSERVER TRIGGERED CLASSES
+   ======================================== */
+.observe-fade {
+  opacity: 0;
+  transition: opacity var(--transition-slow) var(--ease-out-cubic);
+}
+
+.observe-fade.observed {
+  opacity: 1;
+}
+
+.observe-slide-up {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity var(--transition-slow) var(--ease-out-cubic),
+              transform var(--transition-slow) var(--ease-out-cubic);
+}
+
+.observe-slide-up.observed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.observe-scale {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity var(--transition-slow) var(--ease-out-cubic),
+              transform var(--transition-slow) var(--ease-out-cubic);
+}
+
+.observe-scale.observed {
+  opacity: 1;
+  transform: scale(1);
+}
