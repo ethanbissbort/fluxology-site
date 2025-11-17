@@ -1,0 +1,54 @@
+---
+// Static navigation component
+---
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<nav class="main-nav" id="mainNav" role="navigation" aria-label="Main navigation">
+  <div class="nav-container">
+    <div class="nav-logo" id="navLogo">
+      <span class="logo-text">Fluxology</span>
+      <span class="logo-inc">Inc.</span>
+    </div>
+
+    <button
+      class="nav-toggle"
+      id="navToggle"
+      aria-label="Toggle navigation menu"
+      aria-expanded="false"
+    >
+      <span class="nav-toggle-line"></span>
+      <span class="nav-toggle-line"></span>
+      <span class="nav-toggle-line"></span>
+    </button>
+
+    <ul class="nav-links" id="navLinks" role="list">
+      <li><a href="#hero" class="nav-link active" data-section="hero">Home</a></li>
+      <li><a href="#about" class="nav-link" data-section="about">About</a></li>
+      <li><a href="#fabrication" class="nav-link" data-section="fabrication">Fabrication</a></li>
+      <li><a href="#3d-lab" class="nav-link" data-section="3d-lab">3D Lab</a></li>
+      <li><a href="#greenhouse" class="nav-link" data-section="greenhouse">Greenhouse</a></li>
+      <li><a href="#orchard" class="nav-link" data-section="orchard">Orchard</a></li>
+      <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<style>
+  /* Navigation specific styles that override/extend base.css */
+  .skip-link {
+    position: absolute;
+    top: -100px;
+    left: 0;
+    background: var(--corporate-accent-blue);
+    color: white;
+    padding: var(--spacing-md);
+    text-decoration: none;
+    z-index: 1000;
+    transition: top var(--transition-fast) var(--ease-out-cubic);
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+</style>

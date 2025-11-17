@@ -1,0 +1,175 @@
+/* Utility Classes for Performance Optimization */
+
+/* CSS Containment for major sections */
+.section {
+  content-visibility: auto;
+  contain: layout style paint;
+  contain-intrinsic-size: 0 100vh;
+}
+
+/* Specific containment for DBA sections */
+.dba-section {
+  content-visibility: auto;
+  contain: layout style paint;
+  contain-intrinsic-size: 0 100vh;
+}
+
+/* Critical above-the-fold content - always visible */
+.hero-section,
+.nav {
+  content-visibility: visible;
+  contain: none;
+}
+
+/* Layout containment for cards and grid items */
+.service-card,
+.stat-card {
+  contain: layout style;
+}
+
+/* Style containment for particle systems */
+.particle-container,
+.accent-layer {
+  contain: style paint;
+}
+
+/* Utility classes for lazy loading states */
+.lazy-load {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.lazy-load.loaded {
+  opacity: 1;
+}
+
+/* Blur-up image loading */
+.blur-placeholder {
+  filter: blur(20px);
+  transform: scale(1.1);
+  transition: filter 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.blur-placeholder.loaded {
+  filter: blur(0);
+  transform: scale(1);
+}
+
+/* Performance: will-change hints (use sparingly) */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-scroll {
+  will-change: scroll-position;
+}
+
+/* Remove will-change after animation */
+.will-change-auto {
+  will-change: auto;
+}
+
+/* Intersection Observer triggered classes */
+.observe-fade {
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.observe-fade.observed {
+  opacity: 1;
+}
+
+.observe-slide-up {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1),
+              transform 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.observe-slide-up.observed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hardware acceleration helpers */
+.gpu-accelerated {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Container query support */
+@supports (container-type: inline-size) {
+  .container-responsive {
+    container-type: inline-size;
+  }
+
+  @container (min-width: 768px) {
+    .container-responsive .service-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+/* Accessibility utilities */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  background: var(--corporate-accent-blue, #3A86FF);
+  color: white;
+  padding: 1rem;
+  text-decoration: none;
+  z-index: 1000;
+  transition: top 0.15s ease-out;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--current-accent-primary, #3A86FF);
+  outline-offset: 2px;
+}
+
+/* Reduced motion utilities */
+@media (prefers-reduced-motion: reduce) {
+  .respect-motion-preference {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .particle,
+  .parallax-effect {
+    display: none !important;
+  }
+}
+
+/* Print utilities */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+}
