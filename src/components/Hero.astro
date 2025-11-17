@@ -1,0 +1,52 @@
+---
+// Hero section component
+---
+
+<section class="section hero-section" id="hero" data-theme="corporate">
+  <div class="background-layer">
+    <div class="parallax-bg" data-speed="0.5"></div>
+  </div>
+
+  <div class="content-layer">
+    <div class="container">
+      <h1 class="hero-title observe-fade">
+        <span class="hero-title-main">Fluxology Inc.</span>
+        <span class="hero-title-sub">Innovation Across Industries</span>
+      </h1>
+
+      <p class="hero-description observe-fade">
+        A Canadian Controlled Private Corporation driving excellence through four distinct business divisions,
+        combining traditional craftsmanship with cutting-edge technology and sustainable agriculture.
+      </p>
+
+      <div class="hero-cta-group observe-fade">
+        <a href="#about" class="cta-button cta-primary">Explore Our Businesses</a>
+        <a href="#contact" class="cta-button cta-secondary">Get in Touch</a>
+      </div>
+
+      <div class="hero-scroll-indicator" aria-label="Scroll down">
+        <span class="scroll-arrow">↓</span>
+        <span class="scroll-text">Scroll to discover</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="accent-layer" id="heroParticles"></div>
+</section>
+
+<script>
+  // Trigger observe-fade animations on load
+  if (typeof window !== 'undefined') {
+    window.addEventListener('DOMContentLoaded', () => {
+      const observeElements = document.querySelectorAll('.hero-section .observe-fade');
+
+      setTimeout(() => {
+        observeElements.forEach((el, index) => {
+          setTimeout(() => {
+            el.classList.add('observed');
+          }, index * 150);
+        });
+      }, 200);
+    });
+  }
+</script>
