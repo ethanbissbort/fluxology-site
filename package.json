@@ -1,0 +1,21 @@
+{
+  "name": "fluxology-site",
+  "version": "2.0.0",
+  "description": "High-performance Astro + Svelte website for Fluxology Inc.",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "optimize-images": "node scripts/optimize-images.js"
+  },
+  "dependencies": {
+    "astro": "^4.0.0",
+    "@astrojs/svelte": "^5.0.0",
+    "svelte": "^4.2.0",
+    "astro-compress": "^2.2.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.0"
+  }
+}
