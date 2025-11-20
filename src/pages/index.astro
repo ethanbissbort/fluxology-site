@@ -1,0 +1,206 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navigation from '../components/Navigation.astro';
+import Hero from '../components/Hero.astro';
+import About from '../components/About.astro';
+import DBASection from '../components/DBASection.astro';
+import Footer from '../components/Footer.astro';
+
+import ScrollProgress from '../components/ScrollProgress.svelte';
+import ThemeTransition from '../components/ThemeTransition.svelte';
+import ParticleSystem from '../components/ParticleSystem.svelte';
+import ContactForm from '../components/ContactForm.svelte';
+import NavigationMenu from '../components/NavigationMenu.svelte';
+import BackToTop from '../components/BackToTop.svelte';
+
+// DBA Section Data
+const dbaSections = [
+  {
+    id: 'fabrication',
+    theme: 'industrial',
+    name: 'Fluxology Fabrication & Welding',
+    naics: 'NAICS 332710 - Machine Shops',
+    description:
+      'Precision metalworking and fabrication services delivering custom solutions for industrial, commercial, and residential applications. Our experienced team combines traditional craftsmanship with modern techniques to create durable, high-quality metal products.',
+    services: [
+      {
+        icon: '⚙️',
+        title: 'Custom Fabrication',
+        description:
+          'Bespoke metal fabrication tailored to your exact specifications, from concept to completion.'
+      },
+      {
+        icon: '🔥',
+        title: 'Precision Welding',
+        description:
+          'Expert welding services including MIG, TIG, and stick welding for all types of metals.'
+      },
+      {
+        icon: '🔧',
+        title: 'Metal Repair',
+        description:
+          'Professional repair and restoration services for damaged metal components and structures.'
+      },
+      {
+        icon: '⚒️',
+        title: 'Parts Manufacturing',
+        description:
+          'Production of custom metal parts and components for industrial machinery and equipment.'
+      }
+    ],
+    ctaText: 'Request a Quote'
+  },
+  {
+    id: '3d-lab',
+    theme: 'tech',
+    name: 'Fluxology 3D Lab',
+    naics: 'NAICS 541990 - All Other Professional, Scientific and Technical Services',
+    description:
+      'State-of-the-art 3D printing and digital fabrication services bringing your ideas to life with precision and speed. From rapid prototyping to artistic creations, we leverage advanced additive manufacturing technologies to deliver exceptional results.',
+    services: [
+      {
+        icon: '🖨️',
+        title: '3D Printing Services',
+        description:
+          'Professional-grade FDM and resin printing for functional prototypes and finished products.'
+      },
+      {
+        icon: '⚡',
+        title: 'Rapid Prototyping',
+        description:
+          'Fast-turnaround prototype development to accelerate your product development cycle.'
+      },
+      {
+        icon: '📐',
+        title: '3D Scanning',
+        description:
+          'High-precision 3D scanning services for reverse engineering and digital archiving.'
+      },
+      {
+        icon: '🎨',
+        title: 'Resin Art',
+        description:
+          'Custom artistic pieces and decorative objects created with advanced resin printing techniques.'
+      }
+    ],
+    ctaText: 'Start Your Project'
+  },
+  {
+    id: 'greenhouse',
+    theme: 'natural',
+    name: 'Fluxology Greenhouse',
+    naics: 'NAICS 111419 - Other Food Crops Grown Under Cover',
+    description:
+      'Sustainable greenhouse production specializing in exotic and specialty crops. Our controlled-environment agriculture ensures year-round production of premium quality ginger, coffee, cocoa, and other high-value food crops.',
+    services: [
+      {
+        icon: '🫚',
+        title: 'Ginger Production',
+        description:
+          'Premium fresh ginger grown in optimal greenhouse conditions for superior flavor and quality.'
+      },
+      {
+        icon: '☕',
+        title: 'Coffee Cultivation',
+        description:
+          'Specialty coffee plants producing unique beans with exceptional terroir characteristics.'
+      },
+      {
+        icon: '🍫',
+        title: 'Cocoa Growing',
+        description:
+          'Small-batch cocoa production with focus on flavor and sustainable farming practices.'
+      },
+      {
+        icon: '🌱',
+        title: 'Specialty Crops',
+        description:
+          'Diverse selection of exotic and hard-to-find food crops grown in controlled environments.'
+      }
+    ],
+    ctaText: 'Explore Our Crops'
+  },
+  {
+    id: 'orchard',
+    theme: 'natural',
+    name: 'Fluxology Orchard & Food Forest',
+    naics: 'NAICS 111330 - Noncitrus Fruit and Tree Nut Farming',
+    description:
+      'Regenerative agriculture through perennial food production systems. Our orchard and food forest combine traditional fruit and nut cultivation with permaculture principles to create biodiverse, sustainable ecosystems that produce abundant harvests.',
+    services: [
+      {
+        icon: '🍎',
+        title: 'Fruit Tree Production',
+        description:
+          'Diverse selection of fruit trees producing fresh, seasonal harvests throughout the year.'
+      },
+      {
+        icon: '🌰',
+        title: 'Nut Cultivation',
+        description:
+          'Premium nut varieties grown using sustainable practices for maximum flavor and nutrition.'
+      },
+      {
+        icon: '🌿',
+        title: 'Perennial Crops',
+        description:
+          'Long-lived food crops that provide consistent yields with minimal environmental impact.'
+      },
+      {
+        icon: '🌳',
+        title: 'Food Forest Systems',
+        description:
+          'Multi-layered edible ecosystems designed for biodiversity and sustainable food production.'
+      }
+    ],
+    ctaText: 'Visit the Orchard'
+  }
+];
+---
+
+<BaseLayout title="Fluxology Inc. - Innovation Across Industries">
+  <!-- Interactive Svelte components -->
+  <ScrollProgress client:load />
+  <ThemeTransition client:load />
+  <BackToTop client:load />
+
+  <!-- Static navigation -->
+  <Navigation />
+  <NavigationMenu client:load />
+
+  <!-- Main content -->
+  <main id="main-content">
+    <Hero />
+    <About />
+
+    <!-- DBA Sections with particle systems -->
+    {
+      dbaSections.map((dba) => (
+        <DBASection {...dba}>
+          <ParticleSystem slot="particles" theme={dba.theme} client:visible />
+        </DBASection>
+      ))
+    }
+
+    <!-- Contact Section -->
+    <section id="contact" data-theme="corporate" class="section contact-section">
+      <div class="content-layer">
+        <div class="container">
+          <header class="section-header observe-fade">
+            <h2 class="section-title">Get In Touch</h2>
+            <p class="section-subtitle">We'd love to hear from you</p>
+          </header>
+
+          <ContactForm client:visible />
+        </div>
+      </div>
+
+      <div class="accent-layer" id="contactParticles">
+        <ParticleSystem theme="corporate" client:visible />
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <Footer />
+</BaseLayout>

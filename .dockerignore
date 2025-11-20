@@ -1,0 +1,94 @@
+# .dockerignore - Exclude files from Docker build context
+# This significantly speeds up builds and reduces image size
+
+# Node modules (will be installed in container)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build output (will be generated in container)
+dist
+.astro
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment files (use docker-compose env instead)
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Docker
+Dockerfile
+docker-compose.yml
+docker-compose.*.yml
+.dockerignore
+
+# Documentation (not needed in container)
+README.md
+README-ASTRO.md
+ASTRO-MIGRATION.md
+claude.md
+docs
+
+# Tests (if any)
+tests
+__tests__
+*.test.js
+*.spec.js
+coverage
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+.circleci
+
+# Temporary files
+tmp
+temp
+*.tmp
+.cache
+
+# Source maps (production doesn't need them)
+*.map
+
+# Package manager lock files (we use package-lock.json)
+yarn.lock
+pnpm-lock.yaml
+
+# Optional: Exclude source assets that are already optimized
+# src/assets/raw
+
+# Misc
+.npmrc
+.yarnrc
+.editorconfig
+.eslintrc*
+.prettierrc*
+tsconfig.json

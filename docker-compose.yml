@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  fluxology-web:
+    container_name: fluxology-website
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    image: fluxology-site:latest
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    environment:
+      - APACHE_SERVER_NAME=${SERVER_NAME:-localhost}
+      - APACHE_SERVER_ADMIN=${SERVER_ADMIN:-admin@fluxology.ca}
+      - TZ=${TIMEZONE:-America/Toronto}
+    volumes:
+      # Mount custom Apache logs (optional)
+      - ./logs/apache:/usr/local/apache2/logs
+      # Mount SSL certificates if needed (optional)
+      # - ./docker/ssl:/etc/ssl/certs:ro
+    networks:
+      - fluxology-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.fluxology.description=Fluxology Inc. Corporate Website"
+      - "com.fluxology.version=2.0.0"
+
+networks:
+  fluxology-network:
+    driver: bridge
+    name: fluxology-network
+
+# Optional: Add volume for persistent data if needed
+volumes:
+  apache-logs:
+    driver: local
