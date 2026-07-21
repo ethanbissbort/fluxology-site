@@ -192,6 +192,37 @@ const dbaSections = [
           </header>
 
           <ContactForm client:visible />
+
+          {/*
+            Netlify Forms detection form. Netlify's build bot registers forms by
+            parsing the STATIC HTML at deploy time, but the real form above is
+            rendered by a client-hydrated Svelte island. This hidden plain-HTML
+            form (matching field names) ensures Netlify registers the "contact"
+            form; the visible Svelte form then submits to it via AJAX.
+          */}
+          <form
+            name="contact"
+            method="POST"
+            data-netlify="true"
+            netlify-honeypot="bot-field"
+            hidden
+          >
+            <input type="hidden" name="form-name" value="contact" />
+            <input type="text" name="companyName" />
+            <input type="text" name="fullName" />
+            <input type="email" name="email" />
+            <input type="tel" name="phone" />
+            <select name="serviceInterest">
+              <option value="fabrication">Fabrication &amp; Welding</option>
+              <option value="3d-lab">3D Lab</option>
+              <option value="greenhouse">Greenhouse</option>
+              <option value="orchard">Orchard &amp; Food Forest</option>
+              <option value="multiple">Multiple Services</option>
+              <option value="general">General Inquiry</option>
+            </select>
+            <textarea name="message"></textarea>
+            <input name="bot-field" />
+          </form>
         </div>
       </div>
 

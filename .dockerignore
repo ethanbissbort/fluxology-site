@@ -18,10 +18,11 @@ dist
 .gitattributes
 
 # Environment files (use docker-compose env instead)
-.env.local
-.env.development
-.env.test
-.env.production
+# Exclude ALL env files so real secrets never land in the image via `COPY . .`
+.env
+.env.*
+!.env.example
+*.env
 
 # IDE
 .vscode
