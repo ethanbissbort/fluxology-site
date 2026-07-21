@@ -3,18 +3,16 @@
  * Provides offline support and performance caching
  */
 
-const CACHE_NAME = 'fluxology-v2.0.0';
+const CACHE_NAME = 'fluxology-v2.1.0';
 // Versioned so the activate handler evicts stale runtime entries on each
 // release instead of serving poisoned/outdated assets indefinitely.
-const RUNTIME_CACHE = 'fluxology-runtime-v2.0.0';
+const RUNTIME_CACHE = 'fluxology-runtime-v2.1.0';
 
-// Assets to cache on install
-const ASSETS_TO_CACHE = [
-  '/',
-  '/fonts/Inter-Variable.woff2',
-  '/fonts/Outfit-Variable.woff2',
-  '/fonts/OpenSans-Variable.woff2'
-];
+// Precache only the app shell. All other assets (content-hashed CSS/JS and
+// the astro:fonts woff2 files under /_assets) are cached at runtime by the
+// fetch handler. Listing hashed filenames here would go stale every build,
+// and any 404 in this list makes cache.addAll reject and the install fail.
+const ASSETS_TO_CACHE = ['/'];
 
 // Install event - cache critical assets
 self.addEventListener('install', (event) => {
