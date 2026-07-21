@@ -3,23 +3,23 @@
   // form in index.astro that Netlify's build bot parses at deploy time.
   const FORM_NAME = 'contact';
 
-  let formData = {
+  let formData = $state({
     companyName: '',
     fullName: '',
     email: '',
     phone: '',
     serviceInterest: '',
     message: ''
-  };
+  });
 
   // Netlify honeypot: real users leave this empty; bots that auto-fill
   // every field get silently rejected.
-  let botField = '';
+  let botField = $state('');
 
-  let errors = {};
-  let isSubmitting = false;
-  let submitStatus = null; // 'success' | 'error' | null
-  let submitMessage = '';
+  let errors = $state({});
+  let isSubmitting = $state(false);
+  let submitStatus = $state(null); // 'success' | 'error' | null
+  let submitMessage = $state('');
 
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -106,8 +106,9 @@
   }
 
   function clearError(field) {
+    // $state objects are deeply reactive, so a direct assignment updates the UI.
     if (errors[field]) {
-      errors = { ...errors, [field]: undefined };
+      errors[field] = undefined;
     }
   }
 </script>
@@ -168,7 +169,7 @@
     method="POST"
     data-netlify="true"
     netlify-honeypot="bot-field"
-    on:submit={handleSubmit}
+    onsubmit={handleSubmit}
     novalidate
   >
     <!-- Netlify Forms: required so submissions are attributed to the right form -->
@@ -214,7 +215,7 @@
           name="fullName"
           class="form-input"
           bind:value={formData.fullName}
-          on:input={() => clearError('fullName')}
+          oninput={() => clearError('fullName')}
           required
           aria-invalid={!!errors.fullName}
           placeholder="John Doe"
@@ -236,7 +237,7 @@
           name="email"
           class="form-input"
           bind:value={formData.email}
-          on:input={() => clearError('email')}
+          oninput={() => clearError('email')}
           required
           aria-invalid={!!errors.email}
           placeholder="john@example.com"
@@ -273,7 +274,7 @@
           name="serviceInterest"
           class="form-select"
           bind:value={formData.serviceInterest}
-          on:change={() => clearError('serviceInterest')}
+          onchange={() => clearError('serviceInterest')}
           required
           aria-invalid={!!errors.serviceInterest}
         >
@@ -302,11 +303,11 @@
           class="form-textarea"
           rows="6"
           bind:value={formData.message}
-          on:input={() => clearError('message')}
+          oninput={() => clearError('message')}
           required
           aria-invalid={!!errors.message}
           placeholder="Tell us about your project or inquiry..."
-        />
+        ></textarea>
         {#if errors.message}
           <span class="form-error" role="alert">{errors.message}</span>
         {/if}

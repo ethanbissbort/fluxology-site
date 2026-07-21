@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
 
-  let visible = false;
+  let visible = $state(false);
 
   function scrollToTop() {
     window.scrollTo({
@@ -32,7 +32,7 @@
 <button
   class="back-to-top"
   class:visible
-  on:click={scrollToTop}
+  onclick={scrollToTop}
   aria-label="Back to top"
 >
   <span class="back-to-top-arrow">↑</span>

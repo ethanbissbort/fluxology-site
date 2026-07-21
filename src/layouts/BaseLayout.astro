@@ -1,4 +1,16 @@
 ---
+// Global stylesheets — imported so Astro bundles, hashes, and injects them.
+// Referencing "/src/styles/*.css" via <link> does NOT work in a production
+// build (src/ is not served); imports are the correct mechanism. Order is
+// preserved, so the cascade matches the previous <link> order.
+import '../styles/reset.css';
+import '../styles/variables.css';
+import '../styles/base.css';
+import '../styles/themes.css';
+import '../styles/transitions.css';
+import '../styles/utilities.css';
+import '../styles/responsive.css';
+
 interface Props {
   title: string;
   description?: string;
@@ -21,22 +33,9 @@ const {
 
   <title>{title}</title>
 
-  <!-- Preconnect for performance (if using external resources) -->
-  <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
-
-  <!-- Preload critical variable fonts -->
-  <link rel="preload" href="/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/Outfit-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/OpenSans-Variable.woff2" as="font" type="font/woff2" crossorigin>
-
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="/src/styles/reset.css">
-  <link rel="stylesheet" href="/src/styles/variables.css">
-  <link rel="stylesheet" href="/src/styles/base.css">
-  <link rel="stylesheet" href="/src/styles/themes.css">
-  <link rel="stylesheet" href="/src/styles/transitions.css">
-  <link rel="stylesheet" href="/src/styles/utilities.css">
-  <link rel="stylesheet" href="/src/styles/responsive.css">
+  <!-- Note: web fonts are not currently self-hosted (no files in public/fonts).
+       When real font files are added, adopt Astro's Fonts API (astro:assets
+       <Font />) which handles preload + fallback metrics automatically. -->
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">

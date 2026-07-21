@@ -1,37 +1,17 @@
 import { defineConfig } from 'astro/config';
 import svelte from '@astrojs/svelte';
-import compress from 'astro-compress';
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [
-    svelte(),
-    compress({
-      CSS: true,
-      HTML: {
-        removeAttributeQuotes: false,
-        removeComments: true,
-      },
-      Image: false, // We'll handle images separately with Sharp
-      JavaScript: true,
-      SVG: true,
-    }),
-  ],
+  integrations: [svelte()],
   output: 'static',
   build: {
-    inlineStylesheets: 'auto',
+    // Custom asset directory (default is '_astro').
     assets: '_assets',
   },
   vite: {
     build: {
-      cssCodeSplit: false,
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            'svelte-runtime': ['svelte', 'svelte/internal'],
-          },
-        },
-      },
+      // Drop console/debugger calls from the production client bundle.
       minify: 'terser',
       terserOptions: {
         compress: {
@@ -39,9 +19,6 @@ export default defineConfig({
           passes: 2,
         },
       },
-    },
-    css: {
-      devSourcemap: true,
     },
   },
 });

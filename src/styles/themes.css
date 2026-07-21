@@ -137,29 +137,29 @@
   --current-font-body: var(--font-tech-body);
 }
 
-#3d-lab {
+#\33 d-lab {
   background: linear-gradient(135deg, var(--tech-primary-black) 0%, var(--tech-primary-navy) 100%);
 }
 
-#3d-lab .parallax-bg {
+#\33 d-lab .parallax-bg {
   background: linear-gradient(135deg, var(--tech-primary-black) 0%, var(--tech-primary-slate) 100%);
 }
 
-#3d-lab .tech-gradient {
+#\33 d-lab .tech-gradient {
   background:
     radial-gradient(circle at 20% 50%, rgba(0, 217, 255, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 80% 50%, rgba(255, 0, 110, 0.15) 0%, transparent 50%),
     linear-gradient(135deg, var(--tech-primary-black) 0%, var(--tech-primary-navy) 100%);
 }
 
-#3d-lab .parallax-wireframe {
+#\33 d-lab .parallax-wireframe {
   background-image:
     linear-gradient(0deg, transparent 24%, rgba(0, 217, 255, 0.05) 25%, rgba(0, 217, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 217, 255, 0.05) 75%, rgba(0, 217, 255, 0.05) 76%, transparent 77%, transparent),
     linear-gradient(90deg, transparent 24%, rgba(0, 217, 255, 0.05) 25%, rgba(0, 217, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 217, 255, 0.05) 75%, rgba(0, 217, 255, 0.05) 76%, transparent 77%, transparent);
   background-size: 50px 50px;
 }
 
-#3d-lab .dba-name {
+#\33 d-lab .dba-name {
   font-family: var(--font-tech-heading);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-wider);
@@ -167,17 +167,17 @@
   text-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
 }
 
-#3d-lab .dba-naics {
+#\33 d-lab .dba-naics {
   font-family: var(--font-tech-technical);
   color: var(--tech-accent-cyan);
 }
 
-#3d-lab .dba-description p {
+#\33 d-lab .dba-description p {
   font-family: var(--font-tech-body);
   color: var(--tech-neutral-white);
 }
 
-#3d-lab .service-card {
+#\33 d-lab .service-card {
   background: rgba(27, 40, 69, 0.5);
   border: 1px solid rgba(0, 217, 255, 0.3);
   border-radius: var(--radius-lg);
@@ -186,7 +186,7 @@
   overflow: hidden;
 }
 
-#3d-lab .service-card::before {
+#\33 d-lab .service-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -197,30 +197,30 @@
   transition: left var(--transition-slow) var(--ease-out-cubic);
 }
 
-#3d-lab .service-card:hover::before {
+#\33 d-lab .service-card:hover::before {
   left: 100%;
 }
 
-#3d-lab .service-card:hover {
+#\33 d-lab .service-card:hover {
   border-color: var(--tech-accent-cyan);
   background: rgba(27, 40, 69, 0.7);
   box-shadow: 0 8px 16px rgba(0, 217, 255, 0.3);
   transform: translateY(-5px) scale(1.02);
 }
 
-#3d-lab .service-title {
+#\33 d-lab .service-title {
   font-family: var(--font-tech-heading);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-wide);
   color: var(--tech-neutral-white);
 }
 
-#3d-lab .service-description {
+#\33 d-lab .service-description {
   font-family: var(--font-tech-body);
   color: var(--tech-neutral-gray);
 }
 
-#3d-lab .tech-cta {
+#\33 d-lab .tech-cta {
   background: linear-gradient(135deg, var(--tech-accent-cyan) 0%, var(--tech-accent-purple) 100%);
   color: var(--tech-neutral-white);
   font-family: var(--font-tech-heading);
@@ -231,7 +231,7 @@
   overflow: hidden;
 }
 
-#3d-lab .tech-cta::after {
+#\33 d-lab .tech-cta::after {
   content: '';
   position: absolute;
   top: 0;
@@ -242,12 +242,12 @@
   transition: left var(--transition-slow) var(--ease-out-cubic);
 }
 
-#3d-lab .tech-cta:hover::after {
+#\33 d-lab .tech-cta:hover::after {
   left: 100%;
 }
 
-#3d-lab .tech-cta:hover,
-#3d-lab .tech-cta:focus {
+#\33 d-lab .tech-cta:hover,
+#\33 d-lab .tech-cta:focus {
   box-shadow: 0 0 30px rgba(0, 217, 255, 0.6);
 }
 

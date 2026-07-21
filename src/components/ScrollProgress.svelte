@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
 
-  let progress = 0;
+  let progress = $state(0);
 
   function updateProgress() {
     const windowHeight = window.innerHeight;

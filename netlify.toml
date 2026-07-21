@@ -6,7 +6,8 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  # Astro 7 requires Node >= 22.12.
+  NODE_VERSION = "22"
 
 # Security headers (mirrors the Apache config in docker/apache/httpd.conf).
 # Netlify serves static assets, so these apply to every response.
