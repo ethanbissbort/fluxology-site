@@ -1,0 +1,80 @@
+---
+interface Service {
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface Props {
+  id: string;
+  theme: string;
+  name: string;
+  naics: string;
+  description: string;
+  services: Service[];
+  ctaText?: string;
+}
+
+const {
+  id,
+  theme,
+  name,
+  naics,
+  description,
+  services,
+  ctaText = "Learn More"
+} = Astro.props;
+---
+
+<section id={id} data-theme={theme} class="section dba-section">
+  <div class="background-layer">
+    <div class="parallax-bg" data-speed="0.4"></div>
+    <div class="parallax-pattern" data-speed="0.6"></div>
+  </div>
+
+  <div class="content-layer">
+    <div class="container">
+      <div class="dba-header observe-fade">
+        <h2 class="dba-name">{name}</h2>
+        <p class="dba-naics">{naics}</p>
+      </div>
+
+      <div class="dba-description observe-fade">
+        <p>{description}</p>
+      </div>
+
+      <div class="services-grid observe-slide-up">
+        {services.map((service) => (
+          <article class="service-card">
+            <div class="service-icon" set:html={service.icon} />
+            <h3 class="service-title">{service.title}</h3>
+            <p class="service-description">{service.description}</p>
+          </article>
+        ))}
+      </div>
+
+      <div class="dba-showcase observe-scale">
+        <div class="showcase-placeholder">
+          <!-- Ideal image: 1200x600px -->
+          <!-- E-COMMERCE INTEGRATION: Product gallery would go here -->
+          <div class="showcase-image" role="img" aria-label={`${name} showcase`}></div>
+        </div>
+      </div>
+
+      <button class="cta-button observe-fade">{ctaText}</button>
+    </div>
+  </div>
+
+  <div class="accent-layer" id={`${id}Particles`}>
+    <slot name="particles" />
+  </div>
+</section>
+
+<style>
+  /* CSS Containment for performance */
+  .dba-section {
+    content-visibility: auto;
+    contain: layout style paint;
+    contain-intrinsic-size: 0 100vh;
+  }
+</style>
