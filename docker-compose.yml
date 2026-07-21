@@ -9,6 +9,10 @@ services:
       args:
         - NODE_ENV=production
     image: fluxology-site:latest
+    # NOTE: this container serves plaintext HTTP on port 80 by design. When
+    # exposed to an untrusted network it MUST sit behind a TLS terminator
+    # (reverse proxy / load balancer) that handles HTTPS, HSTS, and the
+    # HTTP->HTTPS redirect. Do not publish it directly to the internet.
     ports:
       - "${HTTP_PORT:-80}:80"
     environment:
