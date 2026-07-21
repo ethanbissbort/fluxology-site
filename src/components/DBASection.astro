@@ -46,7 +46,7 @@ const {
       <div class="services-grid observe-slide-up">
         {services.map((service) => (
           <article class="service-card">
-            <div class="service-icon" set:html={service.icon} />
+            <div class="service-icon">{service.icon}</div>
             <h3 class="service-title">{service.title}</h3>
             <p class="service-description">{service.description}</p>
           </article>

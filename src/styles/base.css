@@ -707,7 +707,9 @@ p {
 
 .footer-copyright {
   font-size: var(--font-size-xs);
-  opacity: 0.6;
+  /* Raised from 0.6 so the muted copyright text clears WCAG AA 4.5:1
+     contrast on the navy footer. */
+  opacity: 0.85;
 }
 
 /* ========================================

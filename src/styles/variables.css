@@ -1,81 +1,12 @@
 /* CSS Custom Properties - Design System */
 
 /* ========================================
-   VARIABLE FONT LOADING
+   FONTS
    ======================================== */
-/* Load variable fonts with font-display: swap for optimal performance */
-
-@font-face {
-  font-family: 'Inter';
-  src: url('/fonts/Inter-Variable.woff2') format('woff2-variations');
-  font-weight: 100 900;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Outfit';
-  src: url('/fonts/Outfit-Variable.woff2') format('woff2-variations');
-  font-weight: 100 900;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Open Sans';
-  src: url('/fonts/OpenSans-Variable.woff2') format('woff2-variations');
-  font-weight: 300 800;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Rajdhani';
-  src: url('/fonts/Rajdhani-Variable.woff2') format('woff2-variations');
-  font-weight: 300 800;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Space Grotesk';
-  src: url('/fonts/SpaceGrotesk-Variable.woff2') format('woff2-variations');
-  font-weight: 300 700;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'DM Sans';
-  src: url('/fonts/DMSans-Variable.woff2') format('woff2-variations');
-  font-weight: 100 1000;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Sora';
-  src: url('/fonts/Sora-Variable.woff2') format('woff2-variations');
-  font-weight: 100 800;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Nunito';
-  src: url('/fonts/Nunito-Variable.woff2') format('woff2-variations');
-  font-weight: 200 1000;
-  font-display: swap;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Quicksand';
-  src: url('/fonts/Quicksand-Variable.woff2') format('woff2-variations');
-  font-weight: 300 700;
-  font-display: swap;
-  font-style: normal;
-}
+/* Fonts are self-hosted and optimized by astro:fonts (see astro.config.mjs
+   and the <Font /> components in BaseLayout.astro). Each family exposes a
+   CSS variable (e.g. --font-outfit) with generated fallback metrics; the
+   semantic variables below map those to design roles. */
 
 :root {
   /* ========================================
@@ -105,23 +36,23 @@
      FONT FAMILIES
      ======================================== */
   /* Industrial (Fabrication & Welding) */
-  --font-industrial-heading: 'Rajdhani', sans-serif;
-  --font-industrial-body: 'Inter', sans-serif;
+  --font-industrial-heading: var(--font-rajdhani), sans-serif;
+  --font-industrial-body: var(--font-inter), sans-serif;
   --font-industrial-technical: 'JetBrains Mono', monospace;
 
   /* Tech-Forward (3D Lab) */
-  --font-tech-heading: 'Space Grotesk', sans-serif;
-  --font-tech-body: 'DM Sans', sans-serif;
+  --font-tech-heading: var(--font-space-grotesk), sans-serif;
+  --font-tech-body: var(--font-dm-sans), sans-serif;
   --font-tech-technical: 'Fira Code', monospace;
 
   /* Natural (Greenhouse & Orchard) */
-  --font-natural-heading: 'Sora', sans-serif;
-  --font-natural-body: 'Nunito', sans-serif;
-  --font-natural-accent: 'Quicksand', sans-serif;
+  --font-natural-heading: var(--font-sora), sans-serif;
+  --font-natural-body: var(--font-nunito), sans-serif;
+  --font-natural-accent: var(--font-quicksand), sans-serif;
 
   /* Corporate (Hero, About, Contact) */
-  --font-corporate-heading: 'Outfit', sans-serif;
-  --font-corporate-body: 'Open Sans', sans-serif;
+  --font-corporate-heading: var(--font-outfit), sans-serif;
+  --font-corporate-body: var(--font-open-sans), sans-serif;
   --font-corporate-accent: 'Poppins', sans-serif;
 
   /* Font Weights */

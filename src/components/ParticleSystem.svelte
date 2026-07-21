@@ -1,9 +1,9 @@
 <script>
-  export let theme = 'corporate';
-
   import { onMount } from 'svelte';
 
-  let particles = [];
+  let { theme = 'corporate' } = $props();
+
+  let particles = $state([]);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const particleCount = isMobile ? 8 : 15;
 
@@ -58,7 +58,7 @@
         --end-y: {-Math.random() * 500}px;
         --opacity: {Math.random() * 0.4 + 0.2};
       "
-    />
+    ></div>
   {/each}
 </div>
 

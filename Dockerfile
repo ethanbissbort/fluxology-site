@@ -5,7 +5,8 @@
 # ==============================================
 # Build Stage
 # ==============================================
-FROM node:18-alpine AS builder
+# Astro 7 requires Node >= 22.12.
+FROM node:22-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -13,8 +14,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production --ignore-scripts
+# Install ALL dependencies (the build needs devDependencies such as terser
+# and typescript). --ignore-scripts keeps install hardened; the toolchain
+# (Rolldown/Vite/terser) delivers native binaries via optionalDependencies,
+# not lifecycle scripts, so the build does not need them.
+RUN npm ci --ignore-scripts
 
 # Copy source files
 COPY . .

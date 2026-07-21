@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Fluxology">
+  <rect width="32" height="32" rx="6" fill="#0B1B34"/>
+  <path d="M11 8h11v3.4h-7.2v3.5H21v3.4h-6.2V24H11z" fill="#3A86FF"/>
+  <circle cx="23.5" cy="9.5" r="2.2" fill="#7BB0FF"/>
+</svg>

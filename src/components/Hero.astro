@@ -9,17 +9,20 @@
 
   <div class="content-layer">
     <div class="container">
-      <h1 class="hero-title observe-fade">
+      <!-- Above-the-fold hero content renders immediately (no reveal-on-load
+           gating): this is the LCP region, so it must not wait for JS
+           hydration or a fade-in transition. -->
+      <h1 class="hero-title">
         <span class="hero-title-main">Fluxology Inc.</span>
         <span class="hero-title-sub">Innovation Across Industries</span>
       </h1>
 
-      <p class="hero-description observe-fade">
+      <p class="hero-description">
         A Canadian Controlled Private Corporation driving excellence through four distinct business divisions,
         combining traditional craftsmanship with cutting-edge technology and sustainable agriculture.
       </p>
 
-      <div class="hero-cta-group observe-fade">
+      <div class="hero-cta-group">
         <a href="#about" class="cta-button cta-primary">Explore Our Businesses</a>
         <a href="#contact" class="cta-button cta-secondary">Get in Touch</a>
       </div>
@@ -33,20 +36,3 @@
 
   <div class="accent-layer" id="heroParticles"></div>
 </section>
-
-<script>
-  // Trigger observe-fade animations on load
-  if (typeof window !== 'undefined') {
-    window.addEventListener('DOMContentLoaded', () => {
-      const observeElements = document.querySelectorAll('.hero-section .observe-fade');
-
-      setTimeout(() => {
-        observeElements.forEach((el, index) => {
-          setTimeout(() => {
-            el.classList.add('observed');
-          }, index * 150);
-        });
-      }, 200);
-    });
-  }
-</script>

@@ -3,16 +3,16 @@
  * Provides offline support and performance caching
  */
 
-const CACHE_NAME = 'fluxology-v2.0.0';
-const RUNTIME_CACHE = 'fluxology-runtime';
+const CACHE_NAME = 'fluxology-v2.1.0';
+// Versioned so the activate handler evicts stale runtime entries on each
+// release instead of serving poisoned/outdated assets indefinitely.
+const RUNTIME_CACHE = 'fluxology-runtime-v2.1.0';
 
-// Assets to cache on install
-const ASSETS_TO_CACHE = [
-  '/',
-  '/fonts/Inter-Variable.woff2',
-  '/fonts/Outfit-Variable.woff2',
-  '/fonts/OpenSans-Variable.woff2'
-];
+// Precache only the app shell. All other assets (content-hashed CSS/JS and
+// the astro:fonts woff2 files under /_assets) are cached at runtime by the
+// fetch handler. Listing hashed filenames here would go stale every build,
+// and any 404 in this list makes cache.addAll reject and the install fail.
+const ASSETS_TO_CACHE = ['/'];
 
 // Install event - cache critical assets
 self.addEventListener('install', (event) => {
@@ -58,48 +58,60 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
+  const { request } = event;
+
+  // Only handle same-origin GET requests. Cross-origin and non-GET
+  // (e.g. the contact form POST to Netlify) pass straight through.
+  if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  // Navigation / HTML requests: network-first so content and security fixes
+  // reach already-visited clients, falling back to cache only when offline.
+  const isNavigation =
+    request.mode === 'navigate' ||
+    (request.headers.get('accept') || '').includes('text/html');
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const copy = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then((cached) => cached || caches.match('/'))
+        )
+    );
     return;
   }
 
+  // Static assets: cache-first, populating the runtime cache on miss.
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
-        console.log('[ServiceWorker] Serving from cache:', event.request.url);
         return cachedResponse;
       }
 
-      return fetch(event.request)
-        .then((response) => {
-          // Don't cache non-successful responses
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          // Cache runtime assets
-          caches.open(RUNTIME_CACHE).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
+      return fetch(request).then((response) => {
+        // Only cache successful same-origin (basic) responses; never cache
+        // errors, redirects, or opaque cross-origin responses.
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
-        })
-        .catch((error) => {
-          console.error('[ServiceWorker] Fetch failed:', error);
+        }
 
-          // Return offline page if available
-          return caches.match('/offline.html');
+        const responseToCache = response.clone();
+        caches.open(RUNTIME_CACHE).then((cache) => {
+          cache.put(request, responseToCache);
         });
+
+        return response;
+      });
     })
   );
 });

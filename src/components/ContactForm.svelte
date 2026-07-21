@@ -1,15 +1,25 @@
 <script>
-  let formData = {
+  // Must match the `name` attribute on this form and the hidden detection
+  // form in index.astro that Netlify's build bot parses at deploy time.
+  const FORM_NAME = 'contact';
+
+  let formData = $state({
     companyName: '',
     fullName: '',
     email: '',
     phone: '',
     serviceInterest: '',
     message: ''
-  };
+  });
 
-  let errors = {};
-  let isSubmitting = false;
+  // Netlify honeypot: real users leave this empty; bots that auto-fill
+  // every field get silently rejected.
+  let botField = $state('');
+
+  let errors = $state({});
+  let isSubmitting = $state(false);
+  let submitStatus = $state(null); // 'success' | 'error' | null
+  let submitMessage = $state('');
 
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -37,8 +47,18 @@
     return Object.keys(errors).length === 0;
   }
 
+  // Netlify expects application/x-www-form-urlencoded submissions.
+  function encode(data) {
+    return Object.keys(data)
+      .map((key) => encodeURIComponent(key) + '=' + encodeURIComponent(data[key] ?? ''))
+      .join('&');
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
+
+    submitStatus = null;
+    submitMessage = '';
 
     if (!validate()) {
       return;
@@ -47,12 +67,23 @@
     isSubmitting = true;
 
     try {
-      // Simulate API call - replace with actual endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const payload = {
+        'form-name': FORM_NAME,
+        'bot-field': botField,
+        ...formData
+      };
 
-      console.log('Form submitted:', formData);
+      const response = await fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: encode(payload)
+      });
 
-      // Reset form
+      if (!response.ok) {
+        throw new Error(`Submission failed with status ${response.status}`);
+      }
+
+      // Reset form on success
       formData = {
         companyName: '',
         fullName: '',
@@ -61,19 +92,23 @@
         serviceInterest: '',
         message: ''
       };
+      errors = {};
 
-      alert('Thank you for your message! We will get back to you soon.');
+      submitStatus = 'success';
+      submitMessage = 'Thank you for your message! We will get back to you soon.';
     } catch (error) {
-      console.error('Submission error:', error);
-      alert('Sorry, there was an error submitting your message. Please try again.');
+      submitStatus = 'error';
+      submitMessage =
+        'Sorry, there was a problem sending your message. Please try again, or email us directly at info@fluxology.ca.';
     } finally {
       isSubmitting = false;
     }
   }
 
   function clearError(field) {
+    // $state objects are deeply reactive, so a direct assignment updates the UI.
     if (errors[field]) {
-      errors = { ...errors, [field]: undefined };
+      errors[field] = undefined;
     }
   }
 </script>
@@ -128,7 +163,31 @@
     </div>
   </div>
 
-  <form class="contact-form" on:submit={handleSubmit} novalidate>
+  <form
+    class="contact-form"
+    name="contact"
+    method="POST"
+    data-netlify="true"
+    netlify-honeypot="bot-field"
+    onsubmit={handleSubmit}
+    novalidate
+  >
+    <!-- Netlify Forms: required so submissions are attributed to the right form -->
+    <input type="hidden" name="form-name" value="contact" />
+
+    <!-- Netlify honeypot: hidden from humans, catches naive bots -->
+    <p class="honeypot-field" aria-hidden="true">
+      <label>
+        Don't fill this out if you're human:
+        <input
+          name="bot-field"
+          tabindex="-1"
+          autocomplete="off"
+          bind:value={botField}
+        />
+      </label>
+    </p>
+
     <div class="form-row">
       <div class="form-group">
         <label for="companyName" class="form-label">
@@ -156,7 +215,7 @@
           name="fullName"
           class="form-input"
           bind:value={formData.fullName}
-          on:input={() => clearError('fullName')}
+          oninput={() => clearError('fullName')}
           required
           aria-invalid={!!errors.fullName}
           placeholder="John Doe"
@@ -178,7 +237,7 @@
           name="email"
           class="form-input"
           bind:value={formData.email}
-          on:input={() => clearError('email')}
+          oninput={() => clearError('email')}
           required
           aria-invalid={!!errors.email}
           placeholder="john@example.com"
@@ -215,7 +274,7 @@
           name="serviceInterest"
           class="form-select"
           bind:value={formData.serviceInterest}
-          on:change={() => clearError('serviceInterest')}
+          onchange={() => clearError('serviceInterest')}
           required
           aria-invalid={!!errors.serviceInterest}
         >
@@ -244,16 +303,26 @@
           class="form-textarea"
           rows="6"
           bind:value={formData.message}
-          on:input={() => clearError('message')}
+          oninput={() => clearError('message')}
           required
           aria-invalid={!!errors.message}
           placeholder="Tell us about your project or inquiry..."
-        />
+        ></textarea>
         {#if errors.message}
           <span class="form-error" role="alert">{errors.message}</span>
         {/if}
       </div>
     </div>
+
+    {#if submitStatus}
+      <div
+        class="form-status form-status--{submitStatus}"
+        role={submitStatus === 'error' ? 'alert' : 'status'}
+        aria-live="polite"
+      >
+        {submitMessage}
+      </div>
+    {/if}
 
     <button
       type="submit"
@@ -264,3 +333,35 @@
     </button>
   </form>
 </div>
+
+<style>
+  /* Netlify honeypot — visually removed but still submitted with the form */
+  .honeypot-field {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .form-status {
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    border: 1px solid transparent;
+  }
+
+  .form-status--success {
+    color: #0f5132;
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+  }
+
+  .form-status--error {
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+  }
+</style>

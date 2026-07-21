@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
 
-  let progress = 0;
+  let progress = $state(0);
 
   function updateProgress() {
     const windowHeight = window.innerHeight;
@@ -33,6 +33,7 @@
 <div
   class="scroll-progress"
   role="progressbar"
+  aria-label="Page scroll progress"
   aria-valuenow={Math.round(progress)}
   aria-valuemin="0"
   aria-valuemax="100"
