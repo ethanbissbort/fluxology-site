@@ -1,321 +1,237 @@
 # Astro Migration Guide
 
-## Migration Status: IN PROGRESS
+## Migration Status: COMPLETE — Astro 7 / Svelte 5
 
-This document tracks the migration from vanilla JavaScript to Astro + Svelte stack.
+This document tracks how the Fluxology Inc. website reached its current
+architecture. The site started life as a single-page vanilla HTML/CSS/JS build,
+was first migrated to Astro 4 + Svelte 4, and has since been fully overhauled to
+**Astro 7 + Svelte 5 (runes)**. The current end state is described below;
+earlier phases are kept for historical context.
 
-## What's Been Completed
+### Current stack (verified against source)
 
-✅ **Project Setup**
-- Astro 4.x + Svelte 4.x + Vite 5.x installed
-- Project structure created
-- Configuration files (astro.config.mjs, tsconfig.json)
-- CSS system updated with:
-  - Variable font loading (@font-face with font-display: swap)
-  - Performance utilities (content-visibility, CSS containment)
-  - All existing styles preserved (reset, variables, base, themes, transitions, responsive)
+| Concern      | Current state |
+|--------------|---------------|
+| Framework    | Astro `^7.1.3`, `output: 'static'` |
+| Islands      | Svelte `^5.56.7` via `@astrojs/svelte` `^9.0.1` |
+| Language     | TypeScript `^5.7.2` |
+| Runtime      | Node `>=22.12.0` (`engines` + Dockerfile + netlify.toml) |
+| Fonts        | Self-hosted via `astro:fonts` (9 Google families) |
+| Forms        | Netlify Forms (static detection form + AJAX island) |
+| Minify       | Vite + terser (`drop_console`, 2 passes); Rolldown replaces esbuild/rollup |
+| Build output | `dist/` static site (deployed to Netlify) |
 
-## What Needs to Be Built
+Package version is `2.0.0`.
 
-### 1. Astro Components (Static)
-
-**src/layouts/BaseLayout.astro**
-```astro
----
-const { title } = Astro.props;
----
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{title}</title>
-
-  <!-- Preload critical variable fonts -->
-  <link rel="preload" href="/fonts/Inter-Variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/Outfit-Variable.woff2" as="font" type="font/woff2" crossorigin>
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="/src/styles/reset.css">
-  <link rel="stylesheet" href="/src/styles/variables.css">
-  <link rel="stylesheet" href="/src/styles/base.css">
-  <link rel="stylesheet" href="/src/styles/themes.css">
-  <link rel="stylesheet" href="/src/styles/transitions.css">
-  <link rel="stylesheet" href="/src/styles/utilities.css">
-  <link rel="stylesheet" href="/src/styles/responsive.css">
-</head>
-<body>
-  <slot />
-
-  <script>
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js');
-      });
-    }
-
-    // Set current year
-    const yearElement = document.getElementById('currentYear');
-    if (yearElement) {
-      yearElement.textContent = new Date().getFullYear().toString();
-    }
-  </script>
-</body>
-</html>
-```
-
-**src/components/Navigation.astro**
-- Fixed navigation bar
-- Smooth scroll anchors
-- Mobile hamburger menu (behavior handled by Svelte)
-
-**src/components/Hero.astro**
-- Hero section with title and CTA buttons
-- Scroll indicator
-
-**src/components/About.astro**
-- Company overview
-- Values grid
-- Stats cards
-
-**src/components/DBASection.astro**
-- Reusable template for all 4 DBA sections
-- Props: id, theme, name, naics, description, services
-- Slots: particles, showcase images
-
-**src/components/Footer.astro**
-- Footer content
-
-### 2. Svelte Components (Interactive)
-
-**src/components/ScrollProgress.svelte**
-```svelte
-<script>
-  import { onMount } from 'svelte';
-
-  let progress = 0;
-
-  function updateProgress() {
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-    const scrollTop = window.scrollY;
-    progress = (scrollTop / (documentHeight - windowHeight)) * 100;
-  }
-
-  onMount(() => {
-    let ticking = false;
-
-    const handleScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          updateProgress();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    updateProgress();
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  });
-</script>
-
-<div class="scroll-progress">
-  <div class="scroll-progress-bar" style="width: {progress}%"></div>
-</div>
-```
-
-**src/components/ThemeTransition.svelte**
-- Intersection Observer for section detection
-- CSS custom property updates for theme transitions
-
-**src/components/ParticleSystem.svelte**
-- Themed particle animations
-- Props: theme (corporate|industrial|tech|natural)
-- Respects prefers-reduced-motion
-
-**src/components/ContactForm.svelte**
-- Form with validation
-- Error handling
-- Submit logic
-
-**src/components/NavigationMenu.svelte**
-- Mobile menu toggle logic
-- Active link tracking
-
-**src/components/BackToTop.svelte**
-- Back to top button with scroll threshold
-
-### 3. Main Page
-
-**src/pages/index.astro**
-```astro
----
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Navigation from '../components/Navigation.astro';
-import Hero from '../components/Hero.astro';
-import About from '../components/About.astro';
-import DBASection from '../components/DBASection.astro';
-import Footer from '../components/Footer.astro';
-
-import ScrollProgress from '../components/ScrollProgress.svelte';
-import ThemeTransition from '../components/ThemeTransition.svelte';
-import ParticleSystem from '../components/ParticleSystem.svelte';
-import ContactForm from '../components/ContactForm.svelte';
-import NavigationMenu from '../components/NavigationMenu.svelte';
-import BackToTop from '../components/BackToTop.svelte';
-
-const dbaSections = [
-  {
-    id: 'fabrication',
-    theme: 'industrial',
-    name: 'Fluxology Fabrication & Welding',
-    naics: 'NAICS 332710 - Machine Shops',
-    description: 'Precision metalworking and fabrication services delivering custom solutions for industrial, commercial, and residential applications.',
-    services: [
-      { icon: '⚙️', title: 'Custom Fabrication', description: 'Bespoke metal fabrication tailored to your exact specifications.' },
-      { icon: '🔥', title: 'Precision Welding', description: 'Expert welding services including MIG, TIG, and stick welding.' },
-      { icon: '🔧', title: 'Metal Repair', description: 'Professional repair and restoration services for damaged metal components.' },
-      { icon: '⚒️', title: 'Parts Manufacturing', description: 'Production of custom metal parts and components.' },
-    ],
-  },
-  // ... other DBA sections
-];
 ---
 
-<BaseLayout title="Fluxology Inc. - Innovation Across Industries">
-  <ScrollProgress client:load />
-  <ThemeTransition client:load />
-  <BackToTop client:load />
+## Phase 0 — Original site (pre-Astro)
 
-  <Navigation />
-  <NavigationMenu client:load />
+The site began as a hand-authored single-page app: `src/index.html` plus a set
+of plain scripts under `src/scripts/*.js`, styled by the modular CSS system that
+survives to this day. Those pre-Astro artifacts have since been **deleted**
+(`src/index.html` and `src/scripts/*.js`) now that all behavior lives in Astro
+components and Svelte islands.
 
-  <main id="main-content">
-    <Hero />
-    <About />
+## Phase 1 — Astro 4 + Svelte 4 (initial migration)
 
-    {dbaSections.map((dba) => (
-      <DBASection {...dba}>
-        <ParticleSystem slot="particles" theme={dba.theme} client:visible />
-      </DBASection>
-    ))}
+✅ **Completed**
 
-    <section id="contact" data-theme="corporate" class="section contact-section">
-      <div class="container">
-        <h2>Get In Touch</h2>
-        <ContactForm client:visible />
-      </div>
-    </section>
-  </main>
+- Astro 4.x + Svelte 4.x + Vite 5.x installed and configured.
+- Project restructured into `src/layouts`, `src/components`, `src/pages`,
+  `src/styles`.
+- The existing modular CSS system was preserved and enhanced (reset, variables,
+  base, themes, transitions, utilities, responsive).
+- Static content moved into Astro components; interactive behavior moved into
+  Svelte 4 components using `export let`, top-level reactive `let`, `on:event`
+  handlers, and `onMount` lifecycle.
 
-  <Footer />
-</BaseLayout>
-```
+This is the phase the original version of this document described. Everything
+below supersedes it.
 
-### 4. Image Optimization Script
+## Phase 2 — Astro 7 + Svelte 5 overhaul (CURRENT)
 
-**scripts/optimize-images.js**
-```javascript
-import sharp from 'sharp';
-import { promises as fs } from 'fs';
-import path from 'path';
+✅ **Completed**
 
-const inputDir = './src/assets/raw';
-const outputDir = './public/images';
+The most recent major upgrade moved the project to Astro 7 and Svelte 5, adopted
+`astro:fonts`, added Netlify Forms, and hardened/optimized the site.
 
-async function optimizeImages() {
-  const files = await fs.readdir(inputDir);
+---
 
-  for (const file of files) {
-    const inputPath = path.join(inputDir, file);
-    const name = path.parse(file).name;
+## Component inventory (current)
 
-    // Generate AVIF (primary)
-    await sharp(inputPath)
-      .avif({ quality: 80, effort: 9 })
-      .toFile(path.join(outputDir, `${name}.avif`));
+### Static Astro components (`src/components/`)
 
-    // Generate WebP (fallback)
-    await sharp(inputPath)
-      .webp({ quality: 85 })
-      .toFile(path.join(outputDir, `${name}.webp`));
+- `Navigation.astro` — fixed nav bar, smooth-scroll anchors.
+- `Hero.astro` — hero section (renders immediately; see performance notes).
+- `About.astro` — company overview, values grid, stats cards.
+- `DBASection.astro` — reusable template for all four DBA sections
+  (props: `id`, `theme`, `name`, `naics`, `description`, `services`, `ctaText`;
+  slots for particles).
+- `Footer.astro` — footer content.
 
-    // Generate JPG (legacy)
-    await sharp(inputPath)
-      .jpeg({ quality: 80, progressive: true })
-      .toFile(path.join(outputDir, `${name}.jpg`));
+### Interactive Svelte islands (`src/components/`)
 
-    console.log(`Optimized: ${name}`);
-  }
-}
+| Component               | Mode   | Runes used            | Notes |
+|-------------------------|--------|-----------------------|-------|
+| `ContactForm.svelte`    | Runes  | `$state`              | Netlify Forms AJAX submit, validation, honeypot |
+| `ParticleSystem.svelte` | Runes  | `$props`, `$state`    | Themed particles; respects `prefers-reduced-motion` |
+| `BackToTop.svelte`      | Runes  | `$state`              | Scroll-threshold button |
+| `ScrollProgress.svelte` | Runes  | `$state`              | Scroll progress bar |
+| `NavigationMenu.svelte` | Legacy | — (`onMount` only)    | Mobile menu toggle / active-link tracking |
+| `ThemeTransition.svelte`| Legacy | — (`onMount` only)    | IntersectionObserver theme + nav-link updates |
 
-optimizeImages().catch(console.error);
-```
+`NavigationMenu` and `ThemeTransition` are lifecycle-only components (no
+component-local reactive state), so they remain in Svelte 5 legacy mode, which
+is fully supported. There was no need to convert them to runes.
 
-### 5. Service Worker
+### Layout
 
-**public/service-worker.js**
-```javascript
-const CACHE_NAME = 'fluxology-v2';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/fonts/Inter-Variable.woff2',
-  '/fonts/Outfit-Variable.woff2',
-];
+- `BaseLayout.astro` — imports the seven global stylesheets in frontmatter,
+  emits `<Font>` tags from `astro:fonts`, includes a `<noscript>` reveal
+  fallback, registers the service worker, and sets the footer year.
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
-  self.skipWaiting();
-});
+### Page
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
-});
+- `pages/index.astro` — composes the layout, static components, and islands.
+  Client directives in use: `client:load` for `ScrollProgress`,
+  `ThemeTransition`, `BackToTop`, and `NavigationMenu`; `client:visible` for
+  `ParticleSystem` and `ContactForm`. Also contains the hidden Netlify
+  detection form (see Netlify Forms below).
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-```
+---
 
-## Client Directives in Astro
+## Svelte 4 → 5 migration (runes)
 
-When adding Svelte components to Astro, use these client directives:
+The following changes were applied when moving islands to Svelte 5:
 
-- `client:load` - Load immediately (critical interactive elements)
-- `client:visible` - Load when visible (particles, contact form)
-- `client:idle` - Load when browser is idle (non-critical)
+- `export let foo` → `let { foo } = $props()`
+  (e.g. `ParticleSystem`: `let { theme = 'corporate' } = $props()`).
+- Component-local reactive `let` → `$state(...)`
+  (e.g. `ContactForm`'s `formData`, `errors`, `isSubmitting`, `submitStatus`;
+  `ScrollProgress`'s `progress`; `BackToTop`'s `visible`;
+  `ParticleSystem`'s `particles`).
+- `on:event` → `onevent`
+  (e.g. `onsubmit={handleSubmit}`, `oninput`, `onchange` in `ContactForm`).
+- Self-closing non-void tags were given explicit closing tags. Astro 7's Rust
+  Svelte compiler is strict about this (e.g. `<textarea ...></textarea>` rather
+  than a self-closed textarea).
+- A root **`svelte.config.js`** was added with `vitePreprocess()`, which is
+  required by `@astrojs/svelte` 9 (it enables TypeScript/PostCSS preprocessing
+  in `.svelte` files).
 
-## Performance Targets
+## Astro 4 → 7 migration
 
-- Lighthouse Score: 95+ on all metrics
-- First Contentful Paint: <500ms
-- Time to Interactive: <1000ms
-- Largest Contentful Paint: <1500ms
-- Cumulative Layout Shift: <0.05
-- JavaScript Bundle: <50KB gzipped
+Configuration and build changes applied for Astro 7:
 
-## Build Commands
+- Removed the `svelte/internal` `manualChunks` entry — that module no longer
+  exists in Svelte 5.
+- Removed the `astro-compress` integration — redundant under Astro 7, where
+  Vite/terser handle JS/CSS minification and `compressHTML` handles HTML.
+- Simplified the `astro.config.mjs` `vite` block, keeping only the terser
+  `drop_console` (plus `passes: 2`) minification tuning.
+- `BaseLayout.astro` now **imports** the global stylesheets in frontmatter
+  (`import '../styles/reset.css'`, etc.) instead of linking `/src/styles/*.css`.
+  Those source-path `<link>`s 404 in a production build because `src/` is not
+  served; imports let Astro bundle, hash, and inject the CSS while preserving
+  cascade order.
+- Escaped a leading-digit CSS ID selector: `#3d-lab` → `#\33 d-lab`. The
+  stricter `lightningcss` minifier rejects an ID selector that begins with a
+  digit. (The `3d-lab` DBA section id itself is unchanged.)
+- Updated `tsconfig.json` `include`/`exclude`.
+- Added `.astro/` to `.gitignore`.
+- Bumped Node 18 → 22 in the `Dockerfile` and `netlify.toml`, matching the
+  `engines.node >= 22.12.0` constraint.
+- Deleted dead pre-Astro artifacts: `src/index.html` and `src/scripts/*.js`.
+
+Under the hood, Astro 7's toolchain uses **Rolldown** in place of
+esbuild/rollup, which is part of why the dependency tree shrank substantially.
+
+---
+
+## Self-hosted fonts (`astro:fonts`)
+
+Fonts are now self-hosted through Astro's built-in `astro:fonts`, replacing the
+previous broken manual `/fonts/*.woff2` references. `astro.config.mjs` declares
+**9 Google font families**, each exposing a CSS variable consumed in
+`src/styles/variables.css`:
+
+| Family        | CSS variable          | Weights |
+|---------------|-----------------------|---------|
+| Outfit        | `--font-outfit`       | `100 900` |
+| Open Sans     | `--font-open-sans`    | `300 800` |
+| Inter         | `--font-inter`        | `100 900` |
+| Rajdhani      | `--font-rajdhani`     | `300, 400, 500, 600, 700` (non-variable) |
+| Space Grotesk | `--font-space-grotesk`| `300 700` |
+| DM Sans       | `--font-dm-sans`      | `100 1000` |
+| Sora          | `--font-sora`         | `100 800` |
+| Nunito        | `--font-nunito`       | `200 1000` |
+| Quicksand     | `--font-quicksand`    | `300 700` |
+
+All families use the `latin` subset and a `sans-serif` fallback. In
+`BaseLayout.astro`, only the above-the-fold corporate fonts (Outfit, Open Sans)
+are `preload`ed; the theme fonts load on demand with `font-display: swap`.
+
+---
+
+## Netlify Forms contact integration
+
+The contact form is wired to Netlify Forms:
+
+- **`ContactForm.svelte`** is a hydrated island (`client:visible`) with the real,
+  validated form. It POSTs an `application/x-www-form-urlencoded` payload to `/`
+  via `fetch`, then shows a success/error status.
+- Because Netlify's build bot registers forms by parsing **static** HTML at
+  deploy time — and the visible form is client-rendered — `index.astro` includes
+  a **hidden plain-HTML detection form** with matching field names and
+  `data-netlify="true"`. This is what registers the `contact` form with Netlify.
+- A **`bot-field` honeypot** (`netlify-honeypot="bot-field"`) is present on both
+  forms; it is visually removed via CSS but still submitted, silently rejecting
+  naive bots.
+- The island's `form-name` (`contact`) matches the detection form so submissions
+  are attributed correctly.
+
+---
+
+## Security hardening
+
+- Content Security Policy and security response headers.
+- `.dockerignore` added.
+- Service worker (`public/service-worker.js`) registered from `BaseLayout.astro`
+  for PWA/offline support.
+
+## Performance
+
+Measured results after the overhaul:
+
+- Lighthouse **100 desktop / 99 mobile**.
+- LCP ~**0.5s**, CLS **0**, TBT **0**.
+- The hero renders immediately (no hydration gate on above-the-fold content).
+- A `<noscript>` style block reveals all scroll-animated content
+  (`.observe-fade`, `.observe-slide-up`, `.observe-scale`) so nothing is ever
+  permanently hidden when JavaScript is unavailable — the reveal animation is a
+  progressive enhancement.
+
+## Dependency health
+
+- `npm audit`: **19 → 0** vulnerabilities.
+- Dependency tree shrank substantially (Rolldown replaces esbuild/rollup;
+  `astro-compress` removed).
+- Runtime dependencies are now just `astro`, `@astrojs/svelte`, and `svelte`;
+  dev dependencies are `sharp`, `terser`, and `typescript`.
+
+---
+
+## Client directives reference
+
+- `client:load` — hydrate immediately (critical interactive elements:
+  `ScrollProgress`, `ThemeTransition`, `BackToTop`, `NavigationMenu`).
+- `client:visible` — hydrate when the island scrolls into view
+  (`ParticleSystem`, `ContactForm`).
+- `client:idle` — hydrate when the browser is idle (available; not currently
+  used).
+
+## Build commands
 
 ```bash
 # Development
@@ -327,27 +243,27 @@ npm run build
 # Preview production build
 npm run preview
 
+# Sync Astro types (astro:fonts, content, etc.)
+npm run sync
+
 # Optimize images
 npm run optimize-images
 ```
 
 ## Deployment
 
-After `npm run build`, the `dist/` folder contains the static site ready for deployment.
+`npm run build` emits the static site to `dist/`, which is deployed to Netlify.
+Node 22 is pinned in both the `Dockerfile` and `netlify.toml`.
 
-## Next Steps
+## Styles
 
-1. Create all Astro components listed above
-2. Create all Svelte components listed above
-3. Implement image optimization pipeline
-4. Test performance with Lighthouse
-5. Update README.md with new stack information
-6. Commit and push changes
+The modular CSS system in `src/styles/` is unchanged in structure and imported
+by `BaseLayout.astro`:
 
-## Notes
-
-- The existing CSS system is fully compatible and has been enhanced
-- Variable fonts reduce font loading from ~200KB to ~80KB
-- AVIF images are ~50% smaller than WebP
-- Service worker enables offline support
-- Astro pre-renders everything to static HTML for maximum performance
+- `reset.css`
+- `variables.css` (consumes the `astro:fonts` CSS variables)
+- `base.css`
+- `themes.css`
+- `transitions.css`
+- `utilities.css`
+- `responsive.css`

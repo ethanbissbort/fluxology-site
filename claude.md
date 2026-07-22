@@ -2,26 +2,29 @@
 
 **Project**: Fluxology Inc. Website
 **Type**: Single-page scrollable corporate website
-**Version**: 1.0.0
-**Last Updated**: November 2025
+**Stack**: Astro 7 (static) + Svelte 5 islands + TypeScript
+**Version**: 2.0.0
+**Last Updated**: July 2026
 
-This document provides comprehensive technical documentation for AI assistants and developers working on the Fluxology website.
+This document is the technical reference for AI assistants and developers working on the Fluxology website. Every file path, component name, and API below is verified against the current codebase. When you change the architecture, update this file to match.
 
 ---
 
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
-2. [Architecture Decisions](#architecture-decisions)
-3. [File Structure & Organization](#file-structure--organization)
-4. [Implementation Details](#implementation-details)
-5. [Performance Optimizations](#performance-optimizations)
-6. [Theme System](#theme-system)
-7. [Animation System](#animation-system)
-8. [Common Modification Patterns](#common-modification-patterns)
-9. [Testing Strategy](#testing-strategy)
-10. [Future Enhancements](#future-enhancements)
-11. [Troubleshooting Guide](#troubleshooting-guide)
+2. [Architecture](#architecture)
+3. [Directory Layout](#directory-layout)
+4. [Components](#components)
+5. [Styling & Theming](#styling--theming)
+6. [Fonts](#fonts)
+7. [Contact Form](#contact-form)
+8. [Service Worker / PWA](#service-worker--pwa)
+9. [Security](#security)
+10. [Performance](#performance)
+11. [Build & Deploy](#build--deploy)
+12. [Development Workflow](#development-workflow)
+13. [Common Modifications](#common-modifications)
 
 ---
 
@@ -29,1495 +32,339 @@ This document provides comprehensive technical documentation for AI assistants a
 
 ### Business Context
 
-Fluxology Inc. is a Canadian Controlled Private Corporation (CCPC) operating four distinct DBAs (Doing Business As):
+Fluxology Inc. is a Canadian Controlled Private Corporation (CCPC) operating four distinct DBAs (Doing Business As), each rendered as its own themed section on a single scrollable page:
 
-1. **Fluxology Fabrication & Welding** (NAICS 332710)
-2. **Fluxology 3D Lab** (NAICS 541990)
-3. **Fluxology Greenhouse** (NAICS 111419)
-4. **Fluxology Orchard & Food Forest** (NAICS 111330)
+1. **Fluxology Fabrication & Welding** — NAICS 332710 (Machine Shops) — `industrial` theme
+2. **Fluxology 3D Lab** — NAICS 541990 (Professional/Scientific/Technical Services) — `tech` theme
+3. **Fluxology Greenhouse** — NAICS 111419 (Food Crops Grown Under Cover) — `natural` theme
+4. **Fluxology Orchard & Food Forest** — NAICS 111330 (Noncitrus Fruit & Tree Nut Farming) — `natural` theme
 
-### Design Requirements
+The Hero, About, and Contact sections use the `corporate` theme.
 
-- **Single-page scrollable layout** with smooth theme transitions
-- **Distinct visual themes** for each business division
-- **Performance-first approach** (60fps target)
-- **Accessibility compliance** (WCAG AA minimum)
-- **Mobile-first responsive design**
-- **No heavy frameworks** (vanilla JavaScript)
+### Design Goals
 
-### Key Constraints
-
-- Bundle size under 100KB (gzipped)
-- Support modern browsers (latest 2 versions)
-- Graceful degradation for older browsers
-- Respect user preferences (reduced motion, high contrast)
+- Single-page scrollable layout with smooth per-section theme transitions
+- Distinct visual identity (colors + fonts) per business division
+- Performance-first: static HTML, minimal JS shipped only where interactivity is needed
+- Accessibility (skip link, ARIA, `prefers-reduced-motion`, `<noscript>` reveal fallback)
+- Mobile-first responsive design
+- Lighthouse 100 across categories (see [Performance](#performance))
 
 ---
 
-## Architecture Decisions
+## Architecture
 
-### Why Vanilla JavaScript?
+### Astro + Svelte Islands
 
-**Decision**: Use vanilla JavaScript ES6+ modules instead of React, Vue, or Angular.
+The site is a static Astro app (`output: 'static'`). Astro renders all markup to HTML at build time. Interactivity is added through **Svelte 5 islands** — individual components hydrated on the client via Astro's `client:*` directives — rather than shipping a full SPA. Everything that can be static, is static.
 
-**Rationale**:
-- **Performance**: No framework overhead (~40-100KB saved)
-- **Control**: Direct DOM manipulation for 60fps animations
-- **Simplicity**: Easier to maintain for a single-page site
-- **Load time**: Faster initial page load
-- **Learning curve**: Easier for junior developers to understand
+- **Static Astro components** (`.astro`) render to plain HTML with zero client JS: `Navigation`, `Hero`, `About`, `DBASection`, `Footer`.
+- **Svelte islands** (`.svelte`) ship JS and hydrate in the browser: `ScrollProgress`, `ThemeTransition`, `BackToTop`, `NavigationMenu`, `ParticleSystem`, `ContactForm`.
 
-**Trade-offs**:
-- More boilerplate code for state management
-- Manual DOM updates (no virtual DOM)
-- More careful memory management required
+The single page is `src/pages/index.astro`. It wraps content in `src/layouts/BaseLayout.astro` and composes the components. The four DBA sections are data-driven: a `dbaSections` array in `index.astro` frontmatter is mapped over `<DBASection>`.
 
-### Why CSS Custom Properties?
+### Hydration Directives
 
-**Decision**: Use CSS custom properties (CSS variables) for theming instead of CSS-in-JS or preprocessor variables.
+Directives are assigned per component in `index.astro`:
 
-**Rationale**:
-- **Runtime updates**: Can be changed dynamically with JavaScript
-- **Performance**: No JavaScript execution needed for initial paint
-- **Smooth transitions**: Native CSS transitions between theme changes
-- **Maintainability**: Single source of truth in `variables.css`
-- **Browser support**: Excellent (all modern browsers)
+| Component | Directive | Rationale |
+|-----------|-----------|-----------|
+| `ScrollProgress` | `client:load` | Needs to track scroll immediately |
+| `ThemeTransition` | `client:load` | Drives theme + reveal animations from first paint |
+| `BackToTop` | `client:load` | Listens for scroll from the start |
+| `NavigationMenu` | `client:load` | Wires up the nav rendered by the static `Navigation` component |
+| `ParticleSystem` | `client:visible` | Decorative; hydrate only when its section scrolls into view |
+| `ContactForm` | `client:visible` | Below the fold; defer hydration until visible |
 
-**Implementation**:
-```css
-/* variables.css defines all theme colors */
---corporate-accent-blue: #3A86FF;
+### Svelte 5 Runes vs. Legacy Mode
 
-/* themes.css maps them to current theme */
-[data-theme="corporate"] {
-  --current-accent-primary: var(--corporate-accent-blue);
-}
+Svelte 5 is used. Components fall into two styles:
 
-/* base.css uses current theme */
-.cta-button {
-  background: var(--current-accent-primary);
-}
-```
+- **Runes mode** (`$state`, `$props`): `ContactForm`, `ParticleSystem`, `BackToTop`, `ScrollProgress`. These hold reactive UI state.
+- **Legacy / lifecycle-only** (`onMount` + imperative DOM, no runes): `NavigationMenu` and `ThemeTransition`. These render no visual output of their own; they attach listeners and observers to DOM produced by the static Astro components.
 
-### Why Intersection Observer?
+`svelte.config.js` enables `vitePreprocess()` for TypeScript/PostCSS inside `.svelte` files.
 
-**Decision**: Use Intersection Observer API instead of scroll event listeners for section detection.
+### Theme + Reveal System (`ThemeTransition.svelte`)
 
-**Rationale**:
-- **Performance**: Runs on separate thread (doesn't block main thread)
-- **Efficiency**: No need for getBoundingClientRect() calculations
-- **Battery life**: Better for mobile devices
-- **Accuracy**: Built-in threshold detection
-- **Standard**: Well-supported API (96%+ browsers)
+This legacy-mode island is the heart of the scroll experience. On mount it:
 
-**Implementation Pattern**:
-```javascript
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      // Trigger theme change
-      updateTheme(entry.target.dataset.theme);
-    }
-  });
-}, {
-  rootMargin: '-20% 0px -20% 0px', // Trigger in middle 60% of viewport
-  threshold: 0
-});
-```
+1. Selects every `[data-theme]` section and attaches a single `IntersectionObserver` (`rootMargin: '-20% 0px -20% 0px'`, `threshold: 0`) — a section is "active" when it occupies the middle 60% of the viewport.
+2. When a section intersects, it:
+   - Calls `applyTheme(theme)` — writes the section's palette/fonts to `--current-*` CSS custom properties on `:root` (an in-component `themes` object mirrors the CSS values). CSS transitions animate the color change.
+   - Calls `updateActiveNavLink(sectionId)` — toggles `.active` / `aria-current` on the matching `.nav-link`.
+   - Adds `.observed` to that section's `.observe-fade` / `.observe-slide-up` / `.observe-scale` elements, triggering their reveal animations (defined in `transitions.css`).
+3. Separately, a throttled scroll handler toggles `.scrolled` on `#mainNav` past 100px.
 
-### Why Modular JavaScript?
+**Reveal-on-scroll** works purely through CSS: `.observe-*` elements start at `opacity: 0` (and a transform), and gain `.observed` to animate to their resting state.
 
-**Decision**: Split JavaScript into separate ES6 modules rather than one large file.
+**LCP exemption**: the Hero's above-the-fold content is *not* wrapped in `.observe-*` classes, so it paints immediately without waiting for JS hydration.
 
-**Rationale**:
-- **Maintainability**: Each module has single responsibility
-- **Testability**: Easier to unit test individual modules
-- **Code organization**: Clear separation of concerns
-- **Debugging**: Easier to locate and fix bugs
-- **Reusability**: Modules can be reused in future projects
-
-**Module Breakdown**:
-- `main.js` - Application initialization and lifecycle
-- `scroll-controller.js` - All scroll-related behavior
-- `theme-manager.js` - Theme switching logic
-- `animations.js` - Particle systems and effects
-- `form-handler.js` - Form validation and submission
+**No-JS fallback**: `BaseLayout.astro` includes a `<noscript>` block that forces all `.observe-*` elements to `opacity: 1; transform: none`, so content is never permanently hidden when JavaScript is unavailable.
 
 ---
 
-## File Structure & Organization
-
-### Directory Layout
+## Directory Layout
 
 ```
 fluxology-site/
-├── src/                        # Source files
-│   ├── index.html              # Single HTML file (semantic structure)
-│   ├── styles/                 # All stylesheets (organized by concern)
-│   │   ├── reset.css           # Modern CSS reset (minimal)
-│   │   ├── variables.css       # Design tokens (colors, spacing, typography)
-│   │   ├── base.css            # Base styles, typography, layout primitives
-│   │   ├── themes.css          # Theme-specific overrides
-│   │   ├── transitions.css     # Animations and transition definitions
-│   │   └── responsive.css      # Media queries (mobile-first)
-│   ├── scripts/                # JavaScript modules
-│   │   ├── main.js             # Entry point and app initialization
-│   │   ├── scroll-controller.js # Scroll behavior management
-│   │   ├── theme-manager.js    # Theme transition logic
-│   │   ├── animations.js       # Particle systems and animations
-│   │   └── form-handler.js     # Contact form validation
-│   └── assets/                 # Static assets
-│       ├── images/             # Image files (to be added)
-│       └── icons/              # Icon files (to be added)
-├── README.md                   # User-facing documentation
-├── claude.md                   # This file - AI/developer documentation
-└── .gitignore                  # Git ignore rules
+├── astro.config.mjs            # Astro config: svelte integration, fonts, vite/terser
+├── svelte.config.js            # Svelte preprocess config
+├── tsconfig.json               # Extends astro/tsconfigs/strict, svelte JSX
+├── netlify.toml                # Primary deploy: build + security headers
+├── Dockerfile                  # Alternative deploy: node builder -> Apache
+├── package.json                # v2.0.0, Node >= 22.12
+├── DOCKER-DEPLOYMENT.md         # Docker/Apache deployment guide
+├── public/                     # Copied verbatim into dist/
+│   ├── favicon.svg             # SVG favicon (no favicon.ico)
+│   ├── service-worker.js       # PWA offline caching
+│   └── fonts/README.md         # Explains fonts are self-hosted by astro:fonts (no committed woff2)
+├── scripts/
+│   └── optimize-images.js      # Sharp-based image optimizer (npm run optimize-images)
+└── src/
+    ├── pages/
+    │   └── index.astro         # The single page; contains the dbaSections data array
+    ├── layouts/
+    │   └── BaseLayout.astro    # <head>, global CSS imports, <Font> tags, SW registration
+    ├── components/
+    │   ├── Navigation.astro     # Static nav bar markup (+ skip link)
+    │   ├── Hero.astro           # Static hero (LCP region)
+    │   ├── About.astro          # Static about section
+    │   ├── DBASection.astro     # Static reusable DBA section (props-driven)
+    │   ├── Footer.astro         # Static footer
+    │   ├── ScrollProgress.svelte    # Island: top scroll progress bar
+    │   ├── ThemeTransition.svelte   # Island: IntersectionObserver theme + reveal driver
+    │   ├── BackToTop.svelte         # Island: back-to-top button
+    │   ├── NavigationMenu.svelte    # Island: mobile menu toggle + smooth scroll
+    │   ├── ParticleSystem.svelte    # Island: per-theme decorative particles
+    │   └── ContactForm.svelte       # Island: validated Netlify Forms contact form
+    └── styles/                  # 7 global stylesheets (imported by BaseLayout)
+        ├── reset.css
+        ├── variables.css        # Design tokens (colors, type, spacing, fonts, --current-*)
+        ├── base.css
+        ├── themes.css           # [data-theme] + section-id theme mappings
+        ├── transitions.css      # Animations, keyframes, .observe-* reveal classes
+        ├── utilities.css        # Perf/containment utility classes
+        └── responsive.css       # Mobile-first media queries
 ```
 
-### CSS Organization Strategy
-
-**Cascading order** (specificity increases):
-
-1. **reset.css** - Remove browser defaults
-2. **variables.css** - Define design tokens
-3. **base.css** - Base styles that apply everywhere
-4. **themes.css** - Theme-specific overrides
-5. **transitions.css** - Animation definitions
-6. **responsive.css** - Media query adjustments
-
-**Why this order?**
-- Later files can override earlier ones
-- Specificity increases naturally
-- Easy to find where styles are defined
-- Follows "progressive enhancement" principle
-
-### JavaScript Module Dependencies
-
-```
-main.js
-├── scroll-controller.js
-│   └── (no dependencies)
-├── theme-manager.js
-│   └── (listens to scroll-controller events)
-├── animations.js
-│   └── (listens to theme-manager events)
-└── form-handler.js
-    └── (no dependencies)
-```
-
-**Communication Pattern**: Event-driven architecture
-- Modules communicate via custom events
-- Loose coupling between modules
-- Easy to add/remove modules
+> The previous vanilla implementation (`src/index.html`, `src/scripts/*.js`) no longer exists. There is no `main.js`, `scroll-controller.js`, `theme-manager.js`, `animations.js`, or `form-handler.js` — that behavior now lives in the Svelte islands above.
 
 ---
 
-## Implementation Details
+## Components
 
-### 1. Scroll Controller
+### Static Astro components
 
-**File**: `src/scripts/scroll-controller.js`
+- **`Navigation.astro`** — Renders the fixed nav bar: logo, hamburger `#navToggle`, and `#navLinks` list (Home / About / Fabrication / 3D Lab / Greenhouse / Orchard / Contact). Includes the skip-to-content link. Ships no JS; behavior is added by `NavigationMenu.svelte` and `ThemeTransition.svelte`, which query these elements by id/class.
+- **`Hero.astro`** — Above-the-fold hero (`#hero`, `corporate` theme). Renders immediately (no `.observe-*` gating) because it is the LCP region.
+- **`About.astro`** — `#about` (`corporate`). Uses `.observe-fade` / `.observe-slide-up` for reveal.
+- **`DBASection.astro`** — Reusable, props-driven section (`id`, `theme`, `name`, `naics`, `description`, `services[]`, `ctaText`). Renders the header, description, a services grid, a showcase placeholder, and a CTA button, plus a `<slot name="particles">` filled by `ParticleSystem`. Applies CSS containment (`content-visibility: auto; contain: layout style paint`) via scoped `<style>`.
+- **`Footer.astro`** — Site footer with division/company links and a `#currentYear` span populated by an inline script in `BaseLayout`.
 
-**Responsibilities**:
-- Monitor scroll position
-- Update scroll progress bar
-- Trigger theme changes
-- Manage parallax effects
-- Handle navigation state
-- Trigger scroll-based animations
+### Svelte islands
 
-**Key Methods**:
-
-```javascript
-setupIntersectionObserver() {
-  // Observes sections entering viewport
-  // Triggers theme changes at 20% from top/bottom
-}
-
-handleScroll() {
-  // Called via requestAnimationFrame (60fps max)
-  // Updates: progress bar, nav style, parallax
-}
-
-updateParallax() {
-  // Calculates parallax offset for each layer
-  // Only updates elements in viewport (performance)
-}
-```
-
-**Performance Considerations**:
-- Uses `requestAnimationFrame` to throttle scroll events to 60fps
-- Only updates parallax for visible sections
-- Unobserves elements after animation triggers (memory optimization)
-
-### 2. Theme Manager
-
-**File**: `src/scripts/theme-manager.js`
-
-**Responsibilities**:
-- Manage theme definitions
-- Apply theme changes
-- Transition between themes smoothly
-
-**Theme Definition Structure**:
-
-```javascript
-themes = {
-  'corporate': {
-    bgPrimary: '#1B3A4B',        // Background colors
-    bgSecondary: '#2E5266',
-    textPrimary: '#FFFFFF',       // Text colors
-    textSecondary: '#E9ECEF',
-    accentPrimary: '#3A86FF',     // Accent colors
-    accentSecondary: '#A8DADC',
-    fontHeading: "'Outfit', sans-serif",  // Typography
-    fontBody: "'Open Sans', sans-serif"
-  }
-  // ... other themes
-}
-```
-
-**How Theme Transitions Work**:
-
-1. Scroll controller detects section in viewport
-2. Fires `themeChange` event with theme name
-3. Theme manager receives event
-4. Updates CSS custom properties
-5. CSS transitions handle smooth color changes (800ms)
-
-**Why this approach?**:
-- Separation of concerns (scroll ≠ theme)
-- Theme manager can be used independently
-- Easy to add new themes
-- Centralized theme definitions
-
-### 3. Animation Controller
-
-**File**: `src/scripts/animations.js`
-
-**Responsibilities**:
-- Create particle systems
-- Manage custom cursor (desktop)
-- Handle reduced motion preferences
-
-**Particle System Types**:
-
-1. **Corporate Particles** (Hero, About, Contact)
-   - Floating gentle particles
-   - Blue accent color
-   - Slow movement
-
-2. **Industrial Sparks** (Fabrication)
-   - Falling spark particles
-   - Orange/red colors
-   - Faster movement
-
-3. **Tech Particles** (3D Lab)
-   - Digital pulsing particles
-   - Cyan/magenta colors
-   - Grid-like patterns
-
-4. **Natural Particles** (Greenhouse, Orchard)
-   - Floating leaf shapes
-   - Green/brown colors
-   - Organic movement
-
-**Particle Creation Pattern**:
-
-```javascript
-createParticles(containerId, count) {
-  const container = document.getElementById(containerId);
-
-  for (let i = 0; i < count; i++) {
-    const particle = document.createElement('div');
-    particle.className = 'particle';
-
-    // Random properties
-    const size = Math.random() * 4 + 2;
-    const duration = Math.random() * 4 + 4;
-    const delay = Math.random() * 5;
-
-    // CSS custom properties for animation
-    particle.style.cssText = `
-      width: ${size}px;
-      height: ${size}px;
-      --duration: ${duration}s;
-      --delay: ${delay}s;
-    `;
-
-    container.appendChild(particle);
-  }
-}
-```
-
-**Why CSS animations over JavaScript?**:
-- Better performance (GPU accelerated)
-- Runs on compositor thread
-- Respects prefers-reduced-motion automatically
-- Easier to maintain
-
-**Mobile Optimization**:
-```javascript
-const count = this.isMobile ? 8 : 15; // Fewer particles on mobile
-```
-
-### 4. Form Handler
-
-**File**: `src/scripts/form-handler.js`
-
-**Responsibilities**:
-- Real-time form validation
-- Error message display
-- Form submission handling
-- Loading state management
-
-**Validation Strategy**:
-
-```javascript
-validators = {
-  fullName: (value) => {
-    if (!value || value.trim().length < 2) {
-      return { valid: false, message: 'Please enter your full name' };
-    }
-    return { valid: true };
-  },
-  email: (value) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) {
-      return { valid: false, message: 'Please enter a valid email' };
-    }
-    return { valid: true };
-  }
-  // ... other validators
-}
-```
-
-**Validation Timing**:
-- **On blur**: Validate field when user leaves it
-- **On input**: Clear errors as user types
-- **On submit**: Validate all fields
-
-**Accessibility Features**:
-- `aria-invalid` attribute on invalid fields
-- `role="alert"` on error messages
-- Focus management after submission
+- **`ScrollProgress.svelte`** (runes) — Fixed top progress bar. `$state` `progress`; a `requestAnimationFrame`-throttled passive scroll listener updates width. Exposes `role="progressbar"` with live `aria-valuenow`.
+- **`ThemeTransition.svelte`** (legacy) — See [Theme + Reveal System](#theme--reveal-system-themetransitionsvelte). No visual output.
+- **`BackToTop.svelte`** (runes) — Fixed button; `$state` `visible` becomes true past 500px scroll (rAF-throttled). Smooth-scrolls to top on click.
+- **`NavigationMenu.svelte`** (legacy) — On mount, wires `#navToggle`/`#navLinks`: toggles the `.open` class and `aria-expanded`, closes on link click / outside click / Escape, and installs smooth-scroll for all `a[href^="#"]` with a 70px fixed-nav offset. No visual output.
+- **`ParticleSystem.svelte`** (runes) — Props: `theme`. Generates 15 particles (8 on mobile, `< 768px`) with randomized position/size/duration/delay into `$state`. Skips entirely when `prefers-reduced-motion: reduce`. Particle CSS class is chosen by theme: `spark-particle` (industrial), `digital-particle` (tech), `leaf-particle` (natural), else `particle` (corporate). Keyframes live in the component's scoped `<style>`.
+- **`ContactForm.svelte`** (runes) — See [Contact Form](#contact-form).
 
 ---
 
-## Performance Optimizations
+## Styling & Theming
 
-### Critical Rendering Path
+### CSS architecture
 
-**Strategy**: Inline critical CSS, defer non-critical resources
+Seven global stylesheets are imported (not `<link>`ed) in the frontmatter of `BaseLayout.astro`, in cascade order:
 
-**Current Implementation**:
-- All CSS loaded in `<head>` (small enough to be critical)
-- JavaScript loaded with `type="module"` (deferred automatically)
-- Google Fonts loaded with preconnect hints
-
-**Future Optimization**:
-```html
-<!-- Inline critical CSS -->
-<style>
-  /* Critical above-the-fold styles */
-</style>
-
-<!-- Defer non-critical CSS -->
-<link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+```
+reset.css → variables.css → base.css → themes.css → transitions.css → utilities.css → responsive.css
 ```
 
-### Animation Performance
+> Global CSS must be **imported** in a component/layout so Astro bundles, hashes, and injects it. `<link href="/src/styles/*.css">` does not work in a production build because `src/` is not served. Svelte components additionally use scoped `<style>` blocks for component-local styling.
 
-**Hardware Acceleration**:
-- Only animate `transform` and `opacity`
-- Never animate `left`, `top`, `width`, `height`
-- Use `translate3d()` to trigger GPU acceleration
+### Design tokens (`variables.css`)
 
-**Example**:
-```css
-/* ❌ BAD - Causes layout recalculation */
-.element {
-  animation: slide 1s;
-}
-@keyframes slide {
-  from { left: 0; }
-  to { left: 100px; }
-}
+`:root` defines the full design system:
 
-/* ✅ GOOD - GPU accelerated */
-.element {
-  animation: slide 1s;
-}
-@keyframes slide {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(100px, 0, 0); }
-}
-```
+- **Typography** — Major Third (1.250) scale, `--font-size-xs` … `--font-size-4xl`; line heights, letter spacing, font weights.
+- **Semantic font families** — e.g. `--font-corporate-heading: var(--font-outfit)`, `--font-industrial-heading: var(--font-rajdhani)`, mapping the astro-generated `--font-*` variables to design roles (see [Fonts](#fonts)).
+- **Four color palettes** — full color scales for `corporate`, `industrial`, `tech`, and `natural`.
+- **Spacing, layout, z-index, transitions/easings, radii, shadows.**
+- **`--current-*` variables** — the *active* theme's background/text/accent/font values. Default to the corporate palette; overwritten at runtime by `ThemeTransition.svelte` and by the static `[data-theme="…"]` rules.
 
-**Will-change Usage**:
-```css
-.service-card {
-  will-change: transform; /* Hint browser to optimize */
-}
+### Theme mapping (`themes.css`)
 
-.service-card:not(:hover) {
-  will-change: auto; /* Remove hint when not needed */
-}
-```
+Two mechanisms map a section to its theme:
 
-### Scroll Performance
+1. **`[data-theme="…"]` selectors** set the `--current-*` variables statically (so the correct theme applies before/without JS).
+2. **Section-id selectors** (`#fabrication`, `#\33 d-lab`, `#greenhouse`, `#orchard`, `#contact`) apply gradients, textures, and per-theme component styling (service-card borders, CTA variants, name/naics typography, etc.).
 
-**RequestAnimationFrame Throttling**:
+> `#3d-lab` is escaped as `#\33 d-lab` in CSS because an id selector cannot begin with a digit.
 
-```javascript
-setupScrollListener() {
-  window.addEventListener('scroll', () => {
-    this.lastScrollY = window.scrollY;
-
-    if (!this.ticking) {
-      window.requestAnimationFrame(() => {
-        this.handleScroll(); // Called max 60fps
-        this.ticking = false;
-      });
-      this.ticking = true;
-    }
-  }, { passive: true }); // Passive listener (performance)
-}
-```
-
-**Why `passive: true`?**:
-- Tells browser we won't call `preventDefault()`
-- Allows browser to scroll immediately
-- Improves scroll responsiveness
-
-### Memory Management
-
-**Observer Cleanup**:
-```javascript
-// Unobserve elements after animation triggers
-elementObserver.observe(element);
-
-// Later...
-if (entry.isIntersecting) {
-  element.classList.add('in-view');
-  elementObserver.unobserve(element); // Free memory
-}
-```
-
-**Destroy Methods**:
-```javascript
-destroy() {
-  // Clean up event listeners
-  // Remove DOM elements
-  // Cancel animation frames
-  // Unobserve all observers
-}
-```
-
-### Mobile Optimizations
-
-**Conditional Features**:
-```javascript
-const isMobile = window.innerWidth < 768;
-
-if (!isMobile) {
-  // Enable custom cursor (desktop only)
-  this.setupCustomCursor();
-}
-
-// Reduce particle count on mobile
-const particleCount = isMobile ? 8 : 15;
-```
-
-**Disable Parallax on Mobile**:
-```css
-@media (max-width: 767px) {
-  .parallax-bg {
-    transform: none !important; /* Disable for performance */
-  }
-}
-```
+At runtime `ThemeTransition.applyTheme()` additionally writes `--current-*` inline on `:root` as sections scroll by, letting fixed-position islands (progress bar, back-to-top) recolor to the active theme via `var(--current-accent-primary)`.
 
 ---
 
-## Theme System
+## Fonts
 
-### Color Palette Organization
+Fonts are **self-hosted and optimized by Astro's built-in `astro:fonts`** — there are no manually committed `.woff2` files and no Google Fonts `<link>` tags. `public/fonts/` contains only a README.
 
-**Four Theme Groups**:
+**Configuration** (`astro.config.mjs`): nine Google families are declared via `fontProviders.google()`, each exposing a CSS variable and subset to `latin`:
 
-1. **Corporate** (Hero, About, Contact)
-   - Navy/slate blues
-   - Clean, professional
-   - High contrast
+| Family | Variable | Used by (semantic role) |
+|--------|----------|-------------------------|
+| Outfit | `--font-outfit` | corporate heading |
+| Open Sans | `--font-open-sans` | corporate body |
+| Inter | `--font-inter` | industrial body |
+| Rajdhani | `--font-rajdhani` | industrial heading |
+| Space Grotesk | `--font-space-grotesk` | tech heading |
+| DM Sans | `--font-dm-sans` | tech body |
+| Sora | `--font-sora` | natural heading |
+| Nunito | `--font-nunito` | natural body |
+| Quicksand | `--font-quicksand` | natural accent |
 
-2. **Industrial** (Fabrication)
-   - Charcoal/gunmetal grays
-   - Orange/red accents (welding sparks)
-   - Sharp, angular
+**Rendering** (`BaseLayout.astro`): a `<Font cssVariable="…">` component is emitted for each family. Only the above-the-fold corporate fonts (`--font-outfit`, `--font-open-sans`) use `preload`; the rest load on demand. Astro generates optimized fallback metrics so CLS stays 0. `variables.css` maps each generated `--font-*` to a semantic role.
 
-3. **Tech** (3D Lab)
-   - Deep blacks
-   - Cyan/magenta/purple accents
-   - High-tech, digital
-
-4. **Natural** (Greenhouse, Orchard)
-   - Forest greens
-   - Terracotta/clay accents
-   - Organic, earthy
-
-### Typography System
-
-**Scale**: Major Third (1.250 ratio)
-```
-Base: 16px (1rem)
-xs:   12.8px  (0.8rem)
-sm:   16px    (1rem)
-md:   20px    (1.25rem)
-lg:   25px    (1.563rem)
-xl:   31.25px (1.953rem)
-2xl:  39px    (2.441rem)
-3xl:  48.8px  (3.052rem)
-4xl:  61px    (3.815rem)
-```
-
-**Font Pairing Strategy**:
-
-Each theme has 2-3 fonts:
-- **Heading font**: Distinctive, attention-grabbing
-- **Body font**: Readable, accessible
-- **Technical/Accent font**: Optional, for special elements
-
-**Example - Industrial Theme**:
-- Headings: Rajdhani (bold, industrial feel)
-- Body: Inter (clean, readable)
-- Technical: JetBrains Mono (for specs/codes)
-
-### Theme Transition Mechanics
-
-**CSS Transition Settings**:
-```css
-* {
-  transition-property: background-color, border-color, color;
-  transition-duration: 800ms;
-  transition-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1);
-}
-```
-
-**Why 800ms?**:
-- Long enough to be smooth
-- Short enough to not feel sluggish
-- Matches typical scroll speed between sections
-
-**Cubic-bezier easing**:
-- `cubic-bezier(0.645, 0.045, 0.355, 1)` = ease-in-out-cubic
-- Starts slow, speeds up, slows down
-- Feels natural and organic
+> `Poppins` (`--font-corporate-accent`), `JetBrains Mono` (`--font-industrial-technical`), and `Fira Code` (`--font-tech-technical`) are still *referenced* in `variables.css` but are **not** loaded via `astro:fonts`; they fall back to system `sans-serif`/`monospace` stacks.
 
 ---
 
-## Animation System
+## Contact Form
 
-### Particle Animation Architecture
+`ContactForm.svelte` (runes mode) handles the contact section and submits through **Netlify Forms**.
 
-**CSS-based animations** (not JavaScript):
-- Defined in `transitions.css`
-- GPU accelerated
-- Respects prefers-reduced-motion
-- Runs even if JavaScript fails
+- **State**: `formData` (`$state`) holds the fields (`companyName`, `fullName`, `email`, `phone`, `serviceInterest`, `message`); separate `$state` for `botField`, `errors`, `isSubmitting`, `submitStatus`, `submitMessage`.
+- **Validation**: client-side `validate()` requires `fullName` (≥2 chars), a valid `email`, a selected `serviceInterest`, and `message` (≥10 chars). Errors render inline with `role="alert"` and `aria-invalid`; typing into a field clears its error.
+- **Submission**: `handleSubmit` `preventDefault`s, validates, then AJAX-POSTs `application/x-www-form-urlencoded` data (including `form-name` and the honeypot `bot-field`) to `/`. Netlify intercepts the POST to `/`. Success resets the form and shows an in-page success message; failure shows an error with a fallback email address. No page navigation occurs.
+- **Spam protection**: the `bot-field` honeypot (declared via `netlify-honeypot="bot-field"`) is visually hidden but submitted; bots that fill it are silently rejected.
 
-**Keyframe Pattern**:
-```css
-@keyframes particle-float {
-  0% {
-    opacity: 0;
-    transform: translate3d(var(--start-x), var(--start-y), 0) scale(0);
-  }
-  10% { opacity: var(--opacity); }
-  90% { opacity: var(--opacity); }
-  100% {
-    opacity: 0;
-    transform: translate3d(var(--end-x), var(--end-y), 0) scale(1);
-  }
-}
-```
-
-**Why CSS custom properties in keyframes?**:
-- Each particle can have unique animation
-- Set via JavaScript: `particle.style.setProperty('--end-x', '100px')`
-- No need to generate unique keyframes
-
-### Parallax Implementation
-
-**Multi-layer parallax**:
-```html
-<section class="section">
-  <div class="background-layer">
-    <div class="parallax-bg" data-speed="0.5"></div>
-  </div>
-  <div class="content-layer">
-    <!-- Content -->
-  </div>
-  <div class="accent-layer">
-    <!-- Particles -->
-  </div>
-</section>
-```
-
-**Speed values**:
-- `data-speed="0.3"` - Slowest (far background)
-- `data-speed="0.5"` - Medium (mid background)
-- `data-speed="0.7"` - Fastest (near background)
-- Content layer: Speed 1.0 (moves with scroll)
-
-**Calculation**:
-```javascript
-const offset = (window.innerHeight - sectionTop) * speed;
-element.style.transform = `translate3d(0, ${offset}px, 0)`;
-```
-
-### Custom Cursor (Desktop)
-
-**Implementation**:
-```javascript
-// Smooth cursor following
-const animateCursor = () => {
-  const speed = 0.2;
-  cursorX += (mouseX - cursorX) * speed; // Ease towards mouse
-  cursorY += (mouseY - cursorY) * speed;
-
-  cursor.style.left = `${cursorX}px`;
-  cursor.style.top = `${cursorY}px`;
-
-  requestAnimationFrame(animateCursor);
-};
-```
-
-**Why easing?**:
-- Direct following feels robotic
-- Easing (20% per frame) creates smooth lag
-- More organic, pleasant feel
-
-**Hover effects**:
-```javascript
-interactiveElement.addEventListener('mouseenter', () => {
-  cursor.classList.add('hover'); // Expands cursor
-});
-```
+**Netlify form detection**: Netlify's build bot registers forms by parsing *static* HTML at deploy time, but the real form is a client-hydrated Svelte island invisible to the bot. To bridge this, `index.astro` includes a **hidden static `<form name="contact" data-netlify="true">`** whose field names match the Svelte form. This registers the "contact" form so the island's AJAX submissions are accepted.
 
 ---
 
-## Common Modification Patterns
+## Service Worker / PWA
 
-### Adding a New Business Section
+`public/service-worker.js` provides offline support and runtime caching. It is registered by an inline script in `BaseLayout.astro` on `window.load`.
 
-**Step-by-step process**:
+- **Cache names** are versioned (`fluxology-v2.1.0`, `fluxology-runtime-v2.1.0`); the `activate` handler deletes any cache not in the current set, so releases evict stale entries.
+- **Precache** is only the app shell: `ASSETS_TO_CACHE = ['/']`. Content-hashed CSS/JS and font `.woff2` files under `/_assets` are cached lazily at runtime — listing hashed names would go stale each build and a single 404 would fail `cache.addAll`.
+- **Fetch strategy**:
+  - Non-GET and cross-origin requests pass straight through (so the contact form POST is untouched).
+  - **Navigations / HTML**: network-first, caching successful basic responses, falling back to cache (then `/`) offline — so content and security fixes reach returning visitors.
+  - **Other same-origin assets**: cache-first, populating the runtime cache on miss (only `status 200`, `type: 'basic'`).
+- Includes stubbed `push` / `notificationclick` handlers for future notification support (referencing `/icon-192.png`, `/badge-72.png`, which are not yet shipped).
 
-1. **Add HTML section** in `index.html`:
-```html
-<section class="section dba-section" id="new-business" data-theme="new-theme">
-  <div class="background-layer">
-    <div class="parallax-bg" data-speed="0.4"></div>
-  </div>
-  <div class="content-layer">
-    <div class="container">
-      <div class="dba-header">
-        <h2 class="dba-name">New Business Name</h2>
-        <p class="dba-naics">NAICS CODE - Industry</p>
-      </div>
-      <!-- ... rest of structure ... -->
-    </div>
-  </div>
-  <div class="accent-layer" id="newBusinessParticles"></div>
-</section>
-```
-
-2. **Define theme colors** in `variables.css`:
-```css
-/* New Theme Colors */
---new-theme-primary: #HEXCODE;
---new-theme-secondary: #HEXCODE;
---new-theme-accent: #HEXCODE;
---font-new-theme-heading: 'Font Name', sans-serif;
---font-new-theme-body: 'Font Name', sans-serif;
-```
-
-3. **Add theme mapping** in `themes.css`:
-```css
-[data-theme="new-theme"] {
-  --current-bg-primary: var(--new-theme-primary);
-  --current-bg-secondary: var(--new-theme-secondary);
-  --current-text-primary: #FFFFFF;
-  --current-accent-primary: var(--new-theme-accent);
-  --current-font-heading: var(--font-new-theme-heading);
-  --current-font-body: var(--font-new-theme-body);
-}
-
-#new-business {
-  background: linear-gradient(135deg, var(--new-theme-primary) 0%, var(--new-theme-secondary) 100%);
-}
-```
-
-4. **Add to theme manager** in `theme-manager.js`:
-```javascript
-this.themes = {
-  // ... existing themes
-  'new-theme': {
-    bgPrimary: '#HEXCODE',
-    bgSecondary: '#HEXCODE',
-    textPrimary: '#FFFFFF',
-    accentPrimary: '#HEXCODE',
-    fontHeading: "'Font Name', sans-serif",
-    fontBody: "'Font Name', sans-serif"
-  }
-};
-```
-
-5. **Add navigation link** in `index.html`:
-```html
-<li><a href="#new-business" class="nav-link">New Business</a></li>
-```
-
-6. **Create particles** in `animations.js`:
-```javascript
-this.createNewThemeParticles('newBusinessParticles', 15);
-```
-
-### Changing Colors
-
-**Single color change**:
-```css
-/* In variables.css */
---corporate-accent-blue: #FF5733; /* Change to new color */
-```
-
-**All instances automatically update** due to CSS custom properties.
-
-**Theme-wide color change**:
-```css
-/* Change all corporate theme colors */
---corporate-primary-navy: #NEW_COLOR;
---corporate-primary-slate: #NEW_COLOR;
---corporate-accent-blue: #NEW_COLOR;
-```
-
-### Updating Typography
-
-**Change a single font**:
-```css
-/* In variables.css */
---font-corporate-heading: 'New Font', sans-serif;
-```
-
-**Don't forget to update Google Fonts import**:
-```html
-<!-- In index.html -->
-<link href="https://fonts.googleapis.com/css2?family=New+Font:wght@400;600;700&display=swap" rel="stylesheet">
-```
-
-### Adding Service Cards
-
-**Copy existing card structure**:
-```html
-<article class="service-card">
-  <div class="service-icon">🔧</div>
-  <h3 class="service-title">Service Name</h3>
-  <p class="service-description">
-    Service description text here.
-  </p>
-</article>
-```
-
-**Emoji icons vs. SVG**:
-- Current: Using emoji for simplicity
-- Future: Replace with SVG for better control
-- Location for SVGs: `src/assets/icons/`
-
-### Integrating Backend API
-
-**Update form-handler.js**:
-```javascript
-async submitForm(data) {
-  try {
-    const response = await fetch('https://your-api.com/contact', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Add auth headers if needed
-        'Authorization': 'Bearer YOUR_TOKEN'
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!response.ok) {
-      throw new Error('Submission failed');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Submission error:', error);
-    throw error;
-  }
-}
-```
-
-**Popular services**:
-
-**Formspree**:
-```javascript
-const response = await fetch('https://formspree.io/f/YOUR_FORM_ID', {
-  method: 'POST',
-  body: formData,
-  headers: { 'Accept': 'application/json' }
-});
-```
-
-**EmailJS**:
-```javascript
-emailjs.send('service_id', 'template_id', data, 'user_id')
-  .then(response => console.log('Success', response))
-  .catch(error => console.error('Error', error));
-```
+`netlify.toml` sends `Cache-Control: no-cache, no-store, must-revalidate` for `/service-worker.js` so it is always revalidated.
 
 ---
 
-## Testing Strategy
+## Security
 
-### Manual Testing Checklist
+Hardened HTTP headers are configured in **`netlify.toml`** (Netlify deploys) and mirrored in **`docker/apache/httpd.conf`** (Docker/Apache deploys):
 
-**Browser Testing**:
-- [ ] Chrome (latest)
-- [ ] Firefox (latest)
-- [ ] Safari (latest)
-- [ ] Edge (latest)
-- [ ] Mobile Safari (iOS 14+)
-- [ ] Chrome Mobile (Android 10+)
+- `Content-Security-Policy`: `default-src 'self'`; `script-src`/`style-src 'self' 'unsafe-inline'`; `img-src 'self' data: https:`; `font-src 'self' data:`; `connect-src 'self'`; `frame-ancestors 'self'`; **`base-uri 'self'`**; **`form-action 'self'`**; **`object-src 'none'`**.
+- `X-Frame-Options: SAMEORIGIN`
+- `X-Content-Type-Options: nosniff`
+- `X-XSS-Protection: 0` (the CSP supersedes the legacy auditor)
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: geolocation=(), microphone=(), camera=()`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains` (Netlify serves over HTTPS)
 
-**Device Testing**:
-- [ ] Desktop (1920x1080, 1440x900)
-- [ ] Tablet (768x1024, 1024x768)
-- [ ] Mobile (375x667, 414x896)
-- [ ] Large desktop (2560x1440)
-
-**Functionality Testing**:
-- [ ] Scroll progress bar updates
-- [ ] Theme transitions smooth
-- [ ] Parallax effects work
-- [ ] Particles animate
-- [ ] Navigation links work
-- [ ] Mobile menu toggles
-- [ ] Form validation works
-- [ ] Form submission works
-- [ ] Back to top button appears
-- [ ] Keyboard navigation works
-
-**Performance Testing**:
-- [ ] Lighthouse score > 90
-- [ ] 60fps scrolling
-- [ ] Time to Interactive < 3.5s
-- [ ] First Contentful Paint < 1.5s
-- [ ] No layout shifts (CLS < 0.1)
-
-**Accessibility Testing**:
-- [ ] Tab navigation works
-- [ ] Skip to content works
-- [ ] ARIA labels present
-- [ ] Color contrast passes
-- [ ] Screen reader test (NVDA/VoiceOver)
-- [ ] Keyboard shortcuts work
-- [ ] Focus states visible
-- [ ] Form errors announced
-
-**User Preference Testing**:
-- [ ] Prefers-reduced-motion disables animations
-- [ ] High contrast mode works
-- [ ] Dark mode preference respected
-- [ ] Large text scaling works
-
-### Automated Testing Setup
-
-**Lighthouse CI** (recommended):
-```bash
-npm install -g @lhci/cli
-
-# Run Lighthouse
-lhci autorun --config=lighthouserc.json
-```
-
-**Lighthouse config** (`lighthouserc.json`):
-```json
-{
-  "ci": {
-    "collect": {
-      "staticDistDir": "./src"
-    },
-    "assert": {
-      "assertions": {
-        "categories:performance": ["error", {"minScore": 0.9}],
-        "categories:accessibility": ["error", {"minScore": 0.9}],
-        "categories:best-practices": ["error", {"minScore": 0.9}],
-        "categories:seo": ["error", {"minScore": 0.9}]
-      }
-    }
-  }
-}
-```
-
-### Performance Monitoring
-
-**Web Vitals**:
-```javascript
-// Add to main.js for production monitoring
-import {getCLS, getFID, getFCP, getLCP, getTTFB} from 'web-vitals';
-
-function sendToAnalytics(metric) {
-  // Send to your analytics service
-  console.log(metric);
-}
-
-getCLS(sendToAnalytics);
-getFID(sendToAnalytics);
-getFCP(sendToAnalytics);
-getLCP(sendToAnalytics);
-getTTFB(sendToAnalytics);
-```
-
-### Cross-browser Testing Tools
-
-- **BrowserStack**: Test on real devices
-- **LambdaTest**: Automated cross-browser testing
-- **Can I Use**: Check feature support
+Content-hashed assets under `/_assets/*` are served `Cache-Control: public, max-age=31536000, immutable`.
 
 ---
 
-## Future Enhancements
+## Performance
 
-### Phase 2: E-Commerce Integration
+Measured targets for the current build:
 
-**Recommended approach**: Shopify Buy Button
+- **Lighthouse**: 100 desktop across Performance / Accessibility / Best Practices / SEO; 99 mobile performance.
+- **LCP**: ~0.5s desktop / ~2.1s mobile
+- **CLS**: 0 (font fallback metrics + no layout-shifting reveals)
+- **TBT**: 0
 
-**Why Shopify?**:
-- Easy integration
-- Handles payments/inventory
-- No backend needed
-- Secure checkout
+Contributing techniques:
 
-**Implementation locations** (marked in HTML):
-```html
-<!-- E-COMMERCE INTEGRATION: Product gallery would go here -->
-<div class="dba-showcase">
-  <!-- Add Shopify product cards here -->
-</div>
-```
-
-**Service card → Product card**:
-```html
-<article class="service-card product-card">
-  <img src="product.jpg" alt="Product name">
-  <h3 class="product-title">Product Name</h3>
-  <p class="product-price">$99.99</p>
-  <button class="add-to-cart" data-product-id="123">
-    Add to Cart
-  </button>
-</article>
-```
-
-### Phase 3: Content Management System
-
-**Recommended**: Headless CMS approach
-
-**Options**:
-- **Contentful**: Easy API, great docs
-- **Sanity**: Real-time collaboration
-- **Strapi**: Open source, self-hosted
-
-**Benefits**:
-- Non-technical users can update content
-- No code deployments for content changes
-- Preview before publishing
-
-**Implementation**:
-```javascript
-// Fetch content from CMS
-async function loadContent() {
-  const response = await fetch('https://cdn.contentful.com/spaces/...');
-  const data = await response.json();
-
-  // Populate sections with CMS content
-  populateSections(data);
-}
-```
-
-### Phase 4: Progressive Web App
-
-**Service worker** for offline support:
-```javascript
-// service-worker.js
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open('fluxology-v1').then((cache) => {
-      return cache.addAll([
-        '/',
-        '/styles/base.css',
-        '/scripts/main.js',
-        // ... other assets
-      ]);
-    })
-  );
-});
-```
-
-**Manifest file** (`manifest.json`):
-```json
-{
-  "name": "Fluxology Inc.",
-  "short_name": "Fluxology",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#1B3A4B",
-  "theme_color": "#3A86FF",
-  "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    }
-  ]
-}
-```
-
-### Phase 5: Analytics & Tracking
-
-**Google Analytics 4**:
-```html
-<!-- Add to <head> -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-XXXXXXXXXX');
-</script>
-```
-
-**Custom events**:
-```javascript
-// Track section views
-window.addEventListener('themeChange', (event) => {
-  gtag('event', 'section_view', {
-    'section_name': event.detail.theme
-  });
-});
-
-// Track form submissions
-gtag('event', 'form_submit', {
-  'form_name': 'contact_form'
-});
-```
-
-### Phase 6: Multi-language Support
-
-**i18n structure**:
-```javascript
-const translations = {
-  en: {
-    'hero.title': 'Innovation Across Industries',
-    'hero.description': 'A Canadian Controlled...'
-  },
-  fr: {
-    'hero.title': 'Innovation dans tous les secteurs',
-    'hero.description': 'Une société privée...'
-  }
-};
-
-function t(key, lang = 'en') {
-  return translations[lang][key] || key;
-}
-```
+- Static HTML with islands — client JS ships only for the six hydrated components, each hydrated at the cheapest safe moment (`client:visible` for below-the-fold/decorative ones).
+- Hero LCP region renders without hydration or reveal gating.
+- Fonts preloaded selectively with generated fallback metrics.
+- CSS containment (`content-visibility`, `contain`) on DBA sections and particle containers.
+- Scroll handlers are passive and `requestAnimationFrame`-throttled.
+- Particles reduced on mobile and disabled under `prefers-reduced-motion`.
+- Production JS minified by **terser** with `drop_console: true` and 2 passes; CSS minified by **lightningcss**; HTML compression via Astro's default `compressHTML: 'jsx'`. (The old `astro-compress` integration and manual `manualChunks`/`svelte/internal` config have been removed.)
 
 ---
 
-## Troubleshooting Guide
+## Build & Deploy
 
-### Common Issues & Solutions
+### Toolchain
 
-#### Issue: Theme transitions not smooth
+- **Astro 7.1.3**, **Svelte 5.56.7**, **@astrojs/svelte 9.0.1**, **TypeScript 5.7.2**.
+- Dev dependencies: `sharp` (image optimization), `terser` (JS minification), `typescript`.
+- **Node >= 22.12** (required by Astro 7).
+- Astro 7 builds on **Vite + Rolldown**; native toolchain binaries arrive via `optionalDependencies` (so `npm ci --ignore-scripts` is safe).
 
-**Symptoms**: Colors change instantly instead of smoothly
+### npm scripts
 
-**Diagnosis**:
-```javascript
-// Check if CSS custom properties are updating
-console.log(getComputedStyle(document.documentElement)
-  .getPropertyValue('--current-accent-primary'));
-```
+| Script | Command | Purpose |
+|--------|---------|---------|
+| `dev` | `astro dev` | Local dev server with HMR |
+| `build` | `astro build` | Static build to `dist/` |
+| `preview` | `astro preview` | Serve the built `dist/` locally |
+| `sync` | `astro sync` | Regenerate Astro type definitions |
+| `optimize-images` | `node scripts/optimize-images.js` | Sharp image optimization |
 
-**Solutions**:
-1. Verify transition timing in `transitions.css`
-2. Check theme definitions in `theme-manager.js`
-3. Ensure CSS custom properties are defined in `variables.css`
+`astro.config.mjs` sets `output: 'static'` and `build.assets: '_assets'` (custom asset directory instead of the default `_astro`).
 
-**Check**:
-```css
-/* Should be present in transitions.css */
-* {
-  transition-property: background-color, border-color, color;
-  transition-duration: 800ms;
-}
-```
+### Netlify (primary)
 
-#### Issue: Scroll performance is janky
+`netlify.toml`: `command = "npm run build"`, `publish = "dist"`, `NODE_VERSION = "22"`, plus the security/cache headers above. The build requires outbound access to Google Fonts (astro:fonts downloads at build time).
 
-**Symptoms**: Scrolling doesn't feel smooth, stutters
+### Docker + Apache (alternative)
 
-**Diagnosis**:
-```javascript
-// Check if too many elements being updated
-console.log(document.querySelectorAll('[data-speed]').length);
-```
-
-**Solutions**:
-1. Reduce number of particles on mobile
-2. Disable parallax on mobile
-3. Check for forced synchronous layouts
-4. Use Chrome DevTools Performance tab
-
-**Check**:
-```javascript
-// Should use requestAnimationFrame
-if (!this.ticking) {
-  window.requestAnimationFrame(() => {
-    this.handleScroll();
-    this.ticking = false;
-  });
-  this.ticking = true;
-}
-```
-
-#### Issue: Particles not appearing
-
-**Symptoms**: No floating particles in sections
-
-**Diagnosis**:
-```javascript
-// Check if prefers-reduced-motion is enabled
-console.log(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-```
-
-**Solutions**:
-1. Check if reduced motion is enabled (expected behavior)
-2. Verify particle containers exist in HTML
-3. Check console for JavaScript errors
-4. Verify animations.js is loaded
-
-**Check**:
-```javascript
-// In animations.js
-if (this.isReducedMotion) {
-  console.log('Reduced motion - particles disabled');
-  return;
-}
-```
-
-#### Issue: Form validation not working
-
-**Symptoms**: Form submits without validation
-
-**Diagnosis**:
-```javascript
-// Check if form handler initialized
-console.log(window.FluxologyApp.formHandler);
-```
-
-**Solutions**:
-1. Verify form has `id="contactForm"`
-2. Check that `novalidate` attribute is present
-3. Ensure form-handler.js is loaded
-4. Check console for errors
-
-**Check**:
-```html
-<!-- Form must have these attributes -->
-<form id="contactForm" novalidate>
-```
-
-#### Issue: Mobile menu not opening
-
-**Symptoms**: Hamburger button doesn't work
-
-**Diagnosis**:
-```javascript
-// Check if elements exist
-console.log(document.getElementById('navToggle'));
-console.log(document.getElementById('navLinks'));
-```
-
-**Solutions**:
-1. Verify IDs match in HTML and JavaScript
-2. Check if click event listener is attached
-3. Verify CSS classes in responsive.css
-4. Check JavaScript console for errors
-
-**Check**:
-```javascript
-// In main.js
-navToggle.addEventListener('click', () => {
-  console.log('Menu toggle clicked');
-  navLinks.classList.toggle('open');
-});
-```
-
-#### Issue: Fonts not loading
-
-**Symptoms**: Fallback fonts showing instead of Google Fonts
-
-**Diagnosis**:
-```javascript
-// Check if fonts loaded
-document.fonts.ready.then(() => {
-  console.log('Fonts loaded:', document.fonts.size);
-});
-```
-
-**Solutions**:
-1. Check internet connection
-2. Verify Google Fonts URL is correct
-3. Check font names match in CSS
-4. Check browser console for CORS errors
-
-**Check**:
-```html
-<!-- Verify this link is in <head> -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=..." rel="stylesheet">
-```
-
-### Debugging Tools
-
-**Chrome DevTools**:
-
-1. **Performance tab**:
-   - Record scroll performance
-   - Check for layout thrashing
-   - Verify 60fps
-
-2. **Coverage tab**:
-   - See unused CSS/JS
-   - Identify optimization opportunities
-
-3. **Lighthouse**:
-   - Generate performance report
-   - Get optimization suggestions
-
-4. **Accessibility tab**:
-   - Check ARIA attributes
-   - Verify color contrast
-   - Test keyboard navigation
-
-**Firefox DevTools**:
-
-1. **Accessibility Inspector**:
-   - Better than Chrome for a11y
-   - Shows role and state
-
-2. **Performance tab**:
-   - Frame rate monitor
-   - Paint flashing
-
-**Console Commands**:
-
-```javascript
-// Check current theme
-console.log(window.FluxologyApp.themeManager.getCurrentTheme());
-
-// Check scroll position
-console.log(window.FluxologyApp.scrollController.lastScrollY);
-
-// Force theme change
-window.dispatchEvent(new CustomEvent('themeChange', {
-  detail: { theme: 'industrial' }
-}));
-
-// Test form validation
-window.FluxologyApp.formHandler.validateForm();
-```
-
-### Performance Debugging
-
-**Check animation frame rate**:
-```javascript
-let lastTime = performance.now();
-let frames = 0;
-
-function checkFPS() {
-  const now = performance.now();
-  frames++;
-
-  if (now >= lastTime + 1000) {
-    const fps = Math.round((frames * 1000) / (now - lastTime));
-    console.log(`FPS: ${fps}`);
-    frames = 0;
-    lastTime = now;
-  }
-
-  requestAnimationFrame(checkFPS);
-}
-
-checkFPS();
-```
-
-**Expected**: 60fps (or close to it)
-
-**If lower**:
-- Check number of animated elements
-- Verify using transform/opacity only
-- Check for JavaScript blocking main thread
+Multi-stage `Dockerfile`: `node:22-alpine` builder runs `npm ci --ignore-scripts && npm run build`, then `httpd:2.4-alpine` serves `dist/` with `docker/apache/httpd.conf` + `docker/apache/vhost.conf` (including a health check). See **`DOCKER-DEPLOYMENT.md`** for full Docker instructions rather than duplicating them here.
 
 ---
 
-## Production Deployment Checklist
+## Development Workflow
 
-### Pre-deployment
+1. `npm install` (Node ≥ 22.12).
+2. `npm run dev` — edit components/styles with HMR.
+3. TypeScript is strict (`astro/tsconfigs/strict`); run `npm run sync` after adding content collections or when types drift.
+4. `npm run build && npm run preview` to validate the production output (minification, hashed assets, service worker) before deploying.
+5. Commit; Netlify builds on push. For Docker, `docker build` per `DOCKER-DEPLOYMENT.md`.
 
-- [ ] Remove console.log statements
-- [ ] Minify CSS and JavaScript
-- [ ] Optimize and compress images
-- [ ] Add real content (replace placeholders)
-- [ ] Test in all target browsers
-- [ ] Run Lighthouse audit
-- [ ] Check WCAG compliance
-- [ ] Test form submission
-- [ ] Verify all links work
-- [ ] Check mobile responsiveness
-- [ ] Test keyboard navigation
-- [ ] Review meta tags for SEO
-
-### Build Process
-
-**Manual minification**:
-```bash
-# CSS
-cat src/styles/*.css > dist/styles.all.css
-cleancss -o dist/styles.min.css dist/styles.all.css
-
-# JavaScript (if not using modules)
-uglifyjs src/scripts/*.js -c -m -o dist/scripts.min.js
-```
-
-**Image optimization**:
-```bash
-# WebP conversion
-for file in src/assets/images/*.jpg; do
-  cwebp -q 80 "$file" -o "${file%.jpg}.webp"
-done
-
-# Image compression
-imageoptim src/assets/images/*.{jpg,png}
-```
-
-### Server Configuration
-
-**Apache** (.htaccess):
-```apache
-# Enable compression
-<IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript
-</IfModule>
-
-# Enable caching
-<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType text/css "access plus 1 year"
-  ExpiresByType text/javascript "access plus 1 year"
-  ExpiresByType image/webp "access plus 1 year"
-</IfModule>
-
-# Force HTTPS
-RewriteEngine On
-RewriteCond %{HTTPS} off
-RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-```
-
-**Nginx**:
-```nginx
-# Enable gzip
-gzip on;
-gzip_types text/css text/javascript application/javascript;
-
-# Enable caching
-location ~* \.(css|js|webp|jpg|png)$ {
-  expires 1y;
-  add_header Cache-Control "public, immutable";
-}
-
-# Force HTTPS
-server {
-  listen 80;
-  return 301 https://$server_name$request_uri;
-}
-```
-
-### Post-deployment
-
-- [ ] Verify site loads correctly
-- [ ] Test in production environment
-- [ ] Check SSL certificate
-- [ ] Verify analytics tracking
-- [ ] Test form submissions
-- [ ] Check all external links
-- [ ] Monitor performance metrics
-- [ ] Set up uptime monitoring
-- [ ] Configure CDN (if using)
-- [ ] Submit sitemap to search engines
+Notes:
+- `drop_console: true` strips `console.*` from the production client bundle, so debug logging only appears in dev.
+- The service worker aggressively caches; bump the `CACHE_NAME` / `RUNTIME_CACHE` versions in `public/service-worker.js` when shipping changes that must reach returning visitors immediately.
 
 ---
 
-## Conclusion
+## Common Modifications
 
-This website is built with performance, accessibility, and maintainability as core principles. The architecture is designed to be:
+### Add or edit a DBA section
 
-- **Performant**: 60fps animations, optimized assets
-- **Accessible**: WCAG AA compliant, keyboard navigable
-- **Maintainable**: Modular code, clear separation of concerns
-- **Extensible**: Easy to add new sections, themes, features
-- **Future-proof**: Modern standards, progressive enhancement
+Edit the `dbaSections` array in `src/pages/index.astro` (add an object with `id`, `theme`, `name`, `naics`, `description`, `services[]`, `ctaText`). Then:
 
-### Key Principles
+1. Add a nav link in `Navigation.astro` and a footer link in `Footer.astro`.
+2. If introducing a **new theme**, add its palette to `variables.css`, a `[data-theme="…"]` block plus section-id styling to `themes.css`, and a matching entry in the `themes` object in `ThemeTransition.svelte`. Add a particle class in `ParticleSystem.svelte` if desired.
 
-1. **Progressive Enhancement**: Core functionality works without JavaScript
-2. **Mobile First**: Design for small screens, enhance for large
-3. **Performance Budget**: Keep bundle size under 100KB
-4. **Accessibility First**: Not an afterthought, built-in from start
-5. **Semantic HTML**: Use correct elements for meaning
-6. **CSS Custom Properties**: Single source of truth for design tokens
-7. **Modular JavaScript**: Single responsibility, loose coupling
-8. **Event-Driven**: Components communicate via events
+A `<ParticleSystem slot="particles" theme={dba.theme} client:visible />` is already wired for every mapped section.
 
-### When to Refactor
+### Change a color or font
 
-Consider refactoring when:
-- Adding more than 2 additional business sections (consider templating)
-- Form becomes complex (consider form library)
-- Need state management (consider lightweight state library)
-- Performance drops below 60fps (profile and optimize)
+- **Color**: edit the token in `variables.css`; all `var(...)` consumers update automatically.
+- **Font**: add/edit the entry in the `fonts` array in `astro.config.mjs`, add a matching `<Font cssVariable="…" />` in `BaseLayout.astro` (with `preload` only if above the fold), then reference it via a semantic `--font-*` variable in `variables.css`.
 
-### Getting Help
+### Adjust reveal behavior
 
-**Resources**:
-- MDN Web Docs: https://developer.mozilla.org
-- Web.dev: https://web.dev
-- CSS-Tricks: https://css-tricks.com
-- A11y Project: https://www.a11yproject.com
-
-**Questions?**
-- Check README.md for user-facing docs
-- Review code comments for implementation details
-- Use browser DevTools for debugging
-- Consult this document for architecture decisions
+Reveal is driven by `.observe-fade` / `.observe-slide-up` / `.observe-scale` classes (defined in `transitions.css`) plus the `.observed` toggle applied by `ThemeTransition.svelte`. Add these classes to any element to have it animate in as its section enters the viewport. Do **not** add them to LCP-critical hero content.
 
 ---
 
-**Document Version**: 1.0.0
-**Last Updated**: November 2025
-**Maintained By**: Development Team
-**Next Review**: When major features added
+**Document Version**: 2.0.0
+**Last Updated**: July 2026
+**Next Review**: When the component set, theme system, or deploy targets change.

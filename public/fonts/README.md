@@ -1,57 +1,26 @@
-# Variable Fonts Required
+# Fonts
 
-Place the following variable font files in this directory:
+Fonts are **no longer downloaded or committed manually**. They are self-hosted
+and optimized automatically by [`astro:fonts`](https://docs.astro.build/en/guides/fonts/).
 
-## Download Sources
+## How it works
 
-1. **Inter** (100-900)
-   - Download: https://fonts.google.com/specimen/Inter
-   - File: Inter-Variable.woff2
+- Families are declared in `astro.config.mjs` under `fonts:` (via
+  `fontProviders.google()`), each exposing a CSS variable (e.g. `--font-outfit`).
+- At build time Astro downloads the fonts from Google, subsets them (`latin`),
+  generates optimized fallback metrics (to prevent layout shift), and emits
+  content-hashed `.woff2` files under `dist/_assets/fonts/`.
+- `src/layouts/BaseLayout.astro` renders `<Font>` components that inject the
+  `@font-face` rules and preload the above-the-fold corporate fonts.
+- `src/styles/variables.css` maps the generated `--font-*` variables to the
+  design's semantic roles (e.g. `--font-corporate-heading: var(--font-outfit)`).
 
-2. **Outfit** (100-900)
-   - Download: https://fonts.google.com/specimen/Outfit
-   - File: Outfit-Variable.woff2
+## Adding or changing a font
 
-3. **Open Sans** (300-800)
-   - Download: https://fonts.google.com/specimen/Open+Sans
-   - File: OpenSans-Variable.woff2
+1. Add/edit an entry in the `fonts` array in `astro.config.mjs`.
+2. Add a matching `<Font cssVariable="--font-…" />` in `BaseLayout.astro`
+   (add `preload` only for above-the-fold fonts).
+3. Reference it via a semantic variable in `src/styles/variables.css`.
 
-4. **Rajdhani** (300-800)
-   - Download: https://fonts.google.com/specimen/Rajdhani
-   - File: Rajdhani-Variable.woff2
-
-5. **Space Grotesk** (300-700)
-   - Download: https://fonts.google.com/specimen/Space+Grotesk
-   - File: SpaceGrotesk-Variable.woff2
-
-6. **DM Sans** (100-1000)
-   - Download: https://fonts.google.com/specimen/DM+Sans
-   - File: DMSans-Variable.woff2
-
-7. **Sora** (100-800)
-   - Download: https://fonts.google.com/specimen/Sora
-   - File: Sora-Variable.woff2
-
-8. **Nunito** (200-1000)
-   - Download: https://fonts.google.com/specimen/Nunito
-   - File: Nunito-Variable.woff2
-
-9. **Quicksand** (300-700)
-   - Download: https://fonts.google.com/specimen/Quicksand
-   - File: Quicksand-Variable.woff2
-
-## Quick Download Script
-
-Use Google Webfonts Helper or download directly from Google Fonts and extract the woff2 files.
-
-Alternatively, use the Google Fonts API:
-```bash
-# Example for Inter
-curl -o Inter-Variable.woff2 "https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2"
-```
-
-Note: Font URLs change frequently. Best to use Google Fonts or webfonts helper to get the latest URLs.
-
-## Fallback
-
-For development, the site will use system fallback fonts if these files are missing.
+The build requires outbound access to Google Fonts. This directory intentionally
+contains no font files.

@@ -1,389 +1,297 @@
 # Fluxology Inc. Website
 
-A modern, high-performance single-page website showcasing Fluxology Inc.'s diverse business divisions with smooth theme transitions and immersive animations.
+A high-performance, single-page marketing website for Fluxology Inc., built with
+[Astro](https://astro.build/) and [Svelte](https://svelte.dev/). Static Astro
+components render the page structure, while interactive Svelte islands add
+themed particle systems, scroll progress, a mobile menu, and a Netlify-backed
+contact form.
 
 ## Overview
 
-Fluxology Inc. is a Canadian Controlled Private Corporation (CCPC) operating four distinct business lines:
+Fluxology Inc. is a Canadian Controlled Private Corporation (CCPC) operating
+four distinct business divisions:
 
-1. **Fluxology Fabrication & Welding** - Metalworking and fabrication services
-2. **Fluxology 3D Lab** - 3D printing and digital fabrication
-3. **Fluxology Greenhouse** - Specialty crop production
-4. **Fluxology Orchard & Food Forest** - Perennial food systems
+1. **Fluxology Fabrication & Welding** — Precision metalworking and custom
+   fabrication (NAICS 332710)
+2. **Fluxology 3D Lab** — 3D printing, scanning, and rapid prototyping
+   (NAICS 541990)
+3. **Fluxology Greenhouse** — Controlled-environment specialty crop production
+   (NAICS 111419)
+4. **Fluxology Orchard & Food Forest** — Regenerative perennial food systems
+   (NAICS 111330)
 
-This website features smooth scrolling, theme transitions, particle effects, and a fully responsive design optimized for performance.
+The site presents each division with its own visual theme, smooth scroll-driven
+transitions, and ambient particle animations.
 
-## Features
+## Tech Stack
 
-- **Smooth Theme Transitions**: Seamless color and typography transitions as you scroll between sections
-- **Particle Systems**: Themed ambient animations for each business division
-- **Parallax Effects**: Multi-layer parallax scrolling for depth
-- **Performance Optimized**: 60fps scrolling, lazy loading, optimized animations
-- **Fully Responsive**: Mobile-first design with breakpoints for all devices
-- **Accessible**: WCAG AA compliant, keyboard navigation, screen reader support
-- **Modern Stack**: Vanilla JavaScript ES6+, CSS Grid, Flexbox
+- **[Astro](https://astro.build/) 7** — static site generator
+  (`output: 'static'`), Vite + Rolldown build pipeline
+- **[Svelte](https://svelte.dev/) 5** — interactive islands via
+  [`@astrojs/svelte`](https://github.com/withastro/astro/tree/main/packages/integrations/svelte),
+  hydrated with `client:load` / `client:visible`
+- **TypeScript** — strict config (`astro/tsconfigs/strict`)
+- **[astro:fonts](https://docs.astro.build/en/guides/fonts/)** — self-hosted
+  Google Fonts with generated fallback metrics
+- **[Netlify Forms](https://docs.netlify.com/forms/setup/)** — serverless
+  contact form handling
+
+### Build toolchain
+
+- CSS is minified by **lightningcss** (Astro's default for the static build).
+- Client JavaScript is minified by **terser** with `drop_console` enabled and
+  two compress passes (configured in `astro.config.mjs` under `vite.build`).
+- HTML whitespace is handled by Astro's default `compressHTML: 'jsx'`.
+
+There is no separate manual minification step, no `astro-compress`, and no
+legacy `cleancss` / `uglifyjs` workflow.
+
+## Requirements
+
+- **Node.js `>= 22.12`** (see `engines` in `package.json`; Astro 7 requires it)
+- npm
+
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start the dev server (http://localhost:4321 by default)
+npm run dev
+
+# Type-check / generate Astro types
+npm run sync
+
+# Build the production site into ./dist
+npm run build
+
+# Preview the production build locally
+npm run preview
+
+# Optimize source images (uses sharp; scripts/optimize-images.js)
+npm run optimize-images
+```
+
+There is no "open `index.html` in a browser" or `python -m http.server`
+workflow — the site is a compiled Astro project and must be built or served
+through the Astro dev server.
 
 ## Project Structure
 
 ```
 fluxology-site/
+├── astro.config.mjs            # Astro config: Svelte integration, fonts, terser
+├── svelte.config.js            # Svelte preprocessing (vitePreprocess)
+├── tsconfig.json               # Strict TypeScript config
+├── netlify.toml                # Netlify build + security headers
+├── Dockerfile                  # Multi-stage build (Node → Apache)
+├── docker-compose.yml          # Local/self-hosted container orchestration
 ├── src/
-│   ├── index.html              # Main HTML file
-│   ├── styles/
-│   │   ├── reset.css           # CSS reset
-│   │   ├── variables.css       # CSS custom properties (colors, typography, spacing)
-│   │   ├── base.css            # Base styles and typography
-│   │   ├── themes.css          # Theme-specific styles for each DBA
-│   │   ├── transitions.css     # Animations and transitions
-│   │   └── responsive.css      # Media queries and responsive design
-│   ├── scripts/
-│   │   ├── main.js             # Application entry point
-│   │   ├── scroll-controller.js # Scroll behavior and Intersection Observer
-│   │   ├── theme-manager.js    # Theme transition logic
-│   │   ├── animations.js       # Particle systems and custom animations
-│   │   └── form-handler.js     # Contact form validation
-│   └── assets/
-│       ├── images/             # Image assets (add your images here)
-│       └── icons/              # Icon assets
-└── README.md                   # This file
+│   ├── pages/
+│   │   └── index.astro         # The single page; holds the dbaSections data array
+│   ├── layouts/
+│   │   └── BaseLayout.astro     # <head>, font preloads, global CSS imports, SW registration
+│   ├── components/
+│   │   ├── Navigation.astro     # Static nav bar
+│   │   ├── Hero.astro           # Above-the-fold hero
+│   │   ├── About.astro          # About section
+│   │   ├── DBASection.astro     # Reusable business-division section
+│   │   ├── Footer.astro         # Static footer
+│   │   ├── ContactForm.svelte   # Netlify contact form (runes)
+│   │   ├── ParticleSystem.svelte# Themed ambient particles (runes)
+│   │   ├── NavigationMenu.svelte# Mobile menu + smooth scroll (legacy mode)
+│   │   ├── BackToTop.svelte     # Back-to-top button (runes)
+│   │   ├── ScrollProgress.svelte# Scroll progress bar (runes)
+│   │   └── ThemeTransition.svelte# Section theme transitions (legacy mode)
+│   └── styles/
+│       ├── reset.css            # CSS reset
+│       ├── variables.css        # Custom properties: colors, fonts, spacing
+│       ├── base.css             # Base element styles
+│       ├── themes.css           # Per-division theme definitions
+│       ├── transitions.css      # Animations and transitions
+│       ├── utilities.css        # Utility classes
+│       └── responsive.css       # Media queries
+├── public/
+│   ├── favicon.svg
+│   └── service-worker.js        # PWA offline support
+└── scripts/
+    └── optimize-images.js       # sharp-based image optimization
 ```
 
-## Setup Instructions
+Global stylesheets are imported in the `BaseLayout.astro` frontmatter (not via
+`<link>` tags) so Astro bundles, hashes, and injects them. The cascade order
+matches the import order shown above.
 
-### 1. Local Development
+> **Note:** there is no `src/index.html` and no `src/scripts/` directory. Those
+> were part of a previous vanilla-JavaScript build and have been removed.
 
-Simply open the HTML file in a modern web browser:
+## Architecture Notes
 
-```bash
-cd src
-open index.html
-```
+### Astro components vs. Svelte islands
 
-Or use a local development server for better performance:
+The page is assembled in `src/pages/index.astro`. Static, non-interactive
+content is rendered by Astro components (`Navigation`, `Hero`, `About`,
+`DBASection`, `Footer`). Interactive behavior lives in Svelte island
+components, hydrated only where needed:
 
-```bash
-# Using Python 3
-cd src
-python3 -m http.server 8000
+| Component            | Hydration        | Notes                                    |
+| -------------------- | ---------------- | ---------------------------------------- |
+| `ScrollProgress`     | `client:load`    | Svelte 5 runes                           |
+| `ThemeTransition`    | `client:load`    | Svelte legacy mode (lifecycle only)      |
+| `BackToTop`          | `client:load`    | Svelte 5 runes                           |
+| `NavigationMenu`     | `client:load`    | Svelte legacy mode (lifecycle only)      |
+| `ParticleSystem`     | `client:visible` | Svelte 5 runes; one per division section |
+| `ContactForm`        | `client:visible` | Svelte 5 runes                           |
 
-# Using Node.js
-npx serve src
+`ContactForm`, `ParticleSystem`, `BackToTop`, and `ScrollProgress` use Svelte 5
+runes (`$state`, `$props`). `NavigationMenu` and `ThemeTransition` remain in
+Svelte legacy (lifecycle-only) mode.
 
-# Using PHP
-cd src
-php -S localhost:8000
-```
+### Fonts
 
-Then navigate to `http://localhost:8000` in your browser.
+Fonts are **self-hosted** through `astro:fonts` (Google provider). Nine families
+are configured in `astro.config.mjs`: Outfit, Open Sans, Inter, Rajdhani, Space
+Grotesk, DM Sans, Sora, Nunito, and Quicksand. The above-the-fold corporate
+fonts (Outfit, Open Sans) are preloaded in `BaseLayout.astro`; the rest load on
+demand. There are **no** manual font files and **no** Google Fonts `<link>` in
+`<head>`.
 
-### 2. Production Deployment
+Three additional families are referenced in `src/styles/variables.css`
+(`Poppins`, `JetBrains Mono`, `Fira Code`) but are **not** self-hosted, so they
+fall back to system fonts where used.
 
-For production deployment:
+### Progressive enhancement
 
-1. **Minify CSS and JavaScript**:
-   ```bash
-   # Install build tools
-   npm install -g clean-css-cli uglify-js
+Above-the-fold hero content renders immediately without JavaScript. Scroll-reveal
+content (`.observe-fade`, `.observe-slide-up`, `.observe-scale`) is hidden by
+default and revealed via JavaScript; a `<noscript>` block in `BaseLayout.astro`
+forces it visible when JavaScript is disabled, so nothing is permanently hidden.
 
-   # Minify CSS
-   cat src/styles/*.css | cleancss -o dist/styles.min.css
+The mobile navigation menu closes on `Escape`. There are no other global
+keyboard shortcuts.
 
-   # Minify JavaScript
-   uglifyjs src/scripts/*.js -o dist/scripts.min.js
-   ```
+## Contact Form (Netlify Forms)
 
-2. **Optimize Images**:
-   - Convert images to WebP format with fallbacks
-   - Use responsive image sizes
-   - Compress all images
+The contact form is wired for [Netlify Forms](https://docs.netlify.com/forms/setup/):
 
-3. **Update HTML** to use minified files
+- The **visible** form is a hydrated Svelte island (`ContactForm.svelte`).
+- A **hidden static detection form** in `index.astro` mirrors the field names so
+  Netlify's build bot can register the form by parsing the static HTML at deploy
+  time (it cannot see the client-rendered island).
+- Both forms carry `data-netlify="true"`, a `form-name` hidden input, and a
+  `bot-field` honeypot (`netlify-honeypot="bot-field"`).
+- On submit, the Svelte form performs a real URL-encoded AJAX `POST` to `/`
+  (`application/x-www-form-urlencoded`) and shows in-page success/error states.
 
-4. **Deploy** to your hosting provider (Netlify, Vercel, etc.)
+The form only records submissions when the site is deployed to Netlify. Locally,
+the UI works but submissions are not captured.
 
-## Customization Guide
+## Deployment
 
-### Updating Content
+### Netlify (primary)
 
-#### 1. Modify Text Content
+Configured in `netlify.toml`:
 
-Edit the HTML in `src/index.html`:
+- Build command: `npm run build`
+- Publish directory: `dist`
+- `NODE_VERSION = 22`
+- Security headers applied to every response (see below)
+- Long-cache, immutable headers for content-hashed assets under `/_assets/*`
+- `no-cache` header for `/service-worker.js`
 
-- Section titles: Look for `<h2 class="dba-name">` tags
-- Descriptions: Look for `<p>` tags in `.dba-description`
-- Service cards: Edit content in `.service-card` elements
+### Docker + Apache (alternative)
 
-#### 2. Change Colors
+A multi-stage `Dockerfile` builds the site with `node:22-alpine` and serves the
+static output with `httpd:2.4-alpine` (Apache). `docker-compose.yml` orchestrates
+the container.
 
-All colors are defined as CSS custom properties in `src/styles/variables.css`:
+> The container serves **plaintext HTTP** on port 80 by design and **must** sit
+> behind a TLS terminator (reverse proxy / load balancer) that handles HTTPS,
+> HSTS, and the HTTP→HTTPS redirect. See **[DOCKER-DEPLOYMENT.md](./DOCKER-DEPLOYMENT.md)**
+> for the full container setup.
 
-```css
-/* Example: Change corporate theme accent color */
---corporate-accent-blue: #3A86FF; /* Change to your color */
-```
+## Security
 
-Available theme color groups:
-- Corporate (Hero, About, Contact)
-- Industrial (Fabrication & Welding)
-- Tech (3D Lab)
-- Natural (Greenhouse & Orchard)
+Hardened HTTP response headers are configured for both deployment targets:
 
-#### 3. Update Typography
+- **Content-Security-Policy** with `base-uri 'self'`, `form-action 'self'`,
+  `object-src 'none'`, and `frame-ancestors 'self'`
+- **X-Frame-Options:** `SAMEORIGIN`
+- **X-Content-Type-Options:** `nosniff`
+- **X-XSS-Protection:** `0` (legacy auditor disabled in favor of CSP)
+- **Referrer-Policy:** `strict-origin-when-cross-origin`
+- **Permissions-Policy:** geolocation, microphone, and camera disabled
+- **Strict-Transport-Security (HSTS)** — sent by Netlify (always HTTPS)
 
-Font families are also in `variables.css`:
+The service worker (`public/service-worker.js`) uses a **network-first** strategy
+for navigations (so content and security fixes reach already-visited clients) and
+a **cache-first** strategy for static assets, backed by a **versioned** runtime
+cache that is evicted on each release.
 
-```css
-/* Example: Change corporate heading font */
---font-corporate-heading: 'Your Font', sans-serif;
-```
+## Performance
 
-Don't forget to update the Google Fonts import in `index.html`.
+Measured with Lighthouse:
 
-#### 4. Add Images
+- **Desktop:** 100 / 100 / 100 / 100 (Performance / Accessibility / Best
+  Practices / SEO)
+- **Mobile:** 99 Performance
+- **LCP:** ~0.5s desktop, ~2.1s mobile
+- **CLS:** 0
+- **TBT:** 0
 
-Replace placeholder showcase sections:
+Contributing factors include immediate above-the-fold rendering, deferred
+island hydration (`client:visible`), preloaded critical fonts with generated
+fallback metrics, terser-minified JS with console stripping, and lightningcss
+minified CSS.
 
-1. Add your images to `src/assets/images/`
-2. Update the showcase divs in `index.html`:
+## Progressive Web App
 
-```html
-<div class="showcase-placeholder">
-  <img src="assets/images/your-image.jpg" alt="Description" class="showcase-image">
-</div>
-```
+`public/service-worker.js` provides offline support:
 
-**Recommended image sizes**:
-- Showcase images: 1200x600px
-- Service icons: 64x64px
-- Hero background: 1920x1080px
+- **Cache-first** for content-hashed static assets (CSS/JS/fonts under
+  `/_assets`)
+- **Network-first** for HTML navigations, falling back to cache when offline
+- Versioned caches evicted on each release to avoid serving stale content
 
-**Image optimization**:
-- Use WebP format with JPG fallback
-- Compress images (target < 200KB per image)
-- Use responsive images with srcset
+The worker is registered from `BaseLayout.astro` on `window.load`.
 
-### Adding New Sections
+## Customization
 
-To add a new business division:
+### Business content
 
-1. **Add HTML section** in `index.html`:
+Division content (name, NAICS code, description, service cards, and CTA text)
+lives in the `dbaSections` data array at the top of `src/pages/index.astro`.
+Edit that array to change what each division shows or to add/remove a division.
 
-```html
-<section class="section dba-section" id="new-business" data-theme="your-theme">
-  <!-- Follow the existing DBA section structure -->
-</section>
-```
+### Colors and fonts
 
-2. **Define theme colors** in `variables.css`:
+Color and font custom properties are defined in `src/styles/variables.css`.
+Color groups map to the site themes:
 
-```css
---your-theme-primary: #HEXCODE;
---your-theme-accent: #HEXCODE;
-/* etc. */
-```
+- **Corporate** — Hero, About, Contact
+- **Industrial** — Fabrication & Welding
+- **Tech** — 3D Lab
+- **Natural** — Greenhouse & Orchard
 
-3. **Add theme styles** in `themes.css`:
+Per-theme background/foreground mappings are defined in `src/styles/themes.css`
+via `[data-theme="…"]` selectors. Add or adjust a theme there, then reference it
+by setting `theme` (and `data-theme`) on the corresponding section.
 
-```css
-[data-theme="your-theme"] {
-  --current-bg-primary: var(--your-theme-primary);
-  /* etc. */
-}
-```
+Because fonts are self-hosted through `astro:fonts`, adding a new Google font
+means adding an entry to the `fonts` array in `astro.config.mjs` (and a
+matching `<Font>` tag in `BaseLayout.astro` if you want it preloaded) — not
+editing a `<head>` `<link>`.
 
-4. **Update navigation** in `index.html`:
+## Contact
 
-```html
-<li><a href="#new-business" class="nav-link">New Business</a></li>
-```
-
-5. **Add to ThemeManager** in `scripts/theme-manager.js`:
-
-```javascript
-this.themes = {
-  // ... existing themes
-  'your-theme': {
-    bgPrimary: '#HEXCODE',
-    // etc.
-  }
-};
-```
-
-## Contact Form Configuration
-
-The contact form includes validation but requires backend integration for actual submission.
-
-### Integrating with a Backend
-
-Edit `src/scripts/form-handler.js`:
-
-```javascript
-async submitForm(data) {
-  const response = await fetch('YOUR_API_ENDPOINT', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data)
-  });
-
-  if (!response.ok) {
-    throw new Error('Submission failed');
-  }
-
-  return response.json();
-}
-```
-
-### Popular Form Services
-
-- **Formspree**: `https://formspree.io/f/YOUR_FORM_ID`
-- **Netlify Forms**: Built-in (add `netlify` attribute to form)
-- **EmailJS**: JavaScript-based email service
-- **Custom API**: Your own backend endpoint
-
-## Performance Optimization
-
-### Current Optimizations
-
-- ✅ Hardware-accelerated CSS transforms
-- ✅ Intersection Observer API for scroll triggers
-- ✅ RequestAnimationFrame for smooth animations
-- ✅ Throttled scroll handlers
-- ✅ Reduced motion support
-- ✅ Mobile-optimized (fewer particles, simplified effects)
-
-### Additional Optimization Tips
-
-1. **Enable Compression**: Configure your server to use gzip/brotli
-2. **Use a CDN**: Host static assets on a CDN
-3. **Lazy Load Images**: Add `loading="lazy"` to images
-4. **Preload Critical Resources**:
-
-```html
-<link rel="preload" href="styles/variables.css" as="style">
-```
-
-5. **Monitor Performance**: Use Lighthouse and WebPageTest
-
-### Performance Targets
-
-- First Contentful Paint: < 1.5s
-- Largest Contentful Paint: < 2.5s
-- Time to Interactive: < 3.5s
-- Cumulative Layout Shift: < 0.1
-- Page Weight: < 500KB (initial load)
-
-## Browser Support
-
-- Chrome/Edge (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
-- Mobile Safari iOS 14+
-- Chrome Mobile Android 10+
-
-### Graceful Degradation
-
-- Fallbacks for CSS custom properties
-- Reduced animations for older browsers
-- Mobile-first responsive design
-
-## Accessibility Features
-
-- ✅ Semantic HTML5 structure
-- ✅ ARIA labels and landmarks
-- ✅ Keyboard navigation support
-- ✅ Skip-to-content link
-- ✅ Focus states for all interactive elements
-- ✅ Color contrast WCAG AA compliant
-- ✅ Prefers-reduced-motion support
-- ✅ Screen reader tested
-
-### Keyboard Shortcuts
-
-- `Alt + H` - Scroll to top (Home)
-- `Alt + C` - Scroll to contact section
-- `Tab` - Navigate through interactive elements
-- `Escape` - Close mobile menu
-
-## Future Enhancements
-
-### E-Commerce Integration
-
-The website is structured to easily add e-commerce functionality:
-
-1. **Product cards** can be added to service grids
-2. **Shopping cart** icon placeholder in navigation
-3. **Quick-view modals** for products
-4. Integration points marked with `<!-- E-COMMERCE INTEGRATION -->` comments
-
-### Recommended Platforms
-
-- Shopify Buy Button
-- WooCommerce API
-- Stripe Checkout
-- Custom solution
-
-### Progressive Web App (PWA)
-
-To convert to a PWA:
-
-1. Create `manifest.json`
-2. Implement service worker
-3. Add offline support
-4. Enable install prompt
-
-### Analytics Integration
-
-Add Google Analytics, Plausible, or similar:
-
-```html
-<!-- Add before closing </head> tag -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-```
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: Fonts not loading
-- Check Google Fonts URL in `<head>`
-- Verify internet connection
-- Check browser console for errors
-
-**Issue**: Animations not working
-- Check `prefers-reduced-motion` setting
-- Verify JavaScript is enabled
-- Check browser console for errors
-
-**Issue**: Mobile menu not opening
-- Check JavaScript console for errors
-- Verify `navToggle` and `navLinks` IDs match
-
-**Issue**: Form validation not working
-- Ensure form has `id="contactForm"`
-- Check that FormHandler is initialized
-- Verify field `name` attributes match validators
+- Email: [info@fluxology.ca](mailto:info@fluxology.ca)
 
 ## License
 
 All rights reserved © Fluxology Inc.
 
-## Credits
-
-**Design & Development**: Built with modern web standards
-**Fonts**: Google Fonts
-**Icons**: [Specify your icon source]
-
-## Contact
-
-For questions or support regarding this website:
-
-- Email: info@fluxology.ca
-- Phone: (123) 456-7890
-
 ---
 
-**Version**: 1.0.0
-**Last Updated**: November 2025
-**Built for**: Enterprise deployment on high-performance hardware
+**Version:** 2.0.0
+**Last Updated:** July 2026 — full rewrite for the Astro 7 + Svelte 5 stack
