@@ -6,10 +6,20 @@
 
 <nav class="main-nav" id="mainNav" role="navigation" aria-label="Main navigation">
   <div class="nav-container">
-    <div class="nav-logo" id="navLogo">
-      <span class="logo-text">Fluxology</span>
-      <span class="logo-inc">Inc.</span>
-    </div>
+    <a class="nav-logo" id="navLogo" href="#hero" aria-label="Fluxology Inc. — home">
+      <img
+        class="nav-logo-mark"
+        src="/favicon.svg"
+        alt=""
+        aria-hidden="true"
+        width="36"
+        height="36"
+      />
+      <span class="logo-wordmark">
+        <span class="logo-text">Fluxology</span>
+        <span class="logo-inc">Inc.</span>
+      </span>
+    </a>
 
     <button
       class="nav-toggle"
@@ -36,6 +46,37 @@
 
 <style>
   /* Navigation specific styles that override/extend base.css */
+
+  /* Logo lockup: emblem + wordmark. The emblem keeps its brand colours while
+     the wordmark text still shifts colour per active section (see the
+     .main-nav[data-current-theme] rules in transitions.css). */
+  .nav-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+  }
+
+  .nav-logo-mark {
+    width: 36px;
+    height: 36px;
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .logo-wordmark {
+    display: inline-flex;
+    align-items: baseline;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 400px) {
+    /* Keep just the emblem on very narrow screens to preserve nav space. */
+    .logo-wordmark {
+      display: none;
+    }
+  }
+
   .skip-link {
     position: absolute;
     top: -100px;
