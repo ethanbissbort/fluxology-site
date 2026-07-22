@@ -203,59 +203,12 @@ a,
 /* ========================================
    SCROLL-TRIGGERED ANIMATIONS
    ======================================== */
-.section-header,
-.dba-header,
-.about-content,
-.services-grid,
-.dba-showcase,
-.contact-content,
-.about-stats {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity var(--transition-slow) var(--ease-out-cubic),
-              transform var(--transition-slow) var(--ease-out-cubic);
-}
-
-.section-header.in-view,
-.dba-header.in-view,
-.about-content.in-view,
-.services-grid.in-view,
-.dba-showcase.in-view,
-.contact-content.in-view,
-.about-stats.in-view {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Service cards animate in sequence */
-.services-grid.in-view .service-card {
-  opacity: 0;
-  transform: translateY(30px) scale(0.95);
-  animation: card-appear var(--transition-slow) var(--ease-out-cubic) forwards;
-}
-
-@keyframes card-appear {
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.services-grid.in-view .service-card:nth-child(1) {
-  animation-delay: 100ms;
-}
-
-.services-grid.in-view .service-card:nth-child(2) {
-  animation-delay: 200ms;
-}
-
-.services-grid.in-view .service-card:nth-child(3) {
-  animation-delay: 300ms;
-}
-
-.services-grid.in-view .service-card:nth-child(4) {
-  animation-delay: 400ms;
-}
+/* Reveal-on-scroll is driven by the .observe-fade / .observe-slide-up /
+   .observe-scale classes plus the IntersectionObserver in
+   ThemeTransition.svelte (which adds .observed). The previous ".in-view"
+   system was driven by a script that no longer exists — it left elements
+   permanently at opacity:0 (and a stray translateY offset), so it has been
+   removed in favour of the .observe-* system. */
 
 /* ========================================
    NAVIGATION THEME TRANSITIONS

@@ -113,7 +113,7 @@
   }
 </script>
 
-<div class="contact-content">
+<div class="contact-content observe-fade">
   <div class="contact-info">
     <div class="info-block">
       <h3 class="info-title">Address</h3>
