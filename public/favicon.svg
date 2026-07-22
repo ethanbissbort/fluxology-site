@@ -1,5 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Fluxology">
-  <rect width="32" height="32" rx="6" fill="#0B1B34"/>
-  <path d="M11 8h11v3.4h-7.2v3.5H21v3.4h-6.2V24H11z" fill="#3A86FF"/>
-  <circle cx="23.5" cy="9.5" r="2.2" fill="#7BB0FF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Fluxology Inc.">
+  <rect width="100" height="100" rx="22" fill="#0b1a2c"/>
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#f2e7cd" stroke-width="2"/>
+  <circle cx="14.5" cy="50" r="1.6" fill="#f2e7cd"/>
+  <circle cx="85.5" cy="50" r="1.6" fill="#f2e7cd"/>
+  <path d="M 20 38 A 34 34 0 0 0 20 62" fill="none" stroke="#f2e7cd" stroke-width="1" opacity="0.85"/>
+  <path d="M 80 38 A 34 34 0 0 1 80 62" fill="none" stroke="#f2e7cd" stroke-width="1" opacity="0.85"/>
+  <path d="M 58 33 C 58 24, 47 21, 43 28 C 41 34, 40 42, 40 50 C 40 61, 39 70, 37 76 C 36 82, 28 83, 27 76"
+        fill="none" stroke="#f2e7cd" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 28 51 C 31 46, 35 46, 38 51 C 41 56, 45 56, 48 51 C 51 46, 55 46, 58 51 C 61 56, 65 56, 68 51 C 70 47.5, 71.5 47.5, 73 50"
+        fill="none" stroke="#2cc4de" stroke-width="2.8" stroke-linecap="round"/>
 </svg>
