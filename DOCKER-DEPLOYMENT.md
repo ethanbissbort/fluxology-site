@@ -76,7 +76,7 @@ fluxology-site/
 ├── netlify.toml                # Netlify (primary) build + headers config
 ├── docker/
 │   └── apache/
-│       ├── httpd.conf          # Main Apache config (headers, caching, gzip)
+│       ├── httpd.conf          # Main Apache config (headers, caching, brotli/gzip)
 │       └── vhost.conf          # Virtual host config (:80 active, :443 commented)
 └── logs/
     └── apache/                 # Apache logs (bind-mounted from the container)
@@ -128,7 +128,7 @@ Then access the site at http://localhost:8080. The mapping is
 
 **Main config:** `docker/apache/httpd.conf`
 
-- gzip compression (`mod_deflate`, level 6)
+- brotli compression (`mod_brotli`, quality 5) with gzip (`mod_deflate`, level 6) fallback
 - caching / `Expires` headers (`mod_expires`, `mod_headers`)
 - security headers (see [Security](#security))
 - SPA-style rewrite to `index.html` for non-existent paths
@@ -351,9 +351,19 @@ and code changes:
 
 ### Compression
 
-`mod_deflate` compresses text-based responses (HTML, CSS, JS, SVG, JSON, XML,
-and font formats other than the already-compressed `woff2`), at compression
-level **6**.
+The server negotiates compression by the request's `Accept-Encoding`:
+
+- **Brotli** (`mod_brotli`, quality **5**) is served to clients that advertise
+  `br` — the preferred, higher-ratio codec.
+- **gzip** (`mod_deflate`, level **6**) is the fallback for clients that only
+  support `gzip`.
+
+Both filters target text-based responses (HTML, CSS, JS, SVG, JSON, XML, and
+legacy font formats); already-compressed `woff2` fonts and raster images are
+omitted, and `Vary: Accept-Encoding` is set for correct caching. The
+`mod_brotli` load is guarded with `<IfFile>`, so if a future base image ships
+without `mod_brotli.so`, Apache still starts and falls back to gzip. The
+official `httpd:2.4-alpine` image includes `mod_brotli.so`.
 
 ### Image size
 
