@@ -1,32 +1,59 @@
-# Docker Deployment Guide
+# Docker + Apache Deployment Guide
 
-Complete guide for deploying the Fluxology website as a Docker container with Apache.
+Self-hosted deployment guide for the Fluxology website as a Docker container
+served by Apache HTTP Server.
 
-## 📦 Overview
+> **Netlify is the primary deployment target for this site** (see
+> [Netlify (Primary Target)](#netlify-primary-target) below). The Docker +
+> Apache setup documented here is the **self-hosted alternative** for running
+> the same static build on your own infrastructure.
+
+## Overview
 
 The deployment uses a **multi-stage Docker build**:
-1. **Build Stage**: Node.js Alpine builds the Astro site
-2. **Production Stage**: Apache HTTP Server serves the static files
 
-**Technology Stack:**
+1. **Build stage** (`node:22-alpine`) builds the static Astro site.
+2. **Production stage** (`httpd:2.4-alpine`) serves the built `dist/` directory.
+
+**Technology stack:**
+
 - Docker multi-stage build
 - Apache HTTP Server 2.4 (Alpine)
-- Node.js 18 (Alpine) for building
-- Optimized for production
+- Node.js 22 (Alpine) for building — Astro 7 requires **Node >= 22.12**
+- Static site output (no Node runtime in the final image)
 
-## 🚀 Quick Start
+### What the build produces
+
+The app is a **static Astro 7 build**. There is no server-side runtime in
+production — Apache serves plain files from `dist/`.
+
+- Minification is handled by Vite/terser (JS) and lightningcss (CSS). There is
+  **no `astro-compress` integration** (it was removed in the overhaul).
+- Fonts are self-hosted at build time via `astro:fonts`. **The build needs
+  outbound network access to Google Fonts** so it can download and emit the
+  font files into `dist/`. There are no manually committed font files to copy.
+
+> **Plaintext HTTP by design.** The container serves **plaintext HTTP on port
+> 80**. When exposed to an untrusted network it **must sit behind a TLS
+> terminator** (reverse proxy or load balancer) that handles HTTPS, HSTS, and
+> the HTTP→HTTPS redirect. The commented-out `:443` vhost and HSTS header can
+> be enabled instead, but only with real certificates. See
+> [HTTPS / TLS](#https--tls).
+
+## Quick Start
 
 ### Prerequisites
 
-- Docker 20.10+ installed
-- Docker Compose 2.0+ installed
-- 2GB free disk space
+- Docker 20.10+
+- Docker Compose 2.0+
+- ~2 GB free disk space
+- Outbound internet access during build (npm registry + Google Fonts)
 
-### Start the Container
+### Start the container
 
 ```bash
-# Start in detached mode
-docker-compose up -d
+# Build and start in detached mode
+docker-compose up -d --build
 
 # View logs
 docker-compose logs -f
@@ -35,68 +62,91 @@ docker-compose logs -f
 docker-compose down
 ```
 
-The site will be available at: **http://localhost**
+The site is served at **http://localhost** (or `http://localhost:${HTTP_PORT}`
+if you override the port).
 
-## 📁 File Structure
+## File Structure
 
 ```
 fluxology-site/
-├── Dockerfile                  # Multi-stage build definition
+├── Dockerfile                  # Multi-stage build (node:22-alpine → httpd:2.4-alpine)
 ├── docker-compose.yml          # Container orchestration
-├── .env                        # Environment variables
-├── .dockerignore              # Build optimization
+├── .dockerignore               # Build-context exclusions (incl. all .env files)
+├── .env.example                # Sample environment variables
+├── netlify.toml                # Netlify (primary) build + headers config
 ├── docker/
 │   └── apache/
-│       ├── httpd.conf         # Main Apache config
-│       └── vhost.conf         # Virtual host config
+│       ├── httpd.conf          # Main Apache config (headers, caching, gzip)
+│       └── vhost.conf          # Virtual host config (:80 active, :443 commented)
 └── logs/
-    └── apache/                # Apache logs (mounted)
+    └── apache/                 # Apache logs (bind-mounted from the container)
 ```
 
-## 🔧 Configuration
+## Configuration
 
-### Environment Variables (.env)
+### Environment variables
+
+Copy `.env.example` to `.env` and adjust as needed:
 
 ```bash
-# Port Configuration
-HTTP_PORT=80              # Change if port 80 is in use
-
-# Server Configuration
-SERVER_NAME=localhost
-SERVER_ADMIN=admin@fluxology.ca
-
-# Timezone
-TIMEZONE=America/Toronto
-
-# Apache Settings
-APACHE_LOG_LEVEL=warn
-APACHE_TIMEOUT=300
+cp .env.example .env
 ```
 
-**Change Port Example:**
+`docker-compose.yml` consumes exactly these variables (with the defaults shown):
+
+| Variable       | Default             | Purpose                                             |
+| -------------- | ------------------- | --------------------------------------------------- |
+| `HTTP_PORT`    | `80`                | Host port mapped to the container's port 80         |
+| `SERVER_NAME`  | `localhost`         | Passed to the container as `APACHE_SERVER_NAME`     |
+| `SERVER_ADMIN` | `admin@fluxology.ca`| Passed as `APACHE_SERVER_ADMIN`                     |
+| `TIMEZONE`     | `America/Toronto`   | Passed as `TZ` (container timezone)                 |
+
+> `.env.example` also lists several forward-looking variables (`HTTPS_PORT`,
+> `APACHE_LOG_LEVEL`, `ENABLE_HSTS`, `COMPRESSION_LEVEL`, database/SMTP/SSL
+> placeholders, etc.). These are **not wired into `docker-compose.yml` or the
+> Apache config** — the effective Apache behavior (log level `warn`, gzip
+> level `6`, no HSTS) is baked into `docker/apache/httpd.conf`. Treat those
+> extra keys as documentation/placeholders, not live settings.
+
+**Change the port** — if port 80 is in use:
+
 ```bash
-# If port 80 is already in use
+# in .env
 HTTP_PORT=8080
 ```
 
-Then access at: http://localhost:8080
+Then access the site at http://localhost:8080. The mapping is
+`"${HTTP_PORT:-80}:80"`, so only the host side changes.
 
-### Apache Configuration
+> **Secrets never enter the build context.** `.dockerignore` excludes `.env`,
+> `.env.*`, and `*.env` (keeping only `.env.example`), alongside
+> `node_modules`, `.git`, `dist`, `.astro`, docs, and CI files. The `COPY . .`
+> in the Dockerfile therefore never copies real environment files into the
+> image.
 
-**Main Config:** `docker/apache/httpd.conf`
-- Compression (gzip)
-- Caching headers
-- Security headers
-- Performance optimizations
+### Apache configuration
 
-**Virtual Host:** `docker/apache/vhost.conf`
-- HTTP virtual host (port 80)
-- HTTPS virtual host (commented, enable with SSL)
-- URL rewriting for SPA
+**Main config:** `docker/apache/httpd.conf`
 
-## 🏗️ Building & Running
+- gzip compression (`mod_deflate`, level 6)
+- caching / `Expires` headers (`mod_expires`, `mod_headers`)
+- security headers (see [Security](#security))
+- SPA-style rewrite to `index.html` for non-existent paths
+- `ServerTokens Prod` / `ServerSignature Off` at global scope
 
-### Option 1: Docker Compose (Recommended)
+**Virtual host:** `docker/apache/vhost.conf`
+
+- Active HTTP virtual host on port 80
+- HTTPS (`:443`) virtual host and HTTP→HTTPS redirect are present but
+  **commented out** — enable them only with real SSL certificates
+
+> **Not enabled, on purpose:** `mod_status` (`/server-status`) and
+> `mod_autoindex` directory listings are **not loaded**. This is a static site
+> with no monitoring consumer, so removing them reduces attack surface.
+
+## Building & Running
+
+### Option 1: Docker Compose (recommended)
 
 ```bash
 # Build and start
@@ -105,7 +155,7 @@ docker-compose up -d --build
 # View status
 docker-compose ps
 
-# View logs
+# Follow logs for the service
 docker-compose logs -f fluxology-web
 
 # Restart
@@ -113,12 +163,14 @@ docker-compose restart
 
 # Stop and remove
 docker-compose down
-
-# Stop and remove with volumes
-docker-compose down -v
 ```
 
-### Option 2: Docker Commands
+The Compose service is named **`fluxology-web`**; the running container is
+named **`fluxology-website`**; the image is tagged **`fluxology-site:latest`**;
+the network is **`fluxology-network`** (bridge). Restart policy is
+`unless-stopped`.
+
+### Option 2: Plain Docker
 
 ```bash
 # Build image
@@ -134,33 +186,62 @@ docker run -d \
 # View logs
 docker logs -f fluxology-website
 
-# Stop container
+# Stop / remove
 docker stop fluxology-website
-
-# Remove container
 docker rm fluxology-website
 ```
 
-## 🔍 Health Check
+### How the build works
 
-The container includes a health check:
+The builder stage runs:
 
-```bash
-# Check health status
-docker inspect --format='{{.State.Health.Status}}' fluxology-website
-
-# Should return: healthy
+```dockerfile
+RUN npm ci --ignore-scripts   # installs ALL deps (dev deps needed for the build)
+RUN npm run build             # astro build → /app/dist
 ```
 
-**Health Check Details:**
-- Interval: 30 seconds
-- Timeout: 10 seconds
-- Retries: 3
-- Start period: 40 seconds
+Notes:
 
-## 📊 Monitoring
+- `npm ci` installs **all dependencies, not just production ones** — the build
+  needs devDependencies such as `terser`, `sharp`, and `typescript`.
+- `--ignore-scripts` hardens the install. The toolchain ships native binaries
+  via `optionalDependencies`, not lifecycle scripts, so the build still works.
+- The production stage copies `/app/dist` into
+  `/usr/local/apache2/htdocs/` and sets `www-data:www-data` ownership with
+  `755` permissions. Only this final stage ends up in the image.
 
-### View Logs
+## Health Check
+
+Both the image and Compose define a health check (they use slightly different
+timings):
+
+**Dockerfile `HEALTHCHECK`:**
+
+```
+--interval=30s --timeout=3s --start-period=5s --retries=3
+CMD curl -f http://localhost/ || exit 1
+```
+
+**docker-compose.yml `healthcheck`:**
+
+```
+test: ["CMD", "curl", "-f", "http://localhost/"]
+interval: 30s
+timeout: 10s
+retries: 3
+start_period: 40s
+```
+
+Check the status:
+
+```bash
+docker inspect --format='{{.State.Health.Status}}' fluxology-website
+# → healthy
+```
+
+## Monitoring
+
+### Logs
 
 ```bash
 # All logs
@@ -173,380 +254,227 @@ docker-compose logs --tail=100 -f
 docker-compose logs -f fluxology-web
 ```
 
-### Apache Server Status
+Apache writes access/error logs to the container's stdout/stderr
+(`/proc/self/fd/1` and `/proc/self/fd/2`), and `docker-compose.yml`
+bind-mounts `./logs/apache` to `/usr/local/apache2/logs`.
+
+> There is **no `/server-status` endpoint** — `mod_status` is deliberately not
+> loaded. Use `docker logs` / `docker stats` for observability.
+
+### Container stats
 
 ```bash
-# Access server status (from inside container)
-docker exec fluxology-website curl http://localhost/server-status
-```
-
-### Container Stats
-
-```bash
-# Real-time stats
 docker stats fluxology-website
-
-# One-time stats
 docker stats --no-stream fluxology-website
 ```
 
-## 🔒 Security Features
+## Security
 
-### HTTP Security Headers
+### HTTP security headers
 
-Configured in `httpd.conf`:
-- ✅ **X-Frame-Options**: Prevents clickjacking
-- ✅ **X-Content-Type-Options**: Prevents MIME sniffing
-- ✅ **X-XSS-Protection**: XSS filter enabled
-- ✅ **Referrer-Policy**: Controls referrer info
-- ✅ **Content-Security-Policy**: Prevents XSS/injection
-- ✅ **Permissions-Policy**: Controls browser features
+Set in `docker/apache/httpd.conf` (mirrored in `netlify.toml`):
 
-### HTTPS/SSL Setup
+- **Content-Security-Policy:**
+  `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'`
+- **X-Frame-Options:** `SAMEORIGIN`
+- **X-Content-Type-Options:** `nosniff`
+- **X-XSS-Protection:** `0` — the legacy XSS auditor is **intentionally
+  disabled**; CSP is the real XSS defense.
+- **Referrer-Policy:** `strict-origin-when-cross-origin`
+- **Permissions-Policy:** `geolocation=(), microphone=(), camera=()`
 
-To enable HTTPS:
+Additionally:
 
-1. **Get SSL Certificates** (Let's Encrypt, commercial CA, etc.)
+- `Header always unset X-Powered-By`
+- `ServerTokens Prod` and `ServerSignature Off` are set at **global scope**
+  (they apply even if `mod_headers` is not loaded), so the `Server` header
+  reports `Apache` with no version and no signature footer.
 
-2. **Place certificates:**
-```bash
-docker/ssl/
-├── fluxology.crt          # Certificate
-├── fluxology.key          # Private key
-└── ca-bundle.crt          # CA bundle
+### HSTS
+
+HSTS is **commented out** in `httpd.conf` because the container serves
+plaintext HTTP:
+
+```apache
+# Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 ```
 
-3. **Update docker-compose.yml:**
+Only enable it once TLS terminates in front of (or inside) the container.
+On Netlify, HSTS **is** sent, because Netlify is always HTTPS.
+
+### HTTPS / TLS
+
+The container itself listens only on plaintext port 80. To serve HTTPS you have
+two options:
+
+**Recommended — terminate TLS upstream.** Put the container behind a reverse
+proxy or load balancer (nginx, Caddy, Traefik, an ALB, Cloudflare, etc.) that
+handles certificates, HSTS, and the HTTP→HTTPS redirect. Keep publishing only
+port 80 to that proxy. `docker-compose.yml` documents this requirement:
+
 ```yaml
-services:
-  fluxology-web:
-    ports:
-      - "80:80"
-      - "443:443"      # Add HTTPS port
-    volumes:
-      - ./docker/ssl:/etc/ssl/certs:ro  # Mount certificates
+# NOTE: this container serves plaintext HTTP on port 80 by design. When
+# exposed to an untrusted network it MUST sit behind a TLS terminator
+# (reverse proxy / load balancer) that handles HTTPS, HSTS, and the
+# HTTP->HTTPS redirect. Do not publish it directly to the internet.
 ```
 
-4. **Uncomment HTTPS config** in `docker/apache/vhost.conf`
+**Alternative — terminate TLS inside Apache.** This requires real certificates
+and code changes:
 
-5. **Rebuild and restart:**
-```bash
-docker-compose up -d --build
-```
+1. Obtain certificates (Let's Encrypt, commercial CA, etc.).
+2. Mount them into the container — uncomment the SSL volume in
+   `docker-compose.yml`:
+   ```yaml
+   # - ./docker/ssl:/etc/ssl/certs:ro
+   ```
+   and publish port 443.
+3. Uncomment the `<VirtualHost *:443>` block (and, if desired, the HTTP→HTTPS
+   redirect vhost) in `docker/apache/vhost.conf`, pointing the
+   `SSLCertificateFile` / `SSLCertificateKeyFile` directives at your certs.
+4. Uncomment the HSTS header in `docker/apache/httpd.conf`.
+5. Note that the current `httpd.conf` does **not** load `mod_ssl`; you must add
+   its `LoadModule` line before the `:443` vhost will work.
+6. Rebuild and restart: `docker-compose up -d --build`.
 
-### HSTS (HTTP Strict Transport Security)
+## Performance
 
-After SSL is working, enable HSTS in `.env`:
-```bash
-ENABLE_HSTS=true
-HSTS_MAX_AGE=31536000
-```
+### Caching strategy (from `httpd.conf`)
 
-## ⚡ Performance Optimizations
-
-### Caching Strategy
-
-**HTML Files:**
-- No cache (always fresh)
-- `Cache-Control: no-cache, no-store, must-revalidate`
-
-**Static Assets (CSS, JS, Images, Fonts):**
-- 1 year cache
-- `Cache-Control: public, max-age=31536000, immutable`
-- Assumes hashed filenames from Astro build
-
-**Service Worker:**
-- No cache (always fresh)
-- `Cache-Control: no-cache`
+- **HTML:** `Cache-Control: no-cache, no-store, must-revalidate` (always fresh).
+- **CSS / JS:** `Cache-Control: public, max-age=31536000, immutable`
+  (safe because Astro emits content-hashed filenames).
+- **Images:** `public, max-age=31536000, immutable`.
+- **Fonts:** `public, max-age=31536000, immutable` plus
+  `Access-Control-Allow-Origin: *`.
+- **`service-worker.js`:** `no-cache, no-store, must-revalidate`.
 
 ### Compression
 
-All text-based assets are compressed:
-- HTML, CSS, JavaScript
-- SVG images
-- JSON, XML
-- Fonts (except woff2, already compressed)
+`mod_deflate` compresses text-based responses (HTML, CSS, JS, SVG, JSON, XML,
+and font formats other than the already-compressed `woff2`), at compression
+level **6**.
 
-**Compression Level:** 6 (balance of speed/size)
+### Image size
 
-### Container Size
+- Builder stage: large (Node + full dependency tree) but discarded.
+- Final image: small (`httpd:2.4-alpine` + static `dist/`). Only the
+  production stage ships.
 
-**Build stages:**
-- Builder stage: ~400MB (Node.js + dependencies)
-- Final image: ~50-60MB (Apache + built site)
+## Troubleshooting
 
-Only the final stage is included in the image!
-
-## 🛠️ Troubleshooting
-
-### Container Won't Start
+### Container won't start
 
 ```bash
-# Check if port is in use
-sudo lsof -i :80
+# Is the port already in use?
+sudo lsof -i :80         # or your HTTP_PORT
 
-# Or use a different port in .env
+# Use a different host port in .env
 HTTP_PORT=8080
 
-# Check logs for errors
+# Inspect logs
 docker-compose logs fluxology-web
 ```
 
-### Build Fails
+### Build fails
 
 ```bash
-# Clear Docker cache
-docker system prune -af
-
-# Rebuild from scratch
+# Rebuild without cache
 docker-compose build --no-cache
 
 # Check disk space
 df -h
 ```
 
-### Site Not Loading
+Common build-time causes:
+
+- **No outbound network access.** The build downloads npm packages and, via
+  `astro:fonts`, Google Fonts. A restricted network breaks the build.
+- **Wrong Node version locally.** If you build outside Docker, you need
+  **Node >= 22.12** (the Dockerfile pins `node:22-alpine`).
+
+### Site not loading
 
 ```bash
-# Check container is running
+# Container running?
 docker ps
 
-# Check health status
+# Health status
 docker inspect fluxology-website | grep -A 5 Health
 
-# Access container shell
+# Shell into the container and test Apache
 docker exec -it fluxology-website sh
-
-# Test Apache from inside
 curl http://localhost/
 ```
 
-### Permission Errors
+### Apache config checks
 
 ```bash
-# Ensure proper ownership
-docker exec fluxology-website chown -R www-data:www-data /usr/local/apache2/htdocs/
+# Validate the running config
+docker exec fluxology-website httpd -t
 
-# Check file permissions
+# View the active config
+docker exec fluxology-website cat /usr/local/apache2/conf/httpd.conf
+```
+
+### Permission errors
+
+```bash
 docker exec fluxology-website ls -la /usr/local/apache2/htdocs/
+# The Dockerfile already sets www-data:www-data ownership with 755 perms.
 ```
 
-### High Memory Usage
+## Updating
+
+### Update the site
 
 ```bash
-# Set memory limit in docker-compose.yml
-services:
-  fluxology-web:
-    mem_limit: 512m
-    mem_reservation: 256m
-```
-
-## 🔄 Updates & Maintenance
-
-### Update the Website
-
-```bash
-# 1. Make changes to source code
+# 1. Change source code
 # 2. Rebuild and restart
 docker-compose up -d --build
-
-# Or without downtime:
-docker-compose build
-docker-compose up -d --no-deps fluxology-web
 ```
 
-### Update Base Images
+### Update base images
 
 ```bash
-# Pull latest base images
-docker pull node:18-alpine
+docker pull node:22-alpine
 docker pull httpd:2.4-alpine
-
-# Rebuild
 docker-compose build --no-cache
 docker-compose up -d
 ```
 
-### Backup
+## Netlify (Primary Target)
 
-```bash
-# Backup logs
-tar -czf logs-backup-$(date +%Y%m%d).tar.gz logs/
+Netlify is the **primary hosting target** for this site; Docker + Apache is the
+self-hosted alternative described above. Configuration lives in `netlify.toml`:
 
-# Backup configuration
-tar -czf config-backup-$(date +%Y%m%d).tar.gz docker/ .env
+- **Build command:** `npm run build`
+- **Publish directory:** `dist`
+- **`NODE_VERSION`:** `22`
+- **Security headers** applied to `/*` mirror the Apache config (same CSP,
+  `X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection: 0`,
+  `Referrer-Policy`, `Permissions-Policy`) **plus** HSTS
+  (`Strict-Transport-Security = "max-age=31536000; includeSubDomains"`), which
+  is safe because **Netlify always serves over HTTPS**.
+- **Caching:** `/_assets/*` is `public, max-age=31536000, immutable`;
+  `/service-worker.js` is `no-cache, no-store, must-revalidate`.
 
-# Backup Docker image
-docker save fluxology-site:latest | gzip > fluxology-site-backup-$(date +%Y%m%d).tar.gz
-```
+> **Netlify Forms caveat.** The contact form relies on **Netlify Forms**, which
+> only works when the site is hosted on Netlify. On the Docker + Apache
+> deployment there is no form back end — Apache serves static files only — so
+> form submissions will not be captured there. Use an alternative form handler
+> (or a small backend) if you self-host and need the contact form to work.
 
-## 📈 Production Deployment
+## Additional Resources
 
-### System Requirements
-
-**Minimum:**
-- 1 CPU core
-- 512 MB RAM
-- 5 GB disk space
-
-**Recommended:**
-- 2 CPU cores
-- 1 GB RAM
-- 10 GB disk space
-
-### Environment Setup
-
-1. **Update .env for production:**
-```bash
-HTTP_PORT=80
-HTTPS_PORT=443
-SERVER_NAME=fluxology.ca
-SERVER_ADMIN=admin@fluxology.ca
-NODE_ENV=production
-APACHE_LOG_LEVEL=error  # Less verbose in production
-```
-
-2. **Configure firewall:**
-```bash
-# Allow HTTP
-sudo ufw allow 80/tcp
-
-# Allow HTTPS
-sudo ufw allow 443/tcp
-
-# Enable firewall
-sudo ufw enable
-```
-
-3. **Start container:**
-```bash
-docker-compose up -d
-```
-
-4. **Enable auto-restart:**
-```yaml
-# In docker-compose.yml (already configured)
-restart: unless-stopped
-```
-
-### Monitoring in Production
-
-**Install monitoring tools:**
-
-```bash
-# Prometheus + Grafana
-# Add monitoring stack to docker-compose.yml
-
-# Or use Docker built-in
-docker stats fluxology-website
-```
-
-**Log rotation:**
-
-```bash
-# Configure logrotate for docker logs
-sudo nano /etc/logrotate.d/docker-containers
-
-# Add:
-/var/lib/docker/containers/*/*-json.log {
-  rotate 7
-  daily
-  compress
-  size=10M
-  missingok
-  delaycompress
-  copytruncate
-}
-```
-
-### CI/CD Integration
-
-**Example GitHub Actions:**
-
-```yaml
-# .github/workflows/deploy.yml
-name: Deploy to Production
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Build Docker image
-        run: docker build -t fluxology-site:latest .
-
-      - name: Deploy to server
-        # Add deployment steps here
-```
-
-## 🐳 Advanced Docker Commands
-
-### Clean Up
-
-```bash
-# Remove stopped containers
-docker container prune
-
-# Remove unused images
-docker image prune -a
-
-# Remove everything (careful!)
-docker system prune -a --volumes
-
-# Remove specific image
-docker rmi fluxology-site:latest
-```
-
-### Debugging
-
-```bash
-# Access container shell
-docker exec -it fluxology-website sh
-
-# View Apache config
-docker exec fluxology-website cat /usr/local/apache2/conf/httpd.conf
-
-# Test Apache config
-docker exec fluxology-website apachectl configtest
-
-# Check running processes
-docker exec fluxology-website ps aux
-
-# Check disk usage
-docker exec fluxology-website df -h
-```
-
-### Performance Testing
-
-```bash
-# Apache Bench (from host)
-ab -n 1000 -c 10 http://localhost/
-
-# Or use hey
-hey -n 1000 -c 10 http://localhost/
-```
-
-## 📚 Additional Resources
-
-- [Apache HTTP Server Documentation](https://httpd.apache.org/docs/2.4/)
+- [Apache HTTP Server 2.4 Documentation](https://httpd.apache.org/docs/2.4/)
 - [Docker Documentation](https://docs.docker.com/)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Astro Documentation](https://docs.astro.build/)
-
-## 🆘 Support
-
-For issues or questions:
-- Check logs: `docker-compose logs -f`
-- Review configuration files
-- Contact: admin@fluxology.ca
+- [Netlify Configuration Docs](https://docs.netlify.com/configure-builds/file-based-configuration/)
 
 ---
 
-**Version:** 2.0.0
-**Last Updated:** November 2025
-**Status:** Production Ready
+**Status:** Static Astro 7 build, served by Apache 2.4 (self-hosted) or Netlify
+(primary). Plaintext HTTP in the container — put a TLS terminator in front for
+any untrusted network.
