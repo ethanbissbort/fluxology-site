@@ -1,5 +1,6 @@
 ---
 import { Font } from 'astro:assets';
+import CursorEffects from '../components/CursorEffects.svelte';
 
 // Global stylesheets — imported so Astro bundles, hashes, and injects them.
 // Referencing "/src/styles/*.css" via <link> does NOT work in a production
@@ -101,6 +102,9 @@ const organizationSchema = JSON.stringify({
 </head>
 <body>
   <slot />
+
+  <!-- Site-wide layered cursor (fine pointers only; respects reduced motion) -->
+  <CursorEffects client:idle />
 
   <script>
     // Register service worker for PWA support. (No logging: terser strips
