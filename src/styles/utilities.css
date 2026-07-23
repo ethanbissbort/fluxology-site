@@ -1,17 +1,22 @@
 /* Utility Classes for Performance Optimization */
 
-/* CSS Containment for major sections */
+/* CSS Containment for major sections.
+   The intrinsic-size estimate must be close to real section heights
+   (~1400-1500px on desktop): "0 100vh" underestimated them so badly that
+   anchor navigation landed hundreds of pixels short as sections rendered in
+   mid-scroll. "auto" makes the browser remember the real size once a section
+   has been rendered, eliminating the shift on subsequent scrolls. */
 .section {
   content-visibility: auto;
   contain: layout style paint;
-  contain-intrinsic-size: 0 100vh;
+  contain-intrinsic-size: auto 1500px;
 }
 
 /* Specific containment for DBA sections */
 .dba-section {
   content-visibility: auto;
   contain: layout style paint;
-  contain-intrinsic-size: 0 100vh;
+  contain-intrinsic-size: auto 1500px;
 }
 
 /* Critical above-the-fold content - always visible */

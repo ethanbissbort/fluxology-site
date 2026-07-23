@@ -20,34 +20,12 @@
   transform: translateY(0);
 }
 
-/* Stagger animation delays for service cards */
-.services-grid .service-card:nth-child(1) {
-  transition-delay: 0ms;
-}
-
-.services-grid .service-card:nth-child(2) {
-  transition-delay: 100ms;
-}
-
-.services-grid .service-card:nth-child(3) {
-  transition-delay: 200ms;
-}
-
-.services-grid .service-card:nth-child(4) {
-  transition-delay: 300ms;
-}
-
-/* ========================================
-   PARALLAX EFFECTS
-   ======================================== */
-.parallax-bg,
-.parallax-pattern,
-.parallax-wireframe,
-.parallax-foliage,
-.parallax-trees {
-  will-change: transform;
-  transition: transform 0.1s linear;
-}
+/* Note: per-card transition-delay staggering was removed — it belonged to the
+   old .in-view reveal system, and a transition-delay on the cards also delayed
+   their hover border/background/shadow transitions by 100-300ms.
+   The parallax will-change/transform rules were removed too: no script drives
+   parallax anymore, and the layers are static backgrounds — the GPU
+   memory hint was pure cost. */
 
 /* ========================================
    THEME TRANSITION EFFECTS
@@ -214,7 +192,10 @@ a,
    NAVIGATION THEME TRANSITIONS
    ======================================== */
 .main-nav {
-  transition: background var(--transition-theme) var(--ease-in-out-cubic);
+  /* Must include padding: this rule overrides base.css's .main-nav
+     transition, and losing padding made the nav shrink-on-scroll snap. */
+  transition: background var(--transition-theme) var(--ease-in-out-cubic),
+              padding var(--transition-base) var(--ease-in-out-cubic);
 }
 
 .nav-logo {
@@ -269,7 +250,11 @@ a,
 }
 
 .hero-scroll-indicator {
-  animation: fadeInUp 1s var(--ease-out-cubic) 1s backwards;
+  /* Both animations: the entrance fade, then the continuous bounce from
+     base.css — a bare fadeInUp shorthand was cancelling the bounce. */
+  animation:
+    fadeInUp 1s var(--ease-out-cubic) 1s backwards,
+    bounce 2s 2s infinite;
 }
 
 /* ========================================

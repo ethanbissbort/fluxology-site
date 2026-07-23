@@ -208,6 +208,13 @@ body {
   outline: none;
 }
 
+/* Keyboard focus must stay visible everywhere — the ::after underline that
+   doubles as the focus indicator is display:none inside the mobile menu. */
+.nav-link:focus-visible {
+  outline: 2px solid var(--current-accent-primary, #3A86FF);
+  outline-offset: 4px;
+}
+
 .nav-link:hover::after,
 .nav-link:focus::after {
   width: 70%;
@@ -237,6 +244,15 @@ body {
   align-items: center;
   overflow: hidden;
   padding: var(--section-padding-y) 0;
+}
+
+/* Anchor navigation offset for the fixed nav bar. Native fragment scrolling
+   (reset.css sets smooth scroll-behavior with reduced-motion overrides) uses
+   this instead of JS offset math, which mis-measured under
+   content-visibility:auto. */
+.section,
+#main-content {
+  scroll-margin-top: 72px;
 }
 
 .background-layer,

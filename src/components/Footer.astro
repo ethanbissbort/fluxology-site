@@ -1,5 +1,8 @@
 ---
 // Footer component
+// Build-time year: correct without JavaScript; the small script in
+// BaseLayout still refreshes it client-side for long-cached pages.
+const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer" role="contentinfo">
@@ -26,8 +29,12 @@
           <ul class="footer-list" role="list">
             <li><a href="#about">About Us</a></li>
             <li><a href="#contact">Contact</a></li>
-            <li><a href="#">Privacy Policy</a></li>
-            <li><a href="#">Terms of Service</a></li>
+            <!-- TODO: restore once real Privacy Policy / Terms pages exist.
+                 They previously pointed at href="#", which just jumped the
+                 page to the top — worse than omitting them.
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+            -->
           </ul>
         </div>
       </div>
@@ -35,7 +42,7 @@
 
     <div class="footer-bottom">
       <p class="footer-copyright">
-        &copy; <span id="currentYear"></span> Fluxology Inc. All rights reserved. Canadian Controlled Private Corporation.
+        &copy; <span id="currentYear">{year}</span> Fluxology Inc. All rights reserved. Canadian Controlled Private Corporation.
       </p>
     </div>
   </div>

@@ -27,7 +27,9 @@
         <a href="#contact" class="cta-button cta-secondary">Get in Touch</a>
       </div>
 
-      <div class="hero-scroll-indicator" aria-label="Scroll down">
+      <!-- Purely decorative affordance; aria-label is invalid on a generic
+           div with no role, so hide it from assistive tech instead. -->
+      <div class="hero-scroll-indicator" aria-hidden="true">
         <span class="scroll-arrow">↓</span>
         <span class="scroll-text">Scroll to discover</span>
       </div>

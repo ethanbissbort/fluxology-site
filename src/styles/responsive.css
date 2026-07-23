@@ -602,10 +602,24 @@
 /* ========================================
    DARK MODE SUPPORT (System Preference)
    ======================================== */
-@media (prefers-color-scheme: dark) {
-  /* Already dark by default, but ensure consistency */
-  body {
-    background: var(--corporate-primary-navy);
-    color: white;
+/* Note: the prefers-color-scheme:dark override was removed. The site is dark
+   by design, and pinning body background/color to the corporate palette here
+   defeated the scroll-driven theme crossfade for dark-preference users. */
+
+/* ========================================
+   COMPACT NAV ZONE (768-849px)
+   ======================================== */
+/* Desktop nav layout but very little width: 7 links + the emblem/wordmark
+   lockup had near-zero slack here. Compact the links and drop the "Inc."
+   suffix instead of moving the hamburger breakpoint (which would drag the
+   whole mobile layout along with it). */
+@media (min-width: 768px) and (max-width: 849px) {
+  .nav-link {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-sm) 0.4rem;
+  }
+
+  .logo-inc {
+    display: none;
   }
 }

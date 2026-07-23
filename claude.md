@@ -118,9 +118,8 @@ fluxology-site/
 ├── public/                     # Copied verbatim into dist/
 │   ├── favicon.svg             # SVG favicon (no favicon.ico)
 │   ├── service-worker.js       # PWA offline caching
-│   └── fonts/README.md         # Explains fonts are self-hosted by astro:fonts (no committed woff2)
+
 ├── scripts/
-│   └── optimize-images.js      # Sharp-based image optimizer (npm run optimize-images)
 └── src/
     ├── pages/
     │   └── index.astro         # The single page; contains the dbaSections data array
@@ -249,7 +248,7 @@ Fonts are **self-hosted and optimized by Astro's built-in `astro:fonts`** — th
 
 `public/service-worker.js` provides offline support and runtime caching. It is registered by an inline script in `BaseLayout.astro` on `window.load`.
 
-- **Cache names** are versioned (`fluxology-v2.1.0`, `fluxology-runtime-v2.1.0`); the `activate` handler deletes any cache not in the current set, so releases evict stale entries.
+- **Cache names** are versioned (`fluxology-v2.2.0`, `fluxology-runtime-v2.2.0`); the `activate` handler deletes any cache not in the current set, so releases evict stale entries.
 - **Precache** is only the app shell: `ASSETS_TO_CACHE = ['/']`. Content-hashed CSS/JS and font `.woff2` files under `/_assets` are cached lazily at runtime — listing hashed names would go stale each build and a single 404 would fail `cache.addAll`.
 - **Fetch strategy**:
   - Non-GET and cross-origin requests pass straight through (so the contact form POST is untouched).
@@ -315,7 +314,6 @@ Contributing techniques:
 | `build` | `astro build` | Static build to `dist/` |
 | `preview` | `astro preview` | Serve the built `dist/` locally |
 | `sync` | `astro sync` | Regenerate Astro type definitions |
-| `optimize-images` | `node scripts/optimize-images.js` | Sharp image optimization |
 
 `astro.config.mjs` sets `output: 'static'` and `build.assets: '_assets'` (custom asset directory instead of the default `_astro`).
 

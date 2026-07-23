@@ -1,46 +1,51 @@
 <script>
   import { onMount } from 'svelte';
 
+  // Values are var() references into the canonical palette in variables.css —
+  // never literal colors or font names. Hardcoded font strings previously
+  // broke themed typography entirely: astro:fonts registers HASHED family
+  // names (e.g. "Outfit-1af0…"), so a raw 'Outfit' set at runtime resolved to
+  // the generic sans-serif fallback on every theme change.
   const themes = {
     corporate: {
-      bgPrimary: '#1B3A4B',
-      bgSecondary: '#2E5266',
-      textPrimary: '#FFFFFF',
-      textSecondary: '#E9ECEF',
-      accentPrimary: '#3A86FF',
-      accentSecondary: '#A8DADC',
-      fontHeading: "'Outfit', sans-serif",
-      fontBody: "'Open Sans', sans-serif"
+      bgPrimary: 'var(--corporate-primary-navy)',
+      bgSecondary: 'var(--corporate-primary-slate)',
+      textPrimary: 'var(--corporate-neutral-white)',
+      textSecondary: 'var(--corporate-neutral-gray)',
+      accentPrimary: 'var(--corporate-accent-blue)',
+      accentSecondary: 'var(--corporate-accent-silver)',
+      fontHeading: 'var(--font-corporate-heading)',
+      fontBody: 'var(--font-corporate-body)'
     },
     industrial: {
-      bgPrimary: '#2C3440',
-      bgSecondary: '#4A5F7F',
-      textPrimary: '#F8F9FA',
-      textSecondary: '#C9CDD1',
-      accentPrimary: '#FF6B35',
-      accentSecondary: '#FFA559',
-      fontHeading: "'Rajdhani', sans-serif",
-      fontBody: "'Inter', sans-serif"
+      bgPrimary: 'var(--industrial-primary-charcoal)',
+      bgSecondary: 'var(--industrial-primary-steel)',
+      textPrimary: 'var(--industrial-neutral-white)',
+      textSecondary: 'var(--industrial-neutral-silver)',
+      accentPrimary: 'var(--industrial-accent-orange)',
+      accentSecondary: 'var(--industrial-accent-amber)',
+      fontHeading: 'var(--font-industrial-heading)',
+      fontBody: 'var(--font-industrial-body)'
     },
     tech: {
-      bgPrimary: '#0A0E27',
-      bgSecondary: '#1B2845',
-      textPrimary: '#FFFFFF',
-      textSecondary: '#E8EAF0',
-      accentPrimary: '#00D9FF',
-      accentSecondary: '#FF006E',
-      fontHeading: "'Space Grotesk', sans-serif",
-      fontBody: "'DM Sans', sans-serif"
+      bgPrimary: 'var(--tech-primary-black)',
+      bgSecondary: 'var(--tech-primary-navy)',
+      textPrimary: 'var(--tech-neutral-white)',
+      textSecondary: 'var(--tech-neutral-gray)',
+      accentPrimary: 'var(--tech-accent-cyan)',
+      accentSecondary: 'var(--tech-accent-magenta)',
+      fontHeading: 'var(--font-tech-heading)',
+      fontBody: 'var(--font-tech-body)'
     },
     natural: {
-      bgPrimary: '#2D4A2B',
-      bgSecondary: '#6B8E6B',
-      textPrimary: '#FDFBF7',
-      textSecondary: '#F5F1E8',
-      accentPrimary: '#C77D58',
-      accentSecondary: '#D4A574',
-      fontHeading: "'Sora', sans-serif",
-      fontBody: "'Nunito', sans-serif"
+      bgPrimary: 'var(--natural-primary-forest)',
+      bgSecondary: 'var(--natural-primary-sage)',
+      textPrimary: 'var(--natural-neutral-white)',
+      textSecondary: 'var(--natural-neutral-cream)',
+      accentPrimary: 'var(--natural-accent-terracotta)',
+      accentSecondary: 'var(--natural-accent-gold)',
+      fontHeading: 'var(--font-natural-heading)',
+      fontBody: 'var(--font-natural-body)'
     }
   };
 
@@ -83,7 +88,10 @@
   }
 
   onMount(() => {
-    const sections = document.querySelectorAll('[data-theme]');
+    // Only page sections drive theming. A bare [data-theme] selector also
+    // matched ParticleSystem containers, which have no id — every time one
+    // intersected, updateActiveNavLink('') wiped the nav's active state.
+    const sections = document.querySelectorAll('section[data-theme]');
 
     const observer = new IntersectionObserver(
       (entries) => {

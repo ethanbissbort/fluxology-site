@@ -24,12 +24,32 @@ const {
   services,
   ctaText = "Learn More"
 } = Astro.props;
+
+// Theme-specific CTA class — themes.css styles .industrial-cta / .tech-cta /
+// .natural-cta scoped to the section ids; without one of these the CTA
+// renders with only the base .cta-button skeleton (near-invisible).
+const ctaClass = {
+  industrial: 'industrial-cta',
+  tech: 'tech-cta',
+  natural: 'natural-cta'
+}[theme] ?? 'cta-primary';
+
+// Decorative background layers per section — themes.css styles these class
+// names (scoped to each section id) but the markup stopped rendering them in
+// the Astro migration, leaving 3 of 4 sections with a flat background.
+const textureLayers = {
+  'fabrication': ['industrial-texture'],
+  '3d-lab': ['tech-gradient', 'parallax-wireframe'],
+  'greenhouse': ['natural-texture', 'parallax-foliage'],
+  'orchard': ['orchard-landscape', 'parallax-trees']
+}[id] ?? [];
 ---
 
 <section id={id} data-theme={theme} class="section dba-section">
   <div class="background-layer">
-    <div class="parallax-bg" data-speed="0.4"></div>
-    <div class="parallax-pattern" data-speed="0.6"></div>
+    <div class="parallax-bg"></div>
+    <div class="parallax-pattern"></div>
+    {textureLayers.map((cls) => <div class={cls}></div>)}
   </div>
 
   <div class="content-layer">
@@ -57,11 +77,13 @@ const {
         <div class="showcase-placeholder">
           <!-- Ideal image: 1200x600px -->
           <!-- E-COMMERCE INTEGRATION: Product gallery would go here -->
-          <div class="showcase-image" role="img" aria-label={`${name} showcase`}></div>
+          <!-- Decorative until a real image lands: hidden from assistive tech
+               rather than announced as an empty "image". -->
+          <div class="showcase-image" aria-hidden="true"></div>
         </div>
       </div>
 
-      <button class="cta-button observe-fade">{ctaText}</button>
+      <a class={`cta-button ${ctaClass} observe-fade`} href="#contact">{ctaText}</a>
     </div>
   </div>
 
@@ -71,10 +93,26 @@ const {
 </section>
 
 <style>
-  /* CSS Containment for performance */
+  /* CSS Containment for performance. auto + a realistic estimate keeps
+     anchor navigation accurate (see utilities.css for details). */
   .dba-section {
     content-visibility: auto;
     contain: layout style paint;
-    contain-intrinsic-size: 0 100vh;
+    contain-intrinsic-size: auto 1500px;
+  }
+
+  /* All decorative background layers fill the section. Without this only
+     .parallax-bg (sized in base.css) was visible — pattern/texture layers
+     rendered as zero-height divs. */
+  .background-layer > div {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* CTAs are anchors (they link to #contact); keep button-like display. */
+  a.cta-button {
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
   }
 </style>

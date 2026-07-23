@@ -168,8 +168,9 @@ const dbaSections = [
   <Navigation />
   <NavigationMenu client:load />
 
-  <!-- Main content -->
-  <main id="main-content">
+  <!-- Main content. tabindex="-1" lets the skip link move programmatic
+       focus here reliably across browsers/screen readers. -->
+  <main id="main-content" tabindex="-1">
     <Hero />
     <About />
 

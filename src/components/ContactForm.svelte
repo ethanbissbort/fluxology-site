@@ -61,6 +61,13 @@
     submitMessage = '';
 
     if (!validate()) {
+      // Move focus to the first invalid field so keyboard and screen-reader
+      // users land on the problem instead of a silent no-op.
+      const firstInvalid = ['fullName', 'email', 'serviceInterest', 'message']
+        .find((field) => errors[field]);
+      if (firstInvalid) {
+        document.getElementById(firstInvalid)?.focus();
+      }
       return;
     }
 
@@ -115,6 +122,8 @@
 
 <div class="contact-content observe-fade">
   <div class="contact-info">
+    <!-- TODO: restore with the real street address — the previous block
+         shipped bracketed placeholders ("[Street Address]") to production.
     <div class="info-block">
       <h3 class="info-title">Address</h3>
       <p class="info-text">
@@ -123,12 +132,16 @@
         Canada
       </p>
     </div>
+    -->
 
     <div class="info-block">
       <h3 class="info-title">Contact</h3>
       <p class="info-text">
-        Email: <a href="mailto:info@fluxology.ca">info@fluxology.ca</a><br />
-        Phone: <a href="tel:+1234567890">(123) 456-7890</a>
+        Email: <a href="mailto:info@fluxology.ca">info@fluxology.ca</a>
+        <!-- TODO: restore with the real phone number — (123) 456-7890 was a
+             dummy value.
+        <br />Phone: <a href="tel:+1234567890">(123) 456-7890</a>
+        -->
       </p>
     </div>
 
@@ -141,6 +154,8 @@
       </p>
     </div>
 
+    <!-- TODO: restore with real profile URLs — all five icons pointed at
+         href="#", which just jumped the page to the top.
     <div class="info-block">
       <h3 class="info-title">Follow Us</h3>
       <div class="social-links">
@@ -161,6 +176,7 @@
         </a>
       </div>
     </div>
+    -->
   </div>
 
   <form
@@ -218,10 +234,11 @@
           oninput={() => clearError('fullName')}
           required
           aria-invalid={!!errors.fullName}
+          aria-describedby={errors.fullName ? 'fullName-error' : undefined}
           placeholder="John Doe"
         />
         {#if errors.fullName}
-          <span class="form-error" role="alert">{errors.fullName}</span>
+          <span class="form-error" id="fullName-error" role="alert">{errors.fullName}</span>
         {/if}
       </div>
     </div>
@@ -240,10 +257,11 @@
           oninput={() => clearError('email')}
           required
           aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? 'email-error' : undefined}
           placeholder="john@example.com"
         />
         {#if errors.email}
-          <span class="form-error" role="alert">{errors.email}</span>
+          <span class="form-error" id="email-error" role="alert">{errors.email}</span>
         {/if}
       </div>
     </div>
@@ -277,6 +295,7 @@
           onchange={() => clearError('serviceInterest')}
           required
           aria-invalid={!!errors.serviceInterest}
+          aria-describedby={errors.serviceInterest ? 'serviceInterest-error' : undefined}
         >
           <option value="">Select a service...</option>
           <option value="fabrication">Fabrication & Welding</option>
@@ -287,7 +306,7 @@
           <option value="general">General Inquiry</option>
         </select>
         {#if errors.serviceInterest}
-          <span class="form-error" role="alert">{errors.serviceInterest}</span>
+          <span class="form-error" id="serviceInterest-error" role="alert">{errors.serviceInterest}</span>
         {/if}
       </div>
     </div>
@@ -306,10 +325,11 @@
           oninput={() => clearError('message')}
           required
           aria-invalid={!!errors.message}
+          aria-describedby={errors.message ? 'message-error' : undefined}
           placeholder="Tell us about your project or inquiry..."
         ></textarea>
         {#if errors.message}
-          <span class="form-error" role="alert">{errors.message}</span>
+          <span class="form-error" id="message-error" role="alert">{errors.message}</span>
         {/if}
       </div>
     </div>

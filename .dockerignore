@@ -92,4 +92,5 @@ pnpm-lock.yaml
 .editorconfig
 .eslintrc*
 .prettierrc*
-tsconfig.json
+# tsconfig.json is intentionally NOT excluded — the container runs
+# `astro build`, which reads it.
