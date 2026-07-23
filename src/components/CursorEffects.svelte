@@ -8,8 +8,17 @@
   //
   // Enabled only for fine pointers with hover capability, and never under
   // prefers-reduced-motion. Touch devices and keyboard users are unaffected.
+  //
+  // IMPORTANT: visibility/hover/pulse states are driven by reactive `class:`
+  // directives, NOT runtime classList mutation — Svelte prunes scoped CSS
+  // selectors it cannot see in the template, so classList-only classes end
+  // up with their style rules stripped from the build (which made the
+  // cursor permanently invisible in the first version of this component).
 
   let enabled = $state(false);
+  let shown = $state(false);
+  let hovering = $state(false);
+  let pulsing = $state(false);
   let dotEl = $state(null);
   let ringEl = $state(null);
 
@@ -25,38 +34,28 @@
     let y = window.innerHeight / 2;
     let ringX = x;
     let ringY = y;
-    let shown = false;
     let raf;
 
     function onMove(e) {
       x = e.clientX;
       y = e.clientY;
-
-      if (!shown) {
-        shown = true;
-        dotEl?.classList.add('on');
-        ringEl?.classList.add('on');
-      }
-
+      shown = true;
       // Grow the ring over anything interactive.
-      const interactive = e.target?.closest?.(
+      hovering = !!e.target?.closest?.(
         'a, button, [role="button"], input, textarea, select, label, summary'
       );
-      ringEl?.classList.toggle('hover', !!interactive);
     }
 
     function onLeave() {
       shown = false;
-      dotEl?.classList.remove('on');
-      ringEl?.classList.remove('on');
     }
 
     function onDown() {
-      if (!ringEl) return;
-      ringEl.classList.remove('pulse');
-      // Restart the pulse animation even on rapid clicks.
-      void ringEl.offsetWidth;
-      ringEl.classList.add('pulse');
+      // Drop the class for one frame so rapid clicks restart the animation.
+      pulsing = false;
+      requestAnimationFrame(() => {
+        pulsing = true;
+      });
     }
 
     function loop() {
@@ -83,8 +82,16 @@
 </script>
 
 {#if enabled}
-  <div class="cursor-dot" bind:this={dotEl} aria-hidden="true"></div>
-  <div class="cursor-ring" bind:this={ringEl} aria-hidden="true"></div>
+  <div class="cursor-dot" class:on={shown} bind:this={dotEl} aria-hidden="true"></div>
+  <div
+    class="cursor-ring"
+    class:on={shown}
+    class:hover={hovering}
+    class:pulse={pulsing}
+    bind:this={ringEl}
+    onanimationend={() => (pulsing = false)}
+    aria-hidden="true"
+  ></div>
 {/if}
 
 <style>

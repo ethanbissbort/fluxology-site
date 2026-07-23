@@ -34,7 +34,7 @@ production — Apache serves plain files from `dist/`.
   font files into `dist/`. There are no manually committed font files to copy.
 
 > **Plaintext HTTP by design.** The container serves **plaintext HTTP on port
-> 80**. When exposed to an untrusted network it **must sit behind a TLS
+> 6080**. When exposed to an untrusted network it **must sit behind a TLS
 > terminator** (reverse proxy or load balancer) that handles HTTPS, HSTS, and
 > the HTTP→HTTPS redirect. The commented-out `:443` vhost and HSTS header can
 > be enabled instead, but only with real certificates. See
@@ -62,7 +62,7 @@ docker-compose logs -f
 docker-compose down
 ```
 
-The site is served at **http://localhost** (or `http://localhost:${HTTP_PORT}`
+The site is served at **http://localhost:6080** (or `http://localhost:${HTTP_PORT}`
 if you override the port).
 
 ## File Structure
@@ -77,7 +77,7 @@ fluxology-site/
 ├── docker/
 │   └── apache/
 │       ├── httpd.conf          # Main Apache config (headers, caching, brotli/gzip)
-│       └── vhost.conf          # Virtual host config (:80 active, :443 commented)
+│       └── vhost.conf          # Virtual host config (:6080 active, :443 commented)
 └── logs/
     └── apache/                 # Apache logs (bind-mounted from the container)
 ```
@@ -96,7 +96,7 @@ cp .env.example .env
 
 | Variable       | Default             | Purpose                                             |
 | -------------- | ------------------- | --------------------------------------------------- |
-| `HTTP_PORT`    | `80`                | Host port mapped to the container's port 80         |
+| `HTTP_PORT`    | `6080`              | Host port mapped to the container's port 6080       |
 | `TIMEZONE`     | `America/Toronto`   | Passed as `TZ` (container timezone)                 |
 
 > These are the **only** environment variables — everything else (Apache
@@ -104,7 +104,7 @@ cp .env.example .env
 > `ServerAdmin`) is baked into `docker/apache/httpd.conf`. `.env.example`
 > used to list many unwired placeholder variables; they were removed.
 
-**Change the port** — if port 80 is in use:
+**Change the port** — if port 6080 is in use:
 
 ```bash
 # in .env
@@ -112,7 +112,7 @@ HTTP_PORT=8080
 ```
 
 Then access the site at http://localhost:8080. The mapping is
-`"${HTTP_PORT:-80}:80"`, so only the host side changes.
+`"${HTTP_PORT:-6080}:6080"`, so only the host side changes.
 
 > **Secrets never enter the build context.** `.dockerignore` excludes `.env`,
 > `.env.*`, and `*.env` (keeping only `.env.example`), alongside
@@ -132,7 +132,7 @@ Then access the site at http://localhost:8080. The mapping is
 
 **Virtual host:** `docker/apache/vhost.conf`
 
-- Active HTTP virtual host on port 80
+- Active HTTP virtual host on port 6080 (non-default to avoid clashes with other containers)
 - HTTPS (`:443`) virtual host and HTTP→HTTPS redirect are present but
   **commented out** — enable them only with real SSL certificates
 
@@ -175,7 +175,7 @@ docker build -t fluxology-site:latest .
 # Run container
 docker run -d \
   --name fluxology-website \
-  -p 80:80 \
+  -p 6080:6080 \
   --restart unless-stopped \
   fluxology-site:latest
 
@@ -215,13 +215,13 @@ timings):
 
 ```
 --interval=30s --timeout=3s --start-period=5s --retries=3
-CMD curl -f http://localhost/ || exit 1
+CMD curl -f http://localhost:6080/ || exit 1
 ```
 
 **docker-compose.yml `healthcheck`:**
 
 ```
-test: ["CMD", "curl", "-f", "http://localhost/"]
+test: ["CMD", "curl", "-f", "http://localhost:6080/"]
 interval: 30s
 timeout: 10s
 retries: 3
@@ -300,16 +300,16 @@ On Netlify, HSTS **is** sent, because Netlify is always HTTPS.
 
 ### HTTPS / TLS
 
-The container itself listens only on plaintext port 80. To serve HTTPS you have
+The container itself listens only on plaintext port 6080. To serve HTTPS you have
 two options:
 
 **Recommended — terminate TLS upstream.** Put the container behind a reverse
 proxy or load balancer (nginx, Caddy, Traefik, an ALB, Cloudflare, etc.) that
 handles certificates, HSTS, and the HTTP→HTTPS redirect. Keep publishing only
-port 80 to that proxy. `docker-compose.yml` documents this requirement:
+port 6080 to that proxy. `docker-compose.yml` documents this requirement:
 
 ```yaml
-# NOTE: this container serves plaintext HTTP on port 80 by design. When
+# NOTE: this container serves plaintext HTTP by design. When
 # exposed to an untrusted network it MUST sit behind a TLS terminator
 # (reverse proxy / load balancer) that handles HTTPS, HSTS, and the
 # HTTP->HTTPS redirect. Do not publish it directly to the internet.
@@ -373,7 +373,7 @@ official `httpd:2.4-alpine` image includes `mod_brotli.so`.
 
 ```bash
 # Is the port already in use?
-sudo lsof -i :80         # or your HTTP_PORT
+sudo lsof -i :6080       # or your HTTP_PORT
 
 # Use a different host port in .env
 HTTP_PORT=8080

@@ -7,12 +7,14 @@ services:
       context: .
       dockerfile: Dockerfile
     image: fluxology-site:latest
-    # NOTE: this container serves plaintext HTTP on port 80 by design. When
-    # exposed to an untrusted network it MUST sit behind a TLS terminator
-    # (reverse proxy / load balancer) that handles HTTPS, HSTS, and the
-    # HTTP->HTTPS redirect. Do not publish it directly to the internet.
+    # NOTE: this container serves plaintext HTTP by design. When exposed to
+    # an untrusted network it MUST sit behind a TLS terminator (reverse
+    # proxy / load balancer) that handles HTTPS, HSTS, and the HTTP->HTTPS
+    # redirect. Do not publish it directly to the internet.
+    # Apache listens on 6080 inside the container (avoids clashes with other
+    # containers, including under host networking).
     ports:
-      - "${HTTP_PORT:-80}:80"
+      - "${HTTP_PORT:-6080}:6080"
     environment:
       # Note: only TZ is consumed. Apache's ServerName/ServerAdmin are set in
       # docker/apache/httpd.conf — the old APACHE_SERVER_NAME/ADMIN env vars
@@ -27,7 +29,7 @@ services:
       - fluxology-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD", "curl", "-f", "http://localhost:6080/"]
       interval: 30s
       timeout: 10s
       retries: 3

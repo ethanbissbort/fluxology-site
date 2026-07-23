@@ -47,12 +47,13 @@ COPY --from=builder /app/dist /usr/local/apache2/htdocs/
 RUN chown -R www-data:www-data /usr/local/apache2/htdocs/ && \
     chmod -R 755 /usr/local/apache2/htdocs/
 
-# Expose port 80
-EXPOSE 80
+# Expose the app port (Apache listens on 6080 — see docker/apache/httpd.conf;
+# a non-default port avoids collisions with other containers)
+EXPOSE 6080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD curl -f http://localhost:6080/ || exit 1
 
 # Start Apache in foreground
 CMD ["httpd-foreground"]
