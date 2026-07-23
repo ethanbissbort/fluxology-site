@@ -68,4 +68,10 @@
     background: var(--current-accent-primary, #3A86FF);
     transition: width 0.1s linear, background-color var(--transition-theme) var(--ease-in-out-cubic);
   }
+
+  @media (max-width: 767px) {
+    .scroll-progress {
+      height: 2px;
+    }
+  }
 </style>

@@ -77,6 +77,8 @@
   .back-to-top:focus {
     transform: translateY(-3px);
     box-shadow: var(--shadow-xl);
+    /* Theme-agnostic darkening (replaces the old global static #2865CC). */
+    filter: brightness(0.85);
   }
 
   .back-to-top-arrow {

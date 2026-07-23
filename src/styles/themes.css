@@ -5,13 +5,10 @@
    ======================================== */
 [data-theme="corporate"] {
   --current-bg-primary: var(--corporate-primary-navy);
-  --current-bg-secondary: var(--corporate-primary-slate);
   --current-text-primary: var(--corporate-neutral-white);
   --current-text-secondary: var(--corporate-neutral-gray);
   --current-accent-primary: var(--corporate-accent-blue);
-  --current-accent-secondary: var(--corporate-accent-silver);
   --current-font-heading: var(--font-corporate-heading);
-  --current-font-body: var(--font-corporate-body);
 }
 
 [data-theme="corporate"] .parallax-bg {
@@ -27,13 +24,10 @@
    ======================================== */
 [data-theme="industrial"] {
   --current-bg-primary: var(--industrial-primary-charcoal);
-  --current-bg-secondary: var(--industrial-primary-steel);
   --current-text-primary: var(--industrial-neutral-white);
   --current-text-secondary: var(--industrial-neutral-silver);
   --current-accent-primary: var(--industrial-accent-orange);
-  --current-accent-secondary: var(--industrial-accent-amber);
   --current-font-heading: var(--font-industrial-heading);
-  --current-font-body: var(--font-industrial-body);
 }
 
 #fabrication {
@@ -128,13 +122,10 @@
    ======================================== */
 [data-theme="tech"] {
   --current-bg-primary: var(--tech-primary-black);
-  --current-bg-secondary: var(--tech-primary-navy);
   --current-text-primary: var(--tech-neutral-white);
   --current-text-secondary: var(--tech-neutral-gray);
   --current-accent-primary: var(--tech-accent-cyan);
-  --current-accent-secondary: var(--tech-accent-magenta);
   --current-font-heading: var(--font-tech-heading);
-  --current-font-body: var(--font-tech-body);
 }
 
 #\33 d-lab {
@@ -256,13 +247,10 @@
    ======================================== */
 [data-theme="natural"] {
   --current-bg-primary: var(--natural-primary-forest);
-  --current-bg-secondary: var(--natural-primary-sage);
   --current-text-primary: var(--natural-neutral-white);
   --current-text-secondary: var(--natural-neutral-cream);
   --current-accent-primary: var(--natural-accent-terracotta);
-  --current-accent-secondary: var(--natural-accent-gold);
   --current-font-heading: var(--font-natural-heading);
-  --current-font-body: var(--font-natural-body);
 }
 
 #greenhouse,

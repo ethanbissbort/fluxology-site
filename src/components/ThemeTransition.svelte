@@ -9,43 +9,31 @@
   const themes = {
     corporate: {
       bgPrimary: 'var(--corporate-primary-navy)',
-      bgSecondary: 'var(--corporate-primary-slate)',
       textPrimary: 'var(--corporate-neutral-white)',
       textSecondary: 'var(--corporate-neutral-gray)',
       accentPrimary: 'var(--corporate-accent-blue)',
-      accentSecondary: 'var(--corporate-accent-silver)',
-      fontHeading: 'var(--font-corporate-heading)',
-      fontBody: 'var(--font-corporate-body)'
+      fontHeading: 'var(--font-corporate-heading)'
     },
     industrial: {
       bgPrimary: 'var(--industrial-primary-charcoal)',
-      bgSecondary: 'var(--industrial-primary-steel)',
       textPrimary: 'var(--industrial-neutral-white)',
       textSecondary: 'var(--industrial-neutral-silver)',
       accentPrimary: 'var(--industrial-accent-orange)',
-      accentSecondary: 'var(--industrial-accent-amber)',
-      fontHeading: 'var(--font-industrial-heading)',
-      fontBody: 'var(--font-industrial-body)'
+      fontHeading: 'var(--font-industrial-heading)'
     },
     tech: {
       bgPrimary: 'var(--tech-primary-black)',
-      bgSecondary: 'var(--tech-primary-navy)',
       textPrimary: 'var(--tech-neutral-white)',
       textSecondary: 'var(--tech-neutral-gray)',
       accentPrimary: 'var(--tech-accent-cyan)',
-      accentSecondary: 'var(--tech-accent-magenta)',
-      fontHeading: 'var(--font-tech-heading)',
-      fontBody: 'var(--font-tech-body)'
+      fontHeading: 'var(--font-tech-heading)'
     },
     natural: {
       bgPrimary: 'var(--natural-primary-forest)',
-      bgSecondary: 'var(--natural-primary-sage)',
       textPrimary: 'var(--natural-neutral-white)',
       textSecondary: 'var(--natural-neutral-cream)',
       accentPrimary: 'var(--natural-accent-terracotta)',
-      accentSecondary: 'var(--natural-accent-gold)',
-      fontHeading: 'var(--font-natural-heading)',
-      fontBody: 'var(--font-natural-body)'
+      fontHeading: 'var(--font-natural-heading)'
     }
   };
 
@@ -56,13 +44,10 @@
     const root = document.documentElement;
 
     root.style.setProperty('--current-bg-primary', theme.bgPrimary);
-    root.style.setProperty('--current-bg-secondary', theme.bgSecondary);
     root.style.setProperty('--current-text-primary', theme.textPrimary);
     root.style.setProperty('--current-text-secondary', theme.textSecondary);
     root.style.setProperty('--current-accent-primary', theme.accentPrimary);
-    root.style.setProperty('--current-accent-secondary', theme.accentSecondary);
     root.style.setProperty('--current-font-heading', theme.fontHeading);
-    root.style.setProperty('--current-font-body', theme.fontBody);
 
     // Update navigation theme attribute
     const nav = document.getElementById('mainNav');

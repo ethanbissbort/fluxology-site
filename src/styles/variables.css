@@ -70,12 +70,8 @@
   --corporate-primary-steel: #476072;
   --corporate-accent-blue: #3A86FF;
   --corporate-accent-silver: #A8DADC;
-  --corporate-accent-platinum: #F1FAEE;
   --corporate-neutral-white: #FFFFFF;
   --corporate-neutral-gray: #E9ECEF;
-  --corporate-neutral-medium: #6C757D;
-  --corporate-neutral-charcoal: #212529;
-
   /* ========================================
      INDUSTRIAL THEME (Fabrication & Welding)
      ======================================== */
@@ -87,8 +83,6 @@
   --industrial-accent-red: #E63946;
   --industrial-neutral-white: #F8F9FA;
   --industrial-neutral-silver: #C9CDD1;
-  --industrial-neutral-shadow: #1A1D23;
-
   /* ========================================
      TECH THEME (3D Lab)
      ======================================== */
@@ -100,8 +94,6 @@
   --tech-accent-purple: #8338EC;
   --tech-neutral-white: #FFFFFF;
   --tech-neutral-gray: #E8EAF0;
-  --tech-neutral-soft: #9BA3B4;
-
   /* ========================================
      NATURAL THEME (Greenhouse & Orchard)
      ======================================== */
@@ -110,12 +102,8 @@
   --natural-primary-moss: #8BA888;
   --natural-accent-terracotta: #C77D58;
   --natural-accent-gold: #D4A574;
-  --natural-accent-clay: #A67C52;
   --natural-neutral-cream: #F5F1E8;
   --natural-neutral-white: #FDFBF7;
-  --natural-neutral-bark: #4A3F35;
-  --natural-neutral-soil: #3E342E;
-
   /* ========================================
      SPACING SYSTEM
      ======================================== */
@@ -141,11 +129,9 @@
      Z-INDEX LAYERS
      ======================================== */
   --z-background: -1;
-  --z-base: 0;
   --z-content: 1;
   --z-accent: 2;
   --z-navigation: 100;
-  --z-modal: 200;
   --z-tooltip: 300;
 
   /* ========================================
@@ -155,15 +141,8 @@
   --transition-base: 300ms;
   --transition-slow: 600ms;
   --transition-theme: 800ms;
-
-  --ease-in-quad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
-  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --ease-in-out-quad: cubic-bezier(0.455, 0.03, 0.515, 0.955);
-  --ease-in-cubic: cubic-bezier(0.55, 0.055, 0.675, 0.19);
   --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
   --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
-  --ease-spring: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-
   /* ========================================
      BORDER RADIUS
      ======================================== */
@@ -176,22 +155,16 @@
   /* ========================================
      SHADOWS
      ======================================== */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-
   /* ========================================
      DYNAMIC THEME VARIABLES
      (These will be updated by JavaScript)
      ======================================== */
   --current-bg-primary: var(--corporate-primary-navy);
-  --current-bg-secondary: var(--corporate-primary-slate);
   --current-text-primary: var(--corporate-neutral-white);
   --current-text-secondary: var(--corporate-neutral-gray);
   --current-accent-primary: var(--corporate-accent-blue);
-  --current-accent-secondary: var(--corporate-accent-silver);
   --current-font-heading: var(--font-corporate-heading);
-  --current-font-body: var(--font-corporate-body);
 }

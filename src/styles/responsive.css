@@ -401,28 +401,8 @@
     font-size: var(--font-size-xs);
   }
 
-  /* Back to top button */
-  .back-to-top {
-    bottom: var(--spacing-md);
-    right: var(--spacing-md);
-    width: 44px;
-    height: 44px;
-    font-size: var(--font-size-lg);
-  }
-
-  /* Scroll progress */
-  .scroll-progress {
-    height: 2px;
-  }
-
-  /* Reduce parallax on mobile for performance */
-  .parallax-bg,
-  .parallax-pattern,
-  .parallax-wireframe,
-  .parallax-foliage,
-  .parallax-trees {
-    transform: none !important;
-  }
+  /* (Back-to-top and scroll-progress mobile sizing live in their Svelte
+     components' scoped styles; the parallax transform guard was inert.) */
 
   /* Simplify animations on mobile */
   .particle {
@@ -451,10 +431,6 @@
 
     .cta-button:hover {
       transform: none;
-    }
-
-    .custom-cursor {
-      display: none;
     }
   }
 }
@@ -556,7 +532,6 @@
   .main-nav,
   .scroll-progress,
   .back-to-top,
-  .loading-screen,
   .accent-layer,
   .hero-scroll-indicator {
     display: none !important;
