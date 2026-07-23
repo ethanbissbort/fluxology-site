@@ -20,97 +20,6 @@ body {
   overflow-x: hidden;
 }
 
-/* ========================================
-   SKIP TO CONTENT (Accessibility)
-   ======================================== */
-.skip-to-content {
-  position: absolute;
-  top: -100px;
-  left: 0;
-  background: var(--corporate-accent-blue);
-  color: white;
-  padding: var(--spacing-md);
-  text-decoration: none;
-  z-index: 1000;
-  transition: top var(--transition-fast) var(--ease-out-cubic);
-}
-
-.skip-to-content:focus {
-  top: 0;
-}
-
-/* ========================================
-   LOADING SCREEN
-   ======================================== */
-.loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--corporate-primary-navy);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  opacity: 1;
-  transition: opacity var(--transition-slow) var(--ease-in-out-cubic),
-              visibility var(--transition-slow) var(--ease-in-out-cubic);
-}
-
-.loading-screen.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.loading-animation {
-  text-align: center;
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--corporate-accent-blue);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto var(--spacing-lg);
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-text {
-  font-family: var(--font-corporate-heading);
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-semibold);
-  color: white;
-  letter-spacing: var(--letter-spacing-wide);
-}
-
-/* ========================================
-   SCROLL PROGRESS
-   ======================================== */
-.scroll-progress {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.1);
-  z-index: var(--z-navigation);
-  pointer-events: none;
-}
-
-.scroll-progress-bar {
-  height: 100%;
-  background: var(--corporate-accent-blue);
-  width: 0%;
-  transition: width var(--transition-fast) linear,
-              background-color var(--transition-theme) var(--ease-in-out-cubic);
-}
 
 /* ========================================
    NAVIGATION
@@ -208,6 +117,13 @@ body {
   outline: none;
 }
 
+/* Keyboard focus must stay visible everywhere — the ::after underline that
+   doubles as the focus indicator is display:none inside the mobile menu. */
+.nav-link:focus-visible {
+  outline: 2px solid var(--current-accent-primary, #3A86FF);
+  outline-offset: 4px;
+}
+
 .nav-link:hover::after,
 .nav-link:focus::after {
   width: 70%;
@@ -237,6 +153,15 @@ body {
   align-items: center;
   overflow: hidden;
   padding: var(--section-padding-y) 0;
+}
+
+/* Anchor navigation offset for the fixed nav bar. Native fragment scrolling
+   (reset.css sets smooth scroll-behavior with reduced-motion overrides) uses
+   this instead of JS offset math, which mis-measured under
+   content-visibility:auto. */
+.section,
+#main-content {
+  scroll-margin-top: 72px;
 }
 
 .background-layer,
@@ -712,56 +637,4 @@ p {
   opacity: 0.85;
 }
 
-/* ========================================
-   BACK TO TOP BUTTON
-   ======================================== */
-.back-to-top {
-  position: fixed;
-  bottom: var(--spacing-xl);
-  right: var(--spacing-xl);
-  width: 50px;
-  height: 50px;
-  background: var(--corporate-accent-blue);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xl);
-  cursor: pointer;
-  opacity: 0;
-  visibility: hidden;
-  transition: all var(--transition-base) var(--ease-out-cubic);
-  z-index: var(--z-navigation);
-  box-shadow: var(--shadow-lg);
-}
 
-.back-to-top.visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-.back-to-top:hover,
-.back-to-top:focus {
-  background: #2865CC;
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-xl);
-}
-
-.back-to-top-arrow {
-  line-height: 1;
-}
-
-/* ========================================
-   FOCUS STYLES (Accessibility)
-   ======================================== */
-:focus-visible {
-  outline: 2px solid var(--corporate-accent-blue);
-  outline-offset: 2px;
-}
-
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid var(--corporate-accent-blue);
-  outline-offset: 2px;
-}

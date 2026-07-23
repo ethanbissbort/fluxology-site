@@ -4,9 +4,12 @@
   let visible = $state(false);
 
   function scrollToTop() {
+    // JS-driven scrolling does not inherit CSS scroll-behavior, so honor
+    // prefers-reduced-motion explicitly.
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: reduced ? 'auto' : 'smooth'
     });
   }
 
@@ -22,6 +25,10 @@
         ticking = true;
       }
     };
+
+    // Compute initial state — after scroll restoration or a #fragment load
+    // the page may already be scrolled before any scroll event fires.
+    visible = window.scrollY > 500;
 
     window.addEventListener('scroll', handleScroll, { passive: true });
 
@@ -70,6 +77,8 @@
   .back-to-top:focus {
     transform: translateY(-3px);
     box-shadow: var(--shadow-xl);
+    /* Theme-agnostic darkening (replaces the old global static #2865CC). */
+    filter: brightness(0.85);
   }
 
   .back-to-top-arrow {

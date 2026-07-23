@@ -6,7 +6,9 @@
 
 <nav class="main-nav" id="mainNav" role="navigation" aria-label="Main navigation">
   <div class="nav-container">
-    <a class="nav-logo" id="navLogo" href="#hero" aria-label="Fluxology Inc. — home">
+    <!-- No aria-label: the visible wordmark text is the accessible name
+         (an override tripped WCAG 2.5.3 label-in-name). -->
+    <a class="nav-logo" id="navLogo" href="#hero">
       <img
         class="nav-logo-mark"
         src="/favicon.svg"
@@ -26,6 +28,7 @@
       id="navToggle"
       aria-label="Toggle navigation menu"
       aria-expanded="false"
+      aria-controls="navLinks"
     >
       <span class="nav-toggle-line"></span>
       <span class="nav-toggle-line"></span>

@@ -218,7 +218,7 @@ Measured results after the overhaul:
 - Dependency tree shrank substantially (Rolldown replaces esbuild/rollup;
   `astro-compress` removed).
 - Runtime dependencies are now just `astro`, `@astrojs/svelte`, and `svelte`;
-  dev dependencies are `sharp`, `terser`, and `typescript`.
+  dev dependencies are `terser` and `typescript` (`sharp` was removed along with the dead image-optimization script; reinstall it if raster images and `astro:assets` are adopted later).
 
 ---
 
@@ -247,7 +247,6 @@ npm run preview
 npm run sync
 
 # Optimize images
-npm run optimize-images
 ```
 
 ## Deployment

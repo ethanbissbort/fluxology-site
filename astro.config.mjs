@@ -17,6 +17,9 @@ const googleFont = (name, cssVariable, weights) => ({
 
 // https://astro.build/config
 export default defineConfig({
+  // Canonical origin — used for the canonical link, Open Graph URLs, and the
+  // sitemap. Update here if the production domain ever changes.
+  site: 'https://fluxology.ca',
   integrations: [svelte()],
   output: 'static',
   build: {

@@ -4,7 +4,8 @@
 
 <section class="section hero-section" id="hero" data-theme="corporate">
   <div class="background-layer">
-    <div class="parallax-bg" data-speed="0.5"></div>
+    <div class="parallax-bg"></div>
+    <div class="corporate-flux"></div>
   </div>
 
   <div class="content-layer">
@@ -27,7 +28,9 @@
         <a href="#contact" class="cta-button cta-secondary">Get in Touch</a>
       </div>
 
-      <div class="hero-scroll-indicator" aria-label="Scroll down">
+      <!-- Purely decorative affordance; aria-label is invalid on a generic
+           div with no role, so hide it from assistive tech instead. -->
+      <div class="hero-scroll-indicator" aria-hidden="true">
         <span class="scroll-arrow">↓</span>
         <span class="scroll-text">Scroll to discover</span>
       </div>

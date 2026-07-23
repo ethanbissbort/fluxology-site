@@ -88,6 +88,7 @@ const dbaSections = [
   {
     id: 'greenhouse',
     theme: 'natural',
+    particleVariant: 'mist',
     name: 'Fluxology Greenhouse',
     naics: 'NAICS 111419 - Other Food Crops Grown Under Cover',
     description:
@@ -123,6 +124,7 @@ const dbaSections = [
   {
     id: 'orchard',
     theme: 'natural',
+    particleVariant: 'leaf',
     name: 'Fluxology Orchard & Food Forest',
     naics: 'NAICS 111330 - Noncitrus Fruit and Tree Nut Farming',
     description:
@@ -168,8 +170,9 @@ const dbaSections = [
   <Navigation />
   <NavigationMenu client:load />
 
-  <!-- Main content -->
-  <main id="main-content">
+  <!-- Main content. tabindex="-1" lets the skip link move programmatic
+       focus here reliably across browsers/screen readers. -->
+  <main id="main-content" tabindex="-1">
     <Hero />
     <About />
 
@@ -177,13 +180,22 @@ const dbaSections = [
     {
       dbaSections.map((dba) => (
         <DBASection {...dba}>
-          <ParticleSystem slot="particles" theme={dba.theme} client:visible />
+          <ParticleSystem
+            slot="particles"
+            theme={dba.theme}
+            variant={dba.particleVariant}
+            client:visible
+          />
         </DBASection>
       ))
     }
 
     <!-- Contact Section -->
     <section id="contact" data-theme="corporate" class="section contact-section">
+      <div class="background-layer">
+        <div class="corporate-flux"></div>
+      </div>
+
       <div class="content-layer">
         <div class="container">
           <header class="section-header observe-fade">

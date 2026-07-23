@@ -14,7 +14,6 @@ set of interactive Svelte "islands" hydrate in the browser.
 - **[Svelte 5.56](https://svelte.dev)** — interactive islands, using **runes** (`$state`, `$props`) where reactive
 - **[@astrojs/svelte 9.0.1](https://docs.astro.build/en/guides/integrations-guide/svelte/)** — Svelte integration for Astro
 - **TypeScript 5.7** — `astro/tsconfigs/strict`, JSX preserved with `jsxImportSource: "svelte"`
-- **[Sharp 0.35](https://sharp.pixelplumbing.com)** — image optimization pipeline (`scripts/optimize-images.js`)
 - **[astro:fonts](https://docs.astro.build/en/guides/fonts/)** — self-hosted Google Fonts (no manual font files)
 
 ### Requirements
@@ -71,7 +70,6 @@ fluxology-site/
 │       ├── utilities.css         # Performance / utility classes
 │       └── responsive.css        # Media queries
 ├── scripts/
-│   └── optimize-images.js        # Sharp image optimization pipeline
 ├── astro.config.mjs              # Astro configuration (integrations, fonts, Vite)
 ├── svelte.config.js              # Svelte preprocessing (required by @astrojs/svelte 9)
 ├── tsconfig.json                 # TypeScript config (strict)
@@ -188,7 +186,6 @@ npm run dev          # dev server with HMR at http://localhost:4321
 npm run build        # static build → dist/
 npm run preview      # preview the production build locally
 npm run sync         # regenerate Astro-generated types (.astro/types.d.ts)
-npm run optimize-images  # run the Sharp image pipeline
 ```
 
 Run `npm run sync` after changing content collections or when TypeScript

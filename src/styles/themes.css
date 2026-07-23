@@ -5,17 +5,23 @@
    ======================================== */
 [data-theme="corporate"] {
   --current-bg-primary: var(--corporate-primary-navy);
-  --current-bg-secondary: var(--corporate-primary-slate);
   --current-text-primary: var(--corporate-neutral-white);
   --current-text-secondary: var(--corporate-neutral-gray);
   --current-accent-primary: var(--corporate-accent-blue);
-  --current-accent-secondary: var(--corporate-accent-silver);
   --current-font-heading: var(--font-corporate-heading);
-  --current-font-body: var(--font-corporate-body);
 }
 
 [data-theme="corporate"] .parallax-bg {
   background: linear-gradient(135deg, var(--corporate-primary-navy) 0%, var(--corporate-primary-steel) 100%);
+}
+
+/* Corporate texture: the brand's flux wave, echoing the logo mark */
+[data-theme="corporate"] .corporate-flux {
+  position: absolute;
+  inset: 0;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60"><path d="M0 30 Q 27.5 12, 55 30 T 110 30 T 165 30 T 220 30" fill="none" stroke="rgba(58,134,255,0.06)" stroke-width="2"/></svg>');
+  background-size: 220px 60px;
+  pointer-events: none;
 }
 
 [data-theme="corporate"] .cta-button {
@@ -27,13 +33,10 @@
    ======================================== */
 [data-theme="industrial"] {
   --current-bg-primary: var(--industrial-primary-charcoal);
-  --current-bg-secondary: var(--industrial-primary-steel);
   --current-text-primary: var(--industrial-neutral-white);
   --current-text-secondary: var(--industrial-neutral-silver);
   --current-accent-primary: var(--industrial-accent-orange);
-  --current-accent-secondary: var(--industrial-accent-amber);
   --current-font-heading: var(--font-industrial-heading);
-  --current-font-body: var(--font-industrial-body);
 }
 
 #fabrication {
@@ -44,6 +47,7 @@
   background: linear-gradient(135deg, var(--industrial-primary-charcoal) 0%, var(--industrial-primary-gunmetal) 100%);
 }
 
+/* Crossed diagonal stripes — checker-plate / brushed steel */
 #fabrication .industrial-texture {
   background-image:
     repeating-linear-gradient(
@@ -52,6 +56,13 @@
       transparent 10px,
       rgba(255, 255, 255, 0.02) 10px,
       rgba(255, 255, 255, 0.02) 20px
+    ),
+    repeating-linear-gradient(
+      135deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.015) 10px,
+      rgba(255, 255, 255, 0.015) 20px
     );
 }
 
@@ -128,13 +139,10 @@
    ======================================== */
 [data-theme="tech"] {
   --current-bg-primary: var(--tech-primary-black);
-  --current-bg-secondary: var(--tech-primary-navy);
   --current-text-primary: var(--tech-neutral-white);
   --current-text-secondary: var(--tech-neutral-gray);
   --current-accent-primary: var(--tech-accent-cyan);
-  --current-accent-secondary: var(--tech-accent-magenta);
   --current-font-heading: var(--font-tech-heading);
-  --current-font-body: var(--font-tech-body);
 }
 
 #\33 d-lab {
@@ -152,11 +160,12 @@
     linear-gradient(135deg, var(--tech-primary-black) 0%, var(--tech-primary-navy) 100%);
 }
 
+/* Isometric voxel lattice — 3D-printing build volume */
 #\33 d-lab .parallax-wireframe {
   background-image:
-    linear-gradient(0deg, transparent 24%, rgba(0, 217, 255, 0.05) 25%, rgba(0, 217, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 217, 255, 0.05) 75%, rgba(0, 217, 255, 0.05) 76%, transparent 77%, transparent),
-    linear-gradient(90deg, transparent 24%, rgba(0, 217, 255, 0.05) 25%, rgba(0, 217, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 217, 255, 0.05) 75%, rgba(0, 217, 255, 0.05) 76%, transparent 77%, transparent);
-  background-size: 50px 50px;
+    repeating-linear-gradient(30deg, transparent, transparent 34px, rgba(0, 217, 255, 0.05) 34px, rgba(0, 217, 255, 0.05) 35px),
+    repeating-linear-gradient(150deg, transparent, transparent 34px, rgba(0, 217, 255, 0.05) 34px, rgba(0, 217, 255, 0.05) 35px),
+    repeating-linear-gradient(90deg, transparent, transparent 34px, rgba(0, 217, 255, 0.035) 34px, rgba(0, 217, 255, 0.035) 35px);
 }
 
 #\33 d-lab .dba-name {
@@ -256,13 +265,10 @@
    ======================================== */
 [data-theme="natural"] {
   --current-bg-primary: var(--natural-primary-forest);
-  --current-bg-secondary: var(--natural-primary-sage);
   --current-text-primary: var(--natural-neutral-white);
   --current-text-secondary: var(--natural-neutral-cream);
   --current-accent-primary: var(--natural-accent-terracotta);
-  --current-accent-secondary: var(--natural-accent-gold);
   --current-font-heading: var(--font-natural-heading);
-  --current-font-body: var(--font-natural-body);
 }
 
 #greenhouse,
@@ -275,11 +281,21 @@
   background: linear-gradient(135deg, var(--natural-primary-forest) 0%, var(--natural-primary-moss) 100%);
 }
 
-#greenhouse .natural-texture,
+/* Greenhouse: glasshouse glazing-bar grid with a soft light shaft */
+#greenhouse .natural-texture {
+  background-image:
+    linear-gradient(115deg, transparent 40%, rgba(245, 241, 232, 0.05) 50%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent, transparent 88px, rgba(245, 241, 232, 0.045) 88px, rgba(245, 241, 232, 0.045) 90px),
+    repeating-linear-gradient(90deg, transparent, transparent 88px, rgba(245, 241, 232, 0.045) 88px, rgba(245, 241, 232, 0.045) 90px);
+}
+
+/* Orchard: scattered leaf motif over soft canopy glows */
 #orchard .orchard-landscape {
   background-image:
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 150"><g fill="none" stroke="rgba(212,165,116,0.09)" stroke-width="2"><path d="M35 30 C 55 40, 55 70, 35 82 C 15 70, 15 40, 35 30 Z M35 38 L35 74"/><path d="M110 85 C 127 93, 127 118, 110 128 C 93 118, 93 93, 110 85 Z M110 92 L110 122"/></g></svg>'),
     radial-gradient(circle at 20% 30%, rgba(107, 142, 107, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 70%, rgba(139, 168, 136, 0.1) 0%, transparent 50%);
+  background-size: 150px 150px, auto, auto;
 }
 
 #greenhouse .parallax-foliage,

@@ -69,8 +69,6 @@ npm run build
 # Preview the production build locally
 npm run preview
 
-# Optimize source images (uses sharp; scripts/optimize-images.js)
-npm run optimize-images
 ```
 
 There is no "open `index.html` in a browser" or `python -m http.server`
@@ -116,7 +114,6 @@ fluxology-site/
 │   ├── favicon.svg
 │   └── service-worker.js        # PWA offline support
 └── scripts/
-    └── optimize-images.js       # sharp-based image optimization
 ```
 
 Global stylesheets are imported in the `BaseLayout.astro` frontmatter (not via

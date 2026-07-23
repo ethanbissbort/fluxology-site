@@ -7,7 +7,10 @@
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
     const scrollTop = window.scrollY;
-    progress = (scrollTop / (documentHeight - windowHeight)) * 100;
+    const scrollable = documentHeight - windowHeight;
+    // Guard against division by zero (content shorter than the viewport) and
+    // clamp: overscroll/bounce can push the raw ratio outside 0–100.
+    progress = scrollable > 0 ? Math.min(100, Math.max(0, (scrollTop / scrollable) * 100)) : 0;
   }
 
   onMount(() => {
@@ -24,9 +27,14 @@
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
+    // Viewport resizes change the scrollable height, so recalculate.
+    window.addEventListener('resize', handleScroll, { passive: true });
     updateProgress();
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
   });
 </script>
 
@@ -49,7 +57,9 @@
     width: 100%;
     height: 3px;
     background: rgba(255, 255, 255, 0.1);
-    z-index: var(--z-navigation);
+    /* One above the nav — at equal z-index the nav (later in the DOM)
+       painted over the bar. */
+    z-index: calc(var(--z-navigation) + 1);
     pointer-events: none;
   }
 
@@ -57,5 +67,11 @@
     height: 100%;
     background: var(--current-accent-primary, #3A86FF);
     transition: width 0.1s linear, background-color var(--transition-theme) var(--ease-in-out-cubic);
+  }
+
+  @media (max-width: 767px) {
+    .scroll-progress {
+      height: 2px;
+    }
   }
 </style>

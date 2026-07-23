@@ -97,16 +97,12 @@ cp .env.example .env
 | Variable       | Default             | Purpose                                             |
 | -------------- | ------------------- | --------------------------------------------------- |
 | `HTTP_PORT`    | `80`                | Host port mapped to the container's port 80         |
-| `SERVER_NAME`  | `localhost`         | Passed to the container as `APACHE_SERVER_NAME`     |
-| `SERVER_ADMIN` | `admin@fluxology.ca`| Passed as `APACHE_SERVER_ADMIN`                     |
 | `TIMEZONE`     | `America/Toronto`   | Passed as `TZ` (container timezone)                 |
 
-> `.env.example` also lists several forward-looking variables (`HTTPS_PORT`,
-> `APACHE_LOG_LEVEL`, `ENABLE_HSTS`, `COMPRESSION_LEVEL`, database/SMTP/SSL
-> placeholders, etc.). These are **not wired into `docker-compose.yml` or the
-> Apache config** — the effective Apache behavior (log level `warn`, gzip
-> level `6`, no HSTS) is baked into `docker/apache/httpd.conf`. Treat those
-> extra keys as documentation/placeholders, not live settings.
+> These are the **only** environment variables — everything else (Apache
+> tuning, cache and HSTS behavior, compression level, `ServerName`/
+> `ServerAdmin`) is baked into `docker/apache/httpd.conf`. `.env.example`
+> used to list many unwired placeholder variables; they were removed.
 
 **Change the port** — if port 80 is in use:
 
@@ -131,7 +127,7 @@ Then access the site at http://localhost:8080. The mapping is
 - brotli compression (`mod_brotli`, quality 5) with gzip (`mod_deflate`, level 6) fallback
 - caching / `Expires` headers (`mod_expires`, `mod_headers`)
 - security headers (see [Security](#security))
-- SPA-style rewrite to `index.html` for non-existent paths
+- Real 404s: unknown paths return HTTP 404 with the branded `/404.html` (the old SPA rewrite to `index.html` produced soft-404s and was removed)
 - `ServerTokens Prod` / `ServerSignature Off` at global scope
 
 **Virtual host:** `docker/apache/vhost.conf`
@@ -203,7 +199,7 @@ RUN npm run build             # astro build → /app/dist
 Notes:
 
 - `npm ci` installs **all dependencies, not just production ones** — the build
-  needs devDependencies such as `terser`, `sharp`, and `typescript`.
+  needs devDependencies such as `terser` and `typescript`.
 - `--ignore-scripts` hardens the install. The toolchain ships native binaries
   via `optionalDependencies`, not lifecycle scripts, so the build still works.
 - The production stage copies `/app/dist` into

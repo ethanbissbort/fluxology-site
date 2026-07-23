@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Page Not Found - Fluxology Inc.">
+  <main class="not-found">
+    <p class="not-found-code">404</p>
+    <h1 class="not-found-title">Page not found</h1>
+    <p class="not-found-text">
+      The page you're looking for doesn't exist or may have moved.
+    </p>
+    <a href="/" class="cta-button cta-primary not-found-link">Back to the homepage</a>
+  </main>
+</BaseLayout>
+
+<style>
+  .not-found {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(
+      135deg,
+      var(--corporate-primary-navy) 0%,
+      var(--corporate-primary-slate) 100%
+    );
+    color: var(--corporate-neutral-white);
+  }
+
+  .not-found-code {
+    font-family: var(--font-corporate-heading);
+    font-size: clamp(4rem, 15vw, 8rem);
+    font-weight: var(--font-weight-extrabold);
+    color: var(--corporate-accent-blue);
+    line-height: 1;
+  }
+
+  .not-found-title {
+    font-family: var(--font-corporate-heading);
+    font-size: var(--font-size-2xl);
+  }
+
+  .not-found-text {
+    color: var(--corporate-neutral-gray);
+    max-width: 32rem;
+  }
+
+  .not-found-link {
+    display: inline-block;
+    margin-top: 1rem;
+    text-decoration: none;
+  }
+</style>
