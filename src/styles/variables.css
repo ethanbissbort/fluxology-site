@@ -38,12 +38,14 @@
   /* Industrial (Fabrication & Welding) */
   --font-industrial-heading: var(--font-rajdhani), sans-serif;
   --font-industrial-body: var(--font-inter), sans-serif;
-  --font-industrial-technical: 'JetBrains Mono', monospace;
+  /* JetBrains Mono / Fira Code are not loaded by astro:fonts — use a system
+     monospace stack so the rendered result matches the declaration. */
+  --font-industrial-technical: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
 
   /* Tech-Forward (3D Lab) */
   --font-tech-heading: var(--font-space-grotesk), sans-serif;
   --font-tech-body: var(--font-dm-sans), sans-serif;
-  --font-tech-technical: 'Fira Code', monospace;
+  --font-tech-technical: ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', Menlo, Consolas, monospace;
 
   /* Natural (Greenhouse & Orchard) */
   --font-natural-heading: var(--font-sora), sans-serif;
@@ -53,7 +55,9 @@
   /* Corporate (Hero, About, Contact) */
   --font-corporate-heading: var(--font-outfit), sans-serif;
   --font-corporate-body: var(--font-open-sans), sans-serif;
-  --font-corporate-accent: 'Poppins', sans-serif;
+  /* Poppins is not loaded by astro:fonts; Outfit (loaded, geometric sans) is
+     the closest visual match and keeps CTAs aligned with corporate headings. */
+  --font-corporate-accent: var(--font-outfit), sans-serif;
 
   /* Font Weights */
   --font-weight-regular: 400;
@@ -69,6 +73,13 @@
   --corporate-primary-slate: #2E5266;
   --corporate-primary-steel: #476072;
   --corporate-accent-blue: #3A86FF;
+  /* WCAG AA companions to the accent blue (same hue, shifted lightness):
+     -deep/-pressed are button backgrounds that hold >=4.5:1 under white text
+     (5.49:1 / 7.77:1); -text is for accent-colored copy on navy/slate
+     surfaces (7.49:1 on navy, 5.23:1 on slate, 4.56:1 on tinted cards). */
+  --corporate-accent-blue-deep: #2865CC;
+  --corporate-accent-blue-pressed: #1E4FA3;
+  --corporate-accent-blue-text: #B0CEFF;
   --corporate-accent-silver: #A8DADC;
   --corporate-neutral-white: #FFFFFF;
   --corporate-neutral-gray: #E9ECEF;
@@ -83,6 +94,9 @@
   --industrial-accent-red: #E63946;
   --industrial-neutral-white: #F8F9FA;
   --industrial-neutral-silver: #C9CDD1;
+  /* Dark CTA ink: >=4.5:1 on the bright accent backgrounds white text cannot
+     survive (6.74:1 on orange, 4.59:1 on the red hover state). */
+  --industrial-ink: #06101C;
   /* ========================================
      TECH THEME (3D Lab)
      ======================================== */
@@ -92,6 +106,13 @@
   --tech-accent-cyan: #00D9FF;
   --tech-accent-magenta: #FF006E;
   --tech-accent-purple: #8338EC;
+  /* Lightened purple CTA-gradient stop: keeps the violet hue while holding
+     >=4.5:1 (4.80:1) under the dark tech ink; the canonical purple only
+     reaches 3.41:1 with dark text and 5.61:1 with white, but white collapses
+     to 1.70:1 on the cyan stop, so dark ink + brighter purple wins. */
+  --tech-accent-purple-bright: #9860F0;
+  /* Matches the dark ink DBADetailPage already uses for .theme-tech CTAs. */
+  --tech-ink: #06101C;
   --tech-neutral-white: #FFFFFF;
   --tech-neutral-gray: #E8EAF0;
   /* ========================================
@@ -99,8 +120,22 @@
      ======================================== */
   --natural-primary-forest: #2D4A2B;
   --natural-primary-sage: #6B8E6B;
+  /* Deep sage for the greenhouse/orchard section gradients: the original
+     sage/moss endpoints lifted mid-section backgrounds so far that no
+     terracotta-family text (or even cream body copy at 3.3:1) could reach
+     AA. This endpoint keeps the green hue while capping surface lightness. */
+  --natural-primary-sage-deep: #384D38;
   --natural-primary-moss: #8BA888;
   --natural-accent-terracotta: #C77D58;
+  /* Text-safe terracotta (same 20deg hue, lighter): 6.04:1 on the forest
+     background and >=4.6:1 measured against the lightest rendered spots of
+     the deep-sage section gradient, where the canonical terracotta only
+     reaches 3.06:1 for small labels (collapsing further as the old gradient
+     lightened). */
+  --natural-accent-terracotta-text: #E7C3B1;
+  /* Deep forest ink for CTAs on terracotta/gold backgrounds (4.96:1 on
+     terracotta, 7.19:1 on the gold hover state). */
+  --natural-ink: #1A241A;
   --natural-accent-gold: #D4A574;
   --natural-neutral-cream: #F5F1E8;
   --natural-neutral-white: #FDFBF7;

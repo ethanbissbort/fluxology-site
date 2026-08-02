@@ -53,7 +53,12 @@
     width: 50px;
     height: 50px;
     background: var(--current-accent-primary, #3A86FF);
-    color: white;
+    /* Fixed dark glyph instead of white: the accent background follows the
+       scrolled section's theme, and a white arrow drops to 1.70:1 on the
+       tech cyan and 2.84:1 on the industrial orange (non-text minimum is
+       3:1). #0A0E27 holds >=5.4:1 on all four theme accents and >=4.1:1
+       under the brightness(0.85) hover filter. */
+    color: #0A0E27;
     border-radius: 50%;
     display: flex;
     align-items: center;

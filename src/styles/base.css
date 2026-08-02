@@ -266,13 +266,15 @@ p {
 }
 
 .cta-primary {
-  background: var(--corporate-accent-blue);
+  /* #3A86FF only gives white text 3.48:1; the deep variant (the former
+     hover color) holds 5.49:1 at rest, and hover/focus darkens further. */
+  background: var(--corporate-accent-blue-deep);
   color: white;
 }
 
 .cta-primary:hover,
 .cta-primary:focus {
-  background: #2865CC;
+  background: var(--corporate-accent-blue-pressed);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
@@ -458,7 +460,9 @@ p {
 
 .value-item strong {
   display: block;
-  color: var(--corporate-accent-blue);
+  /* 16px semibold: #3A86FF fails 4.5:1 on the about-section surfaces; the
+     text-safe accent holds >=4.5:1 even on the slate-tinted card. */
+  color: var(--corporate-accent-blue-text);
   font-weight: var(--font-weight-semibold);
   margin-bottom: var(--spacing-xs);
 }
@@ -487,7 +491,9 @@ p {
   display: block;
   font-size: var(--font-size-4xl);
   font-weight: var(--font-weight-bold);
-  color: var(--corporate-accent-blue);
+  /* Large text, but #3A86FF drops to 2.40:1 on the slate end of the about
+     gradient (needs 3:1); the text variant passes everywhere. */
+  color: var(--corporate-accent-blue-text);
   margin-bottom: var(--spacing-sm);
 }
 
@@ -638,7 +644,8 @@ p {
 
 .footer-list a:hover,
 .footer-list a:focus {
-  color: var(--corporate-accent-blue);
+  /* Text variant: #3A86FF was 3.44:1 on the navy footer for 16px links. */
+  color: var(--corporate-accent-blue-text);
 }
 
 .footer-bottom {
