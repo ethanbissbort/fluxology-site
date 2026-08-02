@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "postbuild": "terser dist/service-worker.js --compress --mangle --output dist/service-worker.js",
     "preview": "astro preview",
     "sync": "astro sync"
   },
