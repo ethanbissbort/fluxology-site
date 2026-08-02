@@ -146,6 +146,9 @@ a,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* Zero the delay too: the hero's staggered entrance delays otherwise
+       hold content invisible (backwards fill) for up to 0.8s. */
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }

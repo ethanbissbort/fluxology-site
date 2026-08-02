@@ -227,10 +227,9 @@ const textureLayers = {
 
 <style>
   .dba-section {
+    /* content-visibility/contain-intrinsic-size removed (see utilities.css):
+       stale intrinsic estimates broke smooth anchor scrolling. */
     min-height: auto;
-    content-visibility: auto;
-    contain: layout style paint;
-    contain-intrinsic-size: auto 2600px;
   }
 
   .background-layer > div {

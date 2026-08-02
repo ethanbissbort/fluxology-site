@@ -22,15 +22,8 @@
     padding: var(--section-padding-y-mobile) 0;
   }
 
-  /* Navigation */
-  .nav-links {
-    gap: var(--spacing-md);
-  }
-
-  .nav-link {
-    font-size: var(--font-size-xs);
-    padding: var(--spacing-xs) var(--spacing-sm);
-  }
+  /* (No .nav-link overrides here: the menu is collapsed below 1151px, and the
+     old inline-menu font-size shrink leaked into the overlay menu.) */
 
   /* Hero section */
   .hero-title-main {
@@ -133,8 +126,10 @@
   }
 
   .nav-links {
-    position: fixed;
-    top: 60px;
+    /* absolute inside the fixed .main-nav: top:100% tracks the nav's real
+       height in both scrolled and unscrolled states (it is never 60px). */
+    position: absolute;
+    top: 100%;
     left: 0;
     width: 100%;
     flex-direction: column;
@@ -158,6 +153,10 @@
   }
 
   .nav-link {
+    /* block, not inline: vertical padding/min-height on an inline box does
+       not expand line boxes, so the 44px tap targets overlapped and taps hit
+       the adjacent link. */
+    display: block;
     width: 100%;
     text-align: center;
     padding: var(--spacing-md);
@@ -404,8 +403,12 @@
   /* (Back-to-top and scroll-progress mobile sizing live in their Svelte
      components' scoped styles; the parallax transform guard was inert.) */
 
-  /* Simplify animations on mobile */
-  .particle {
+  /* Simplify animations on mobile — cover every ParticleSystem variant */
+  .particle,
+  .spark-particle,
+  .digital-particle,
+  .leaf-particle,
+  .mist-particle {
     display: none;
   }
 
@@ -495,23 +498,8 @@
     max-width: 1600px;
   }
 
-  /* Enhanced parallax on large screens */
-  .parallax-bg[data-speed="0.3"] {
-    transform: translate3d(0, calc(var(--scroll-offset, 0) * 0.3), 0);
-  }
-
-  .parallax-bg[data-speed="0.4"] {
-    transform: translate3d(0, calc(var(--scroll-offset, 0) * 0.4), 0);
-  }
-
-  .parallax-bg[data-speed="0.5"] {
-    transform: translate3d(0, calc(var(--scroll-offset, 0) * 0.5), 0);
-  }
-
-  /* More particles on large screens */
-  .accent-layer {
-    /* JavaScript will add more particles for large screens */
-  }
+  /* (The JS parallax system was removed; its --scroll-offset/data-speed
+     rules were dead and have been deleted.) */
 }
 
 /* ========================================
@@ -611,11 +599,15 @@
   }
 
   .nav-links {
-    position: fixed;
-    top: 60px;
+    /* absolute inside the fixed .main-nav: top:100% tracks the nav's real
+       height in both scrolled and unscrolled states (it is never 60px).
+       72px in the max-height is the tallest nav across breakpoints, so the
+       open menu never extends past the viewport bottom. */
+    position: absolute;
+    top: 100%;
     left: 0;
     width: 100%;
-    max-height: calc(100vh - 60px);
+    max-height: calc(100vh - 72px);
     overflow-y: auto;
     flex-direction: column;
     gap: 0;
@@ -638,6 +630,10 @@
   }
 
   .nav-link {
+    /* block, not inline: vertical padding/min-height on an inline box does
+       not expand line boxes, so the 44px tap targets overlapped and taps hit
+       the adjacent link. */
+    display: block;
     width: 100%;
     min-height: 44px;
     padding: var(--spacing-md);

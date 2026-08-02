@@ -5,7 +5,9 @@
    ======================================== */
 html {
   font-size: 16px;
-  overflow-x: hidden;
+  /* clip, not hidden: hidden makes a scroll container, which breaks
+     position:sticky descendants (the DBA detail pages' local nav). */
+  overflow-x: clip;
 }
 
 body {
@@ -17,7 +19,7 @@ body {
   background-color: var(--current-bg-primary);
   transition: background-color var(--transition-theme) var(--ease-in-out-cubic),
               color var(--transition-theme) var(--ease-in-out-cubic);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 
@@ -144,6 +146,10 @@ body {
   max-width: var(--container-max-width);
   margin: 0 auto;
   padding: 0 var(--container-padding);
+  /* As a flex item of .content-layer the automatic min-content minimum let
+     wide children (min-width tables) inflate the container past the viewport
+     and defeat their overflow-x:auto wrappers. */
+  min-width: 0;
 }
 
 .section {
@@ -196,7 +202,6 @@ body {
   height: 120%;
   background-size: cover;
   background-position: center;
-  will-change: transform;
 }
 
 /* ========================================

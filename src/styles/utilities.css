@@ -1,28 +1,19 @@
 /* Utility Classes for Performance Optimization */
 
 /* CSS Containment for major sections.
-   The intrinsic-size estimate must be close to real section heights
-   (~1400-1500px on desktop): "0 100vh" underestimated them so badly that
-   anchor navigation landed hundreds of pixels short as sections rendered in
-   mid-scroll. "auto" makes the browser remember the real size once a section
-   has been rendered, eliminating the shift on subsequent scrolls. */
-.section {
-  content-visibility: auto;
-  contain: layout style paint;
-  contain-intrinsic-size: auto 1500px;
-}
-
-/* Specific containment for DBA sections */
+   content-visibility:auto was removed: no contain-intrinsic-size estimate can
+   match real section heights across viewports, and native smooth anchor
+   scrolling animates to the stale offset without retargeting — first-visit
+   anchor clicks landed thousands of pixels off target. Plain containment
+   keeps the invalidation-scoping benefit without skipped layout. */
+.section,
 .dba-section {
-  content-visibility: auto;
   contain: layout style paint;
-  contain-intrinsic-size: auto 1500px;
 }
 
-/* Critical above-the-fold content - always visible */
+/* Critical above-the-fold content - never contained */
 .hero-section,
-.nav {
-  content-visibility: visible;
+.main-nav {
   contain: none;
 }
 
