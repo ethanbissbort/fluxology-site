@@ -21,6 +21,16 @@
   let submitStatus = $state(null); // 'success' | 'error' | null
   let submitMessage = $state('');
 
+  // novalidate is hydration-gated: the server-rendered form must NOT carry it,
+  // so native required/email validation still guards pre-hydration and no-JS
+  // submits (a bare native POST bypasses validation and 404s off-Netlify).
+  // Once hydrated, novalidate hands validation over to validate() below.
+  let hydrated = $state(false);
+
+  $effect(() => {
+    hydrated = true;
+  });
+
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
@@ -154,7 +164,7 @@
     data-netlify="true"
     netlify-honeypot="bot-field"
     onsubmit={handleSubmit}
-    novalidate
+    novalidate={hydrated || undefined}
   >
     <!-- Netlify Forms: required so submissions are attributed to the right form -->
     <input type="hidden" name="form-name" value="contact" />
@@ -302,15 +312,18 @@
       </div>
     </div>
 
-    {#if submitStatus}
-      <div
-        class="form-status form-status--{submitStatus}"
-        role={submitStatus === 'error' ? 'alert' : 'status'}
-        aria-live="polite"
-      >
-        {submitMessage}
-      </div>
-    {/if}
+    <!-- Permanently rendered live region: aria-live only reliably announces
+         CHANGES inside an existing element, so the container stays in the DOM
+         (empty and collapsed when idle) and only its text/class swap. -->
+    <div
+      class="form-status"
+      class:form-status--success={submitStatus === 'success'}
+      class:form-status--error={submitStatus === 'error'}
+      role={submitStatus === 'error' ? 'alert' : 'status'}
+      aria-live="polite"
+    >
+      {submitMessage}
+    </div>
 
     <button
       type="submit"
@@ -332,12 +345,18 @@
     overflow: hidden;
   }
 
+  /* Box styles live on the modifier classes so the always-present live
+     region collapses to nothing while idle/empty. */
   .form-status {
-    margin-bottom: 1rem;
-    padding: 0.85rem 1rem;
     border-radius: 8px;
     font-size: 0.95rem;
     line-height: 1.4;
+  }
+
+  .form-status--success,
+  .form-status--error {
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
     border: 1px solid transparent;
   }
 
