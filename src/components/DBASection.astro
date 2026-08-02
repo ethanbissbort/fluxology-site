@@ -1,8 +1,17 @@
 ---
+interface ImageAsset {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  caption?: string;
+}
+
 interface Service {
   icon: string;
   title: string;
   description: string;
+  image?: ImageAsset;
 }
 
 interface Props {
@@ -12,6 +21,8 @@ interface Props {
   naics: string;
   description: string;
   services: Service[];
+  showcaseImages?: ImageAsset[];
+  sectionBackground?: string;
   ctaText?: string;
   /** Consumed by the ParticleSystem slotted into this section. */
   particleVariant?: string;
@@ -24,6 +35,8 @@ const {
   naics,
   description,
   services,
+  showcaseImages = [],
+  sectionBackground,
   ctaText = "Learn More"
 } = Astro.props;
 
@@ -47,11 +60,17 @@ const textureLayers = {
 }[id] ?? [];
 ---
 
-<section id={id} data-theme={theme} class="section dba-section">
+<section
+  id={id}
+  data-theme={theme}
+  class="section dba-section"
+  style={sectionBackground ? `--section-image: url('${sectionBackground}')` : undefined}
+>
   <div class="background-layer">
     <div class="parallax-bg"></div>
     <div class="parallax-pattern"></div>
     {textureLayers.map((cls) => <div class={cls}></div>)}
+    {sectionBackground && <div class="section-image-texture" aria-hidden="true"></div>}
   </div>
 
   <div class="content-layer">
@@ -67,23 +86,48 @@ const textureLayers = {
 
       <div class="services-grid observe-slide-up">
         {services.map((service) => (
-          <article class="service-card">
-            <div class="service-icon">{service.icon}</div>
-            <h3 class="service-title">{service.title}</h3>
-            <p class="service-description">{service.description}</p>
+          <article class:list={['service-card', { 'service-card--with-image': Boolean(service.image) }]}>
+            <div class:list={['service-media', { 'service-media--placeholder': !service.image }]}>
+              {service.image ? (
+                <img
+                  src={service.image.src}
+                  alt={service.image.alt}
+                  width={service.image.width}
+                  height={service.image.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : (
+                <span class="service-media-icon" aria-hidden="true">{service.icon}</span>
+              )}
+            </div>
+            <div class="service-card-content">
+              <h3 class="service-title">{service.title}</h3>
+              <p class="service-description">{service.description}</p>
+            </div>
           </article>
         ))}
       </div>
 
-      <div class="dba-showcase observe-scale">
-        <div class="showcase-placeholder">
-          <!-- Ideal image: 1200x600px -->
-          <!-- E-COMMERCE INTEGRATION: Product gallery would go here -->
-          <!-- Decorative until a real image lands: hidden from assistive tech
-               rather than announced as an empty "image". -->
-          <div class="showcase-image" aria-hidden="true"></div>
+      {showcaseImages.length > 0 && (
+        <div class="dba-showcase observe-scale">
+          <div class={`showcase-grid showcase-count-${showcaseImages.length}`}>
+            {showcaseImages.map((image, index) => (
+              <figure class:list={['showcase-item', { 'showcase-item--primary': index === 0 }]}>
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  width={image.width}
+                  height={image.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+                {image.caption && <figcaption>{image.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <a class={`cta-button ${ctaClass} observe-fade`} href="#contact">{ctaText}</a>
     </div>
@@ -109,6 +153,143 @@ const textureLayers = {
   .background-layer > div {
     position: absolute;
     inset: 0;
+  }
+
+  .section-image-texture {
+    background-image:
+      linear-gradient(135deg, rgba(10, 14, 39, 0.68), rgba(10, 14, 39, 0.82)),
+      var(--section-image);
+    background-position: center;
+    background-size: cover;
+    mix-blend-mode: screen;
+    opacity: 0.38;
+  }
+
+  .service-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .service-card-content {
+    flex: 1;
+    padding: var(--spacing-xl);
+  }
+
+  .service-media {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.24);
+  }
+
+  .service-media--placeholder {
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at center, color-mix(in srgb, var(--current-accent-primary) 28%, transparent), transparent 58%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.25));
+  }
+
+  .service-media-icon {
+    font-size: clamp(3.5rem, 8vw, 6rem);
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
+  }
+
+  .service-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow) var(--ease-out-cubic);
+  }
+
+  .service-card:hover .service-media img {
+    transform: scale(1.045);
+  }
+
+  .showcase-grid {
+    display: grid;
+    gap: var(--spacing-md);
+    min-height: 430px;
+  }
+
+  .showcase-count-1 {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase-count-2 {
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.85fr);
+  }
+
+  .showcase-count-4 {
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
+    grid-template-rows: repeat(3, minmax(130px, 1fr));
+  }
+
+  .showcase-count-4 .showcase-item--primary {
+    grid-row: 1 / 4;
+  }
+
+  .showcase-item {
+    position: relative;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--radius-lg);
+    background: rgba(0, 0, 0, 0.18);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .showcase-item img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow) var(--ease-out-cubic);
+  }
+
+  .showcase-item:hover img {
+    transform: scale(1.025);
+  }
+
+  .showcase-item figcaption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
+    color: white;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.82));
+  }
+
+  @media (max-width: 767px) {
+    .service-card-content {
+      padding: var(--spacing-lg);
+    }
+
+    .showcase-grid,
+    .showcase-count-2,
+    .showcase-count-4 {
+      grid-template-columns: 1fr;
+      grid-template-rows: none;
+      min-height: 0;
+    }
+
+    .showcase-count-4 .showcase-item--primary {
+      grid-row: auto;
+    }
+
+    .showcase-item {
+      min-height: 230px;
+      aspect-ratio: 16 / 10;
+    }
   }
 
   /* CTAs are anchors (they link to #contact); keep button-like display. */

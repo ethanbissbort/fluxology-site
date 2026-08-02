@@ -89,8 +89,10 @@ Pre-rendered to HTML at build time, no client JavaScript:
 
 - `BaseLayout.astro` — HTML shell, meta tags, global CSS imports, fonts, service worker
 - `Navigation.astro`, `Hero.astro`, `About.astro`, `Footer.astro`
-- `DBASection.astro` — reusable template for each business division; exposes a
-  `particles` slot that `index.astro` fills with a `ParticleSystem` island
+- `DBASection.astro` — reusable template for each business division. It renders
+  image-backed service cards, responsive one/two/four-image showcase layouts,
+  optional section imagery, and exposes a `particles` slot that `index.astro`
+  fills with a `ParticleSystem` island.
 
 ### Svelte islands and their directives
 

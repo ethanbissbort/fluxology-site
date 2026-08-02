@@ -242,6 +242,10 @@
     gap: var(--spacing-xl);
   }
 
+  .values-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .about-paragraph {
     font-size: var(--font-size-sm);
   }
@@ -310,10 +314,6 @@
   /* Showcase */
   .dba-showcase {
     margin-bottom: var(--spacing-xl);
-  }
-
-  .showcase-placeholder {
-    height: 250px;
   }
 
   /* Contact section */
@@ -443,6 +443,11 @@
     font-size: 14px;
   }
 
+  .hero-brand-mark {
+    width: 140px;
+    margin-bottom: var(--spacing-md);
+  }
+
   .hero-title-main {
     font-size: var(--font-size-xl);
   }
@@ -457,6 +462,20 @@
 
   .dba-name {
     font-size: var(--font-size-lg);
+  }
+
+  .values-list {
+    grid-template-columns: 1fr;
+  }
+
+  .value-item {
+    grid-template-columns: 64px minmax(0, 1fr);
+    min-height: 96px;
+  }
+
+  .value-item img {
+    width: 64px;
+    height: 64px;
   }
 
   .container {

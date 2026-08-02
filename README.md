@@ -257,9 +257,12 @@ The worker is registered from `BaseLayout.astro` on `window.load`.
 
 ### Business content
 
-Division content (name, NAICS code, description, service cards, and CTA text)
-lives in the `dbaSections` data array at the top of `src/pages/index.astro`.
-Edit that array to change what each division shows or to add/remove a division.
+Division content (name, NAICS code, description, image-backed service cards,
+showcase galleries, optional section imagery, and CTA text) lives in the
+`dbaSections` data array at the top of `src/pages/index.astro`. Edit that array
+to change what each division shows or to add/remove a division. The production
+image map and outstanding coverage gaps are documented in
+`docs/IMAGE-ASSET-INVENTORY.md`.
 
 ### Colors and fonts
 

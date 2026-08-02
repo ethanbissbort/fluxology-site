@@ -15,13 +15,23 @@
   background: linear-gradient(135deg, var(--corporate-primary-navy) 0%, var(--corporate-primary-steel) 100%);
 }
 
-/* Corporate texture: the brand's flux wave, echoing the logo mark */
+/* Corporate texture: generated flux field, darkened for legible foreground copy. */
 [data-theme="corporate"] .corporate-flux {
   position: absolute;
   inset: 0;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60"><path d="M0 30 Q 27.5 12, 55 30 T 110 30 T 165 30 T 220 30" fill="none" stroke="rgba(58,134,255,0.06)" stroke-width="2"/></svg>');
-  background-size: 220px 60px;
+  background-image:
+    linear-gradient(135deg, rgba(11, 26, 44, 0.5), rgba(27, 58, 75, 0.78)),
+    url('/images/corporate/flux-background.webp');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  opacity: 0.6;
   pointer-events: none;
+}
+
+.about-section .corporate-flux,
+#contact .corporate-flux {
+  opacity: 0.38;
 }
 
 [data-theme="corporate"] .cta-button {
