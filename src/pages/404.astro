@@ -1,9 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Navigation from '../components/Navigation.astro';
+import NavigationMenu from '../components/NavigationMenu.svelte';
 ---
 
-<BaseLayout title="Page Not Found - Fluxology Inc.">
-  <main class="not-found">
+<BaseLayout
+  title="Page Not Found - Fluxology Inc."
+  description="The page you requested does not exist on fluxology.ca. Use the site navigation or return to the Fluxology, Inc. homepage."
+  noindex
+>
+  <Navigation />
+  <NavigationMenu client:load />
+
+  <main id="main-content" tabindex="-1" class="not-found">
     <p class="not-found-code">404</p>
     <h1 class="not-found-title">Page not found</h1>
     <p class="not-found-text">

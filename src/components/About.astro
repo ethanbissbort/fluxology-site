@@ -1,6 +1,40 @@
 ---
 // Company-level facts and operating principles are drawn from the reworked
 // 2029+ portfolio. The DBA names are proposals, not separate legal entities.
+import { Image } from 'astro:assets';
+import valueExcellence from '../assets/images/corporate/value-excellence.webp';
+import valueInnovation from '../assets/images/corporate/value-innovation.webp';
+import valueSustainability from '../assets/images/corporate/value-sustainability.webp';
+import valueIntegrity from '../assets/images/corporate/value-integrity.webp';
+
+// Rendered at 64-76px CSS pixels (base/responsive.css), so 2x = 152px covers
+// every display density without shipping the 360px originals.
+const valueImages = [
+  {
+    src: valueExcellence,
+    alt: 'Polished achievement trophy',
+    strong: 'Controlled scope',
+    text: 'Accept only work that fits qualification, access, schedule, insurance and one-person capacity.'
+  },
+  {
+    src: valueInnovation,
+    alt: 'Luminous modular technology cube',
+    strong: 'Demand-gated capability',
+    text: 'Add technology to solve measured problems, not to fill a speculative equipment catalogue.'
+  },
+  {
+    src: valueSustainability,
+    alt: 'Geometric green and blue leaf',
+    strong: 'Subsistence before surplus',
+    text: 'Secure household food, preservation and propagation needs before agricultural sales.'
+  },
+  {
+    src: valueIntegrity,
+    alt: 'Handshake set in a protective shield',
+    strong: 'Clear separation',
+    text: 'Keep employment, corporate revenue, personal costs and each operating line explicitly documented.'
+  }
+];
 ---
 
 <section class="section about-section" id="about" data-theme="corporate">
@@ -49,50 +83,20 @@
         <div class="about-values">
           <h3 class="values-title">Operating principles</h3>
           <ul class="values-list" role="list">
-            <li class="value-item">
-              <img
-                src="/images/corporate/value-excellence.webp"
-                alt="Polished achievement trophy"
-                width="360"
-                height="360"
-                loading="lazy"
-                decoding="async"
-              />
-              <span><strong>Controlled scope</strong> Accept only work that fits qualification, access, schedule, insurance and one-person capacity.</span>
-            </li>
-            <li class="value-item">
-              <img
-                src="/images/corporate/value-innovation.webp"
-                alt="Luminous modular technology cube"
-                width="360"
-                height="360"
-                loading="lazy"
-                decoding="async"
-              />
-              <span><strong>Demand-gated capability</strong> Add technology to solve measured problems, not to fill a speculative equipment catalogue.</span>
-            </li>
-            <li class="value-item">
-              <img
-                src="/images/corporate/value-sustainability.webp"
-                alt="Geometric green and blue leaf"
-                width="360"
-                height="360"
-                loading="lazy"
-                decoding="async"
-              />
-              <span><strong>Subsistence before surplus</strong> Secure household food, preservation and propagation needs before agricultural sales.</span>
-            </li>
-            <li class="value-item">
-              <img
-                src="/images/corporate/value-integrity.webp"
-                alt="Handshake set in a protective shield"
-                width="360"
-                height="360"
-                loading="lazy"
-                decoding="async"
-              />
-              <span><strong>Clear separation</strong> Keep employment, corporate revenue, personal costs and each operating line explicitly documented.</span>
-            </li>
+            {valueImages.map((value) => (
+              <li class="value-item">
+                <Image
+                  src={value.src}
+                  alt={value.alt}
+                  widths={[76, 152]}
+                  width={152}
+                  sizes="(max-width: 767px) 64px, 76px"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span><strong>{value.strong}</strong> {value.text}</span>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
@@ -117,8 +121,6 @@
       </div>
     </div>
   </div>
-
-  <div class="accent-layer" id="aboutParticles"></div>
 </section>
 
 <style>

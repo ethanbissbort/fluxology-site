@@ -1,6 +1,7 @@
 ---
 import { Font } from 'astro:assets';
 import CursorEffects from '../components/CursorEffects.svelte';
+import { dbaPlans } from '../data/dbaPlans';
 
 // Global stylesheets — imported so Astro bundles, hashes, and injects them.
 // Referencing "/src/styles/*.css" via <link> does NOT work in a production
@@ -14,19 +15,72 @@ import '../styles/transitions.css';
 import '../styles/utilities.css';
 import '../styles/responsive.css';
 
+type Theme = 'corporate' | 'industrial' | 'tech' | 'natural';
+
 interface Props {
   title: string;
   description?: string;
+  /** Error pages: emit a robots noindex and omit canonical/og:url. */
+  noindex?: boolean;
+  /** Theme of the page's hero — decides which heading font gets preloaded. */
+  theme?: Theme;
 }
 
 const {
   title,
-  description = "Fluxology, Inc. is a one-owner Canadian-controlled private corporation developing a staged trade-led homestead micro-enterprise for a 2029-2035 planning horizon."
+  description = "Fluxology, Inc. is a one-owner Canadian-controlled private corporation developing a staged trade-led homestead micro-enterprise for a 2029-2035 planning horizon.",
+  noindex = false,
+  theme,
 } = Astro.props;
+
+// Resolve the page theme: explicit prop wins; otherwise DBA detail pages
+// (/{slug}/) take their plan's theme; everything else is corporate.
+const currentDba = dbaPlans.find((plan) => Astro.url.pathname === `/${plan.slug}/`);
+const resolvedTheme: Theme = theme ?? currentDba?.overview.theme ?? 'corporate';
 
 // Absolute URLs for canonical/social tags (Astro.site is set in astro.config.mjs).
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const socialImageURL = new URL('/images/corporate/logo-medallion.webp', Astro.site);
+// Intrinsic size of logo-medallion.webp — keep in sync if the image changes.
+const socialImageWidth = 640;
+const socialImageHeight = 640;
+const socialImageAlt = 'Fluxology, Inc. logo medallion';
+
+// Fonts to preload. Outfit (nav wordmark, corporate headings) and Open Sans
+// (nav links, body copy) are above the fold on every page. Themed pages
+// additionally preload their theme's heading family, because the hero/LCP
+// <h1> renders in --current-font-heading (see src/styles/themes.css and
+// src/styles/variables.css) and would otherwise swap in late (FOUT).
+// Rajdhani ships discrete weight files (not variable), so its preload is
+// narrowed to the 700 weight that headings use (base.css h1-h6) instead of
+// pulling all five files.
+type PreloadFilter = import('astro:assets').FontPreloadFilter;
+const themeHeadingPreload: Record<Theme, { cssVariable: string; preload: PreloadFilter }> = {
+  corporate: { cssVariable: '--font-outfit', preload: true },
+  industrial: { cssVariable: '--font-rajdhani', preload: [{ weight: 700 }] },
+  tech: { cssVariable: '--font-space-grotesk', preload: true },
+  natural: { cssVariable: '--font-sora', preload: true },
+};
+
+const fontVariables = [
+  '--font-outfit',
+  '--font-open-sans',
+  '--font-inter',
+  '--font-rajdhani',
+  '--font-space-grotesk',
+  '--font-dm-sans',
+  '--font-sora',
+  '--font-nunito',
+  '--font-quicksand',
+];
+
+const headingFont = themeHeadingPreload[resolvedTheme];
+const fontPreload = (cssVariable: string): PreloadFilter =>
+  cssVariable === '--font-outfit' || cssVariable === '--font-open-sans'
+    ? true
+    : cssVariable === headingFont.cssVariable
+      ? headingFont.preload
+      : false;
 
 const organizationSchema = JSON.stringify({
   '@context': 'https://schema.org',
@@ -51,18 +105,25 @@ const organizationSchema = JSON.stringify({
 
   <title>{title}</title>
 
-  <!-- Canonical + social sharing -->
-  <link rel="canonical" href={canonicalURL}>
+  <!-- Canonical + social sharing. Error pages (noindex) have no canonical
+       address of their own, so the canonical link and og:url are omitted and
+       a robots noindex is emitted instead. -->
+  {noindex && <meta name="robots" content="noindex">}
+  {!noindex && <link rel="canonical" href={canonicalURL}>}
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Fluxology, Inc.">
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
-  <meta property="og:url" content={canonicalURL}>
+  {!noindex && <meta property="og:url" content={canonicalURL}>}
   <meta property="og:image" content={socialImageURL}>
+  <meta property="og:image:width" content={String(socialImageWidth)}>
+  <meta property="og:image:height" content={String(socialImageHeight)}>
+  <meta property="og:image:alt" content={socialImageAlt}>
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content={title}>
   <meta name="twitter:description" content={description}>
   <meta name="twitter:image" content={socialImageURL}>
+  <meta name="twitter:image:alt" content={socialImageAlt}>
 
   <!-- Structured data -->
   <script type="application/ld+json" set:html={organizationSchema} is:inline></script>
@@ -80,25 +141,19 @@ const organizationSchema = JSON.stringify({
     </style>
   </noscript>
 
-  <!-- Self-hosted fonts (astro:fonts). Preload only the above-the-fold
-       corporate fonts; the theme fonts further down the page load on demand
-       with font-display: swap. -->
-  <Font cssVariable="--font-outfit" preload />
-  <Font cssVariable="--font-open-sans" preload />
-  <Font cssVariable="--font-inter" />
-  <Font cssVariable="--font-rajdhani" />
-  <Font cssVariable="--font-space-grotesk" />
-  <Font cssVariable="--font-dm-sans" />
-  <Font cssVariable="--font-sora" />
-  <Font cssVariable="--font-nunito" />
-  <Font cssVariable="--font-quicksand" />
+  <!-- Self-hosted fonts (astro:fonts). Preload the above-the-fold corporate
+       fonts plus the current theme's heading font (the hero <h1> renders in
+       it); everything else loads on demand with font-display: swap. -->
+  {fontVariables.map((cssVariable) => (
+    <Font cssVariable={cssVariable} preload={fontPreload(cssVariable)} />
+  ))}
 
   <!-- Icons / PWA -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <meta name="theme-color" content="#0b1a2c">
+  <meta name="theme-color" content="#1B3A4B">
 </head>
 <body>
   <slot />

@@ -33,10 +33,14 @@ controls, milestones, and full image gallery.
   (`output: 'static'`), Vite + Rolldown build pipeline
 - **[Svelte](https://svelte.dev/) 5** — interactive islands via
   [`@astrojs/svelte`](https://github.com/withastro/astro/tree/main/packages/integrations/svelte),
-  hydrated with `client:load` / `client:visible`
+  hydrated with `client:load` / `client:visible` / `client:idle`
 - **TypeScript** — strict config (`astro/tsconfigs/strict`)
 - **[astro:fonts](https://docs.astro.build/en/guides/fonts/)** — self-hosted
   Google Fonts with generated fallback metrics
+- **[astro:assets](https://docs.astro.build/en/guides/images/)** — responsive,
+  build-time-optimized images (via `sharp`)
+- **[@astrojs/sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/)**
+  — generated `sitemap-index.xml` (404 excluded)
 - **[Netlify Forms](https://docs.netlify.com/forms/setup/)** — serverless
   contact form handling
 
@@ -47,8 +51,12 @@ controls, milestones, and full image gallery.
   two compress passes (configured in `astro.config.mjs` under `vite.build`).
 - HTML whitespace is handled by Astro's default `compressHTML: 'jsx'`.
 
-There is no separate manual minification step, no `astro-compress`, and no
-legacy `cleancss` / `uglifyjs` workflow.
+- After `astro build`, the npm **`postbuild`** hook minifies
+  `dist/service-worker.js` with terser (files in `public/` bypass the bundler)
+  and runs `scripts/prune-unused-images.mjs` to delete image originals in
+  `dist/_assets` that no built HTML/CSS/JS references.
+
+There is no `astro-compress` and no legacy `cleancss` / `uglifyjs` workflow.
 
 ## Requirements
 
@@ -83,18 +91,21 @@ through the Astro dev server.
 
 ```
 fluxology-site/
-├── astro.config.mjs            # Astro config: Svelte integration, fonts, terser
+├── astro.config.mjs            # Astro config: Svelte + sitemap integrations, prefetch, fonts, terser
 ├── svelte.config.js            # Svelte preprocessing (vitePreprocess)
 ├── tsconfig.json               # Strict TypeScript config
-├── netlify.toml                # Netlify build + security headers
+├── netlify.toml                # Netlify build + security/cache headers
 ├── Dockerfile                  # Multi-stage build (Node → Apache)
 ├── docker-compose.yml          # Local/self-hosted container orchestration
 ├── src/
 │   ├── pages/
-│   │   ├── index.astro         # Long-form, single-page company overview
-│   │   └── [dba].astro         # Generates the four DBA detail routes
+│   │   ├── index.astro         # Long-form company overview homepage
+│   │   ├── [dba].astro         # Generates the four DBA detail routes
+│   │   └── 404.astro           # Branded 404 page (noindex)
 │   ├── data/
 │   │   └── dbaPlans.ts         # Shared source for homepage and detail-page content
+│   ├── assets/
+│   │   └── images/             # Source images (WebP) optimized via astro:assets
 │   ├── layouts/
 │   │   └── BaseLayout.astro     # <head>, font preloads, global CSS imports, SW registration
 │   ├── components/
@@ -108,10 +119,11 @@ fluxology-site/
 │   │   ├── Footer.astro         # Static footer
 │   │   ├── ContactForm.svelte   # Netlify contact form (runes)
 │   │   ├── ParticleSystem.svelte# Themed ambient particles (runes)
-│   │   ├── NavigationMenu.svelte# Mobile menu + smooth scroll (legacy mode)
+│   │   ├── NavigationMenu.svelte# Mobile menu, focus trap, smooth scroll (legacy mode)
 │   │   ├── BackToTop.svelte     # Back-to-top button (runes)
 │   │   ├── ScrollProgress.svelte# Scroll progress bar (runes)
-│   │   └── ThemeTransition.svelte# Section theme transitions (legacy mode)
+│   │   ├── ThemeTransition.svelte# Section theme transitions (legacy mode)
+│   │   └── CursorEffects.svelte # Themed cursor dot/ring for fine pointers (runes)
 │   └── styles/
 │       ├── reset.css            # CSS reset
 │       ├── variables.css        # Custom properties: colors, fonts, spacing
@@ -121,10 +133,20 @@ fluxology-site/
 │       ├── utilities.css        # Utility classes
 │       └── responsive.css       # Media queries
 ├── public/
-│   ├── favicon.svg
-│   └── service-worker.js        # PWA offline support
+│   ├── favicon.svg / favicon-32.png / apple-touch-icon.png
+│   ├── icon-192.png, icon-512.png (+ maskable variants), badge-72.png
+│   ├── site.webmanifest         # PWA manifest (theme/background #1B3A4B)
+│   ├── robots.txt               # Points at the generated /sitemap-index.xml
+│   ├── offline.html             # Service-worker offline fallback page
+│   ├── service-worker.js        # PWA offline support (minified in postbuild)
+│   └── images/corporate/        # Two stable-URL files only: flux-background.webp,
+│                                #   logo-medallion.webp (CSS texture + og:image)
 └── scripts/
+    └── prune-unused-images.mjs  # Postbuild: removes unreferenced image originals from dist/_assets
 ```
+
+The sitemap (`/sitemap-index.xml` + `/sitemap-0.xml`) is **generated at build
+time** by `@astrojs/sitemap` — it is not checked into `public/`.
 
 Global stylesheets are imported in the `BaseLayout.astro` frontmatter (not via
 `<link>` tags) so Astro bundles, hashes, and injects them. The cascade order
@@ -150,23 +172,25 @@ islands hydrated only where needed:
 | `NavigationMenu`     | `client:load`    | Svelte legacy mode (lifecycle only)      |
 | `ParticleSystem`     | `client:visible` | Svelte 5 runes; themed section ambience  |
 | `ContactForm`        | `client:visible` | Svelte 5 runes                           |
+| `CursorEffects`      | `client:idle`    | Svelte 5 runes; site-wide (rendered by `BaseLayout.astro`) |
 
-`ContactForm`, `ParticleSystem`, `BackToTop`, and `ScrollProgress` use Svelte 5
-runes (`$state`, `$props`). `NavigationMenu` and `ThemeTransition` remain in
-Svelte legacy (lifecycle-only) mode.
+`ContactForm`, `ParticleSystem`, `BackToTop`, `ScrollProgress`, and
+`CursorEffects` use Svelte 5 runes (`$state`, `$props`). `NavigationMenu` and
+`ThemeTransition` remain in Svelte legacy (lifecycle-only) mode.
 
 ### Fonts
 
 Fonts are **self-hosted** through `astro:fonts` (Google provider). Nine families
 are configured in `astro.config.mjs`: Outfit, Open Sans, Inter, Rajdhani, Space
-Grotesk, DM Sans, Sora, Nunito, and Quicksand. The above-the-fold corporate
-fonts (Outfit, Open Sans) are preloaded in `BaseLayout.astro`; the rest load on
-demand. There are **no** manual font files and **no** Google Fonts `<link>` in
-`<head>`.
+Grotesk, DM Sans, Sora, Nunito, and Quicksand. Preloading is theme-aware in
+`BaseLayout.astro`: every page preloads the corporate fonts (Outfit, Open Sans),
+and each DBA detail page additionally preloads its own hero heading family
+(Rajdhani, Space Grotesk, or Sora). The rest load on demand. There are **no**
+manual font files and **no** Google Fonts `<link>` in `<head>`.
 
-Three additional families are referenced in `src/styles/variables.css`
-(`Poppins`, `JetBrains Mono`, `Fira Code`) but are **not** self-hosted, so they
-fall back to system fonts where used.
+All font variables in `src/styles/variables.css` resolve to loaded families or
+system stacks — the previously referenced `Poppins`, `JetBrains Mono`, and
+`Fira Code` were remapped (Outfit and system monospace respectively).
 
 ### Progressive enhancement
 
@@ -175,8 +199,10 @@ content (`.observe-fade`, `.observe-slide-up`, `.observe-scale`) is hidden by
 default and revealed via JavaScript; a `<noscript>` block in `BaseLayout.astro`
 forces it visible when JavaScript is disabled, so nothing is permanently hidden.
 
-The mobile navigation menu closes on `Escape`. There are no other global
-keyboard shortcuts.
+The collapsed mobile navigation manages keyboard focus: opening it focuses the
+first link, `Tab`/`Shift+Tab` are trapped inside the open overlay, and `Escape`
+or an outside click closes it and returns focus to the toggle. There are no
+other global keyboard shortcuts.
 
 ## Contact Form (Netlify Forms)
 
@@ -190,6 +216,10 @@ The contact form is wired for [Netlify Forms](https://docs.netlify.com/forms/set
   `bot-field` honeypot (`netlify-honeypot="bot-field"`).
 - On submit, the Svelte form performs a real URL-encoded AJAX `POST` to `/`
   (`application/x-www-form-urlencoded`) and shows in-page success/error states.
+- `novalidate` is applied only after hydration, so the server-rendered form
+  keeps native `required`/`email` validation for pre-hydration and no-JS
+  submits; the status message region stays permanently in the DOM
+  (`aria-live`) so screen readers announce submit results.
 
 The form only records submissions when the site is deployed to Netlify. Locally,
 the UI works but submissions are not captured.
@@ -200,11 +230,15 @@ the UI works but submissions are not captured.
 
 Configured in `netlify.toml`:
 
-- Build command: `npm run build`
+- Build command: `npm run build` (which also triggers the npm `postbuild` hook:
+  terser-minify `dist/service-worker.js`, then prune unreferenced image
+  originals from `dist/_assets`)
 - Publish directory: `dist`
 - `NODE_VERSION = 22`
 - Security headers applied to every response (see below)
 - Long-cache, immutable headers for content-hashed assets under `/_assets/*`
+- `public, max-age=604800, stale-while-revalidate=86400` for unhashed
+  `/images/*`
 - `no-cache` header for `/service-worker.js`
 
 ### Docker + Apache (alternative)
@@ -213,7 +247,7 @@ A multi-stage `Dockerfile` builds the site with `node:22-alpine` and serves the
 static output with `httpd:2.4-alpine` (Apache). `docker-compose.yml` orchestrates
 the container.
 
-> The container serves **plaintext HTTP** on port 80 by design and **must** sit
+> The container serves **plaintext HTTP** on port 6080 by design and **must** sit
 > behind a TLS terminator (reverse proxy / load balancer) that handles HTTPS,
 > HSTS, and the HTTP→HTTPS redirect. See **[DOCKER-DEPLOYMENT.md](./DOCKER-DEPLOYMENT.md)**
 > for the full container setup.
@@ -232,28 +266,42 @@ Hardened HTTP response headers are configured for both deployment targets:
 - **Strict-Transport-Security (HSTS)** — sent by Netlify (always HTTPS)
 
 The service worker (`public/service-worker.js`) uses a **network-first** strategy
-for navigations (so content and security fixes reach already-visited clients) and
-a **cache-first** strategy for static assets, backed by a **versioned** runtime
-cache that is evicted on each release.
+for navigations (so content and security fixes reach already-visited clients),
+**cache-first** for content-hashed `/_assets/*`, and **stale-while-revalidate**
+for other same-origin assets, backed by **versioned** caches that are evicted on
+each release.
 
 ## Validation
 
-The production build emits the homepage, 404 page, and four DBA routes. Before
-publishing, run `npm run sync`, `npm run build`, `tsc --noEmit`, an internal
-route/image check, and fresh desktop/mobile browser audits. Historical
+The production build emits the homepage, 404 page, four DBA routes, and a
+generated sitemap (`sitemap-index.xml` + `sitemap-0.xml`). Before publishing,
+run `npm run sync`, `npm run build` (which includes the `postbuild` service
+worker minification and image pruning), `tsc --noEmit`, an internal route/image
+check, and fresh desktop/mobile browser audits. Historical
 Lighthouse figures are not treated as current after major content or layout
 changes.
 
 ## Progressive Web App
 
-`public/service-worker.js` provides offline support:
+`public/service-worker.js` provides offline support (source is readable; the
+deployed copy is minified by the `postbuild` terser step):
 
-- **Cache-first** for content-hashed static assets (CSS/JS/fonts under
-  `/_assets`)
-- **Network-first** for HTML navigations, falling back to cache when offline
-- Versioned caches evicted on each release to avoid serving stale content
+- **Precache + priming**: `/` and `/offline.html` are precached at install,
+  then the runtime cache is primed by crawling the shell's real subresources
+  (island scripts, self-hosted fonts, CSS imagery), so a previously visited
+  page renders styled and hydrated offline.
+- **Network-first** for HTML navigations; when offline, the cached copy of the
+  requested URL is served, else the branded `offline.html` page with a **503**
+  status (an uncached route is never impersonated with a 200).
+- **Cache-first** for content-hashed static assets under `/_assets/`
+- **Stale-while-revalidate** for other same-origin assets (unhashed images,
+  icons, manifest), with genuine background revalidation
+- A single `CACHE_VERSION` constant derives both cache names; stale caches are
+  evicted on activate.
 
-The worker is registered from `BaseLayout.astro` on `window.load`.
+The worker is registered from `BaseLayout.astro` on `window.load`. Installable
+PWA metadata lives in `public/site.webmanifest` (theme/background `#1B3A4B`)
+with the icon set in `public/`.
 
 ## Customization
 
@@ -261,9 +309,11 @@ The worker is registered from `BaseLayout.astro` on `window.load`.
 
 Company and DBA content lives in `src/data/dbaPlans.ts`. Each record contains a
 homepage overview and the corresponding detail-page content, keeping status,
-classification, scope, milestones, and image references synchronized. The
-production image map and outstanding coverage gaps are documented in
-`docs/IMAGE-ASSET-INVENTORY.md`.
+classification, scope, milestones, and image references synchronized. Images
+are typed ESM imports from `src/assets/images/` and are rendered as responsive
+renditions via `astro:assets`; only two stable-URL files remain in
+`public/images/corporate/`. The production image map and outstanding coverage
+gaps are documented in `docs/IMAGE-ASSET-INVENTORY.md`.
 
 ### Colors and fonts
 
@@ -295,4 +345,5 @@ All rights reserved © Fluxology Inc.
 ---
 
 **Version:** 2.0.0
-**Last Updated:** July 2026 — full rewrite for the Astro 7 + Svelte 5 stack
+**Last Updated:** August 2026 — audit remediation pass (responsive images,
+sitemap generation, prefetch, service-worker rework, accessibility fixes)

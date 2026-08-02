@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "postbuild": "terser dist/service-worker.js --compress --mangle --output dist/service-worker.js && node scripts/prune-unused-images.mjs",
     "preview": "astro preview",
     "sync": "astro sync"
   },
@@ -18,6 +19,8 @@
     "svelte": "^5.56.7"
   },
   "devDependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "sharp": "^0.35.3",
     "terser": "^5.36.0",
     "typescript": "^5.7.2"
   }

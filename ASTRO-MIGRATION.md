@@ -17,8 +17,10 @@ earlier phases are kept for historical context.
 | Language     | TypeScript `^5.7.2` |
 | Runtime      | Node `>=22.12.0` (`engines` + Dockerfile + netlify.toml) |
 | Fonts        | Self-hosted via `astro:fonts` (9 Google families) |
+| Images       | `astro:assets` responsive renditions from `src/assets/images/` (`sharp` devDependency) |
+| SEO          | `@astrojs/sitemap` generated sitemap; built-in prefetch (viewport strategy) |
 | Forms        | Netlify Forms (static detection form + AJAX island) |
-| Minify       | Vite + terser (`drop_console`, 2 passes); Rolldown replaces esbuild/rollup |
+| Minify       | Vite + terser (`drop_console`, 2 passes); Rolldown replaces esbuild/rollup; npm `postbuild` terser pass minifies `dist/service-worker.js` and prunes unreferenced image originals |
 | Build output | `dist/` static site (deployed to Netlify) |
 
 Package version is `2.0.0`.
@@ -65,9 +67,18 @@ The most recent major upgrade moved the project to Astro 7 and Svelte 5, adopted
 - `Navigation.astro` — fixed nav bar, smooth-scroll anchors.
 - `Hero.astro` — hero section (renders immediately; see performance notes).
 - `About.astro` — company overview, values grid, stats cards.
-- `DBASection.astro` — reusable template for all four DBA sections
-  (props: `id`, `theme`, `name`, `naics`, `description`, `services`, `ctaText`;
-  slots for particles).
+- `DBASection.astro` — reusable template for all four DBA homepage sections,
+  fed by a `DbaOverview` from `src/data/dbaPlans.ts`. Required props: `id`,
+  `theme`, `name`, `status`, `classification`, `description`, `facts`,
+  `services`, `processTitle`, `processSteps`, `boundary`, `detailHref`;
+  optional: `eyebrow`, `servicesTitle`, `servicesIntro`, `processIntro`,
+  `showcaseImages`, `sectionBackground`, `ctaText`, `ctaNote`,
+  `particleVariant`. Image props are `ImageMetadata` (astro:assets). Slots for
+  particles.
+- `DBADetailPage.astro` — reusable detail route rendered by `[dba].astro`
+  (scope/capital tables, controls, milestones, gallery, local nav).
+- `OperatingModel.astro` / `Roadmap.astro` — company architecture and staged
+  2026-2035 plan sections.
 - `Footer.astro` — footer content.
 
 ### Interactive Svelte islands (`src/components/`)
@@ -78,7 +89,8 @@ The most recent major upgrade moved the project to Astro 7 and Svelte 5, adopted
 | `ParticleSystem.svelte` | Runes  | `$props`, `$state`    | Themed particles; respects `prefers-reduced-motion` |
 | `BackToTop.svelte`      | Runes  | `$state`              | Scroll-threshold button |
 | `ScrollProgress.svelte` | Runes  | `$state`              | Scroll progress bar |
-| `NavigationMenu.svelte` | Legacy | — (`onMount` only)    | Mobile menu toggle / active-link tracking |
+| `CursorEffects.svelte`  | Runes  | `$state`              | Themed cursor dot/ring (fine pointers, reduced-motion aware) |
+| `NavigationMenu.svelte` | Legacy | — (`onMount` only)    | Mobile menu toggle, focus trap, active-link tracking |
 | `ThemeTransition.svelte`| Legacy | — (`onMount` only)    | IntersectionObserver theme + nav-link updates |
 
 `NavigationMenu` and `ThemeTransition` are lifecycle-only components (no
@@ -88,16 +100,22 @@ is fully supported. There was no need to convert them to runes.
 ### Layout
 
 - `BaseLayout.astro` — imports the seven global stylesheets in frontmatter,
-  emits `<Font>` tags from `astro:fonts`, includes a `<noscript>` reveal
-  fallback, registers the service worker, and sets the footer year.
+  emits `<Font>` tags from `astro:fonts` (with theme-aware preloads), renders
+  the site-wide `CursorEffects` island (`client:idle`), supports a `noindex`
+  prop (used by 404 to suppress canonical/`og:url`), includes a `<noscript>`
+  reveal fallback, registers the service worker, and sets the footer year.
 
-### Page
+### Pages
 
 - `pages/index.astro` — composes the layout, static components, and islands.
   Client directives in use: `client:load` for `ScrollProgress`,
   `ThemeTransition`, `BackToTop`, and `NavigationMenu`; `client:visible` for
   `ParticleSystem` and `ContactForm`. Also contains the hidden Netlify
   detection form (see Netlify Forms below).
+- `pages/[dba].astro` — `getStaticPaths()` over `dbaPlans` generates the four
+  detail routes (`/fabrication/`, `/3d-lab/`, `/greenhouse/`, `/orchard/`),
+  each rendering `DBADetailPage`.
+- `pages/404.astro` — branded 404 with full navigation, `noindex`.
 
 ---
 
@@ -169,8 +187,10 @@ previous broken manual `/fonts/*.woff2` references. `astro.config.mjs` declares
 | Quicksand     | `--font-quicksand`    | `300 700` |
 
 All families use the `latin` subset and a `sans-serif` fallback. In
-`BaseLayout.astro`, only the above-the-fold corporate fonts (Outfit, Open Sans)
-are `preload`ed; the theme fonts load on demand with `font-display: swap`.
+`BaseLayout.astro`, preloads are theme-aware: the corporate fonts (Outfit,
+Open Sans) are `preload`ed on every page, and each themed page additionally
+preloads its hero heading family (Rajdhani weight 700 / Space Grotesk / Sora);
+the remaining fonts load on demand with `font-display: swap`.
 
 ---
 
@@ -218,7 +238,10 @@ layout; run a fresh audit after material changes.
 - Dependency tree shrank substantially (Rolldown replaces esbuild/rollup;
   `astro-compress` removed).
 - Runtime dependencies are now just `astro`, `@astrojs/svelte`, and `svelte`;
-  dev dependencies are `terser` and `typescript` (`sharp` was removed along with the dead image-optimization script; reinstall it if raster images and `astro:assets` are adopted later).
+  dev dependencies are `@astrojs/sitemap`, `sharp`, `terser`, and `typescript`.
+  (`sharp` was removed during the overhaul along with a dead
+  image-optimization script, then **reinstalled** when the site adopted
+  `astro:assets` responsive images.)
 
 ---
 
@@ -228,8 +251,8 @@ layout; run a fresh audit after material changes.
   `ScrollProgress`, `ThemeTransition`, `BackToTop`, `NavigationMenu`).
 - `client:visible` — hydrate when the island scrolls into view
   (`ParticleSystem`, `ContactForm`).
-- `client:idle` — hydrate when the browser is idle (available; not currently
-  used).
+- `client:idle` — hydrate when the browser is idle (`CursorEffects`, rendered
+  site-wide from `BaseLayout.astro`).
 
 ## Build commands
 
@@ -237,7 +260,8 @@ layout; run a fresh audit after material changes.
 # Development
 npm run dev
 
-# Production build
+# Production build (also triggers the npm postbuild hook:
+# terser-minify dist/service-worker.js + prune unreferenced images)
 npm run build
 
 # Preview production build
@@ -245,14 +269,13 @@ npm run preview
 
 # Sync Astro types (astro:fonts, content, etc.)
 npm run sync
-
-# Optimize images
 ```
 
 ## Deployment
 
 `npm run build` emits the static site to `dist/`, which is deployed to Netlify.
-Node 22 is pinned in both the `Dockerfile` and `netlify.toml`.
+Node 22 is pinned in both the `Dockerfile` and `netlify.toml`. Pipelines that
+call `astro build` directly skip the `postbuild` hook.
 
 ## Styles
 

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   fluxology-web:
     container_name: fluxology-website
@@ -20,11 +18,12 @@ services:
       # docker/apache/httpd.conf — the old APACHE_SERVER_NAME/ADMIN env vars
       # were never read by anything.
       - TZ=${TIMEZONE:-America/Toronto}
-    volumes:
-      # Mount custom Apache logs (optional)
-      - ./logs/apache:/usr/local/apache2/logs
-      # Mount SSL certificates if needed (optional)
-      # - ./docker/ssl:/etc/ssl/certs:ro
+    # Apache logs go to the container's stdout/stderr (see docker/apache/
+    # httpd.conf: ErrorLog /proc/self/fd/2, CustomLog /proc/self/fd/1) —
+    # use `docker compose logs` to read them. No log bind mount is needed.
+    # Mount SSL certificates if needed (optional):
+    # volumes:
+    #   - ./docker/ssl:/etc/ssl/certs:ro
     networks:
       - fluxology-network
     restart: unless-stopped
@@ -42,8 +41,3 @@ networks:
   fluxology-network:
     driver: bridge
     name: fluxology-network
-
-# Optional: Add volume for persistent data if needed
-volumes:
-  apache-logs:
-    driver: local
