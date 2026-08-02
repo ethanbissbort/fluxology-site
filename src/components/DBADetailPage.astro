@@ -1,4 +1,6 @@
 ---
+import { Image, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navigation from './Navigation.astro';
 import Footer from './Footer.astro';
@@ -25,6 +27,19 @@ const localNav = [
   ['milestones', 'Milestones'],
   ['gallery', 'Gallery']
 ];
+
+// Decorative hero texture stays a CSS background, but the URL now points at a
+// build-time optimized rendition instead of the raw public/ file.
+const optimizedSectionBackground = overview.sectionBackground
+  ? await getImage({ src: overview.sectionBackground, width: 1600, format: 'webp' })
+  : undefined;
+
+// Shared responsive ladder (kept identical to DBASection so the same source
+// image resolves to the same renditions on every page). Variants are capped
+// below the source width to avoid shipping full-size re-encodes; the fallback
+// width equals the largest variant.
+const responsiveWidths = (img: ImageMetadata) => [480, 800, 1200].filter((w) => w < img.width);
+const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img));
 ---
 
 <BaseLayout title={detail.pageTitle} description={detail.metaDescription}>
@@ -38,10 +53,10 @@ const localNav = [
     <section class="section detail-hero" id={`${plan.slug}-detail`} data-theme={overview.theme}>
       <div class="background-layer">
         <div class="parallax-bg"></div>
-        {overview.sectionBackground && (
+        {optimizedSectionBackground && (
           <div
             class="detail-section-texture"
-            style={`--detail-texture: url('${overview.sectionBackground}')`}
+            style={`--detail-texture: url('${optimizedSectionBackground.src}')`}
             aria-hidden="true"
           ></div>
         )}
@@ -68,11 +83,13 @@ const localNav = [
           </div>
 
           <figure class="detail-hero-figure">
-            <img
+            <Image
               src={detail.heroImage.src}
               alt={detail.heroImage.alt}
-              width={detail.heroImage.width}
-              height={detail.heroImage.height}
+              widths={responsiveWidths(detail.heroImage.src)}
+              width={fallbackWidth(detail.heroImage.src)}
+              sizes="(max-width: 1199px) 100vw, 660px"
+              loading="eager"
               decoding="async"
               fetchpriority="high"
             />
@@ -285,11 +302,14 @@ const localNav = [
           <div class="detail-gallery observe-scale">
             {detail.gallery.map((image, index) => (
               <figure class:list={{ 'gallery-primary': index === 0 }}>
-                <img
+                <Image
                   src={image.src}
                   alt={image.alt}
-                  width={image.width}
-                  height={image.height}
+                  widths={responsiveWidths(image.src)}
+                  width={fallbackWidth(image.src)}
+                  sizes={index === 0
+                    ? '(max-width: 767px) 100vw, (max-width: 1199px) 66vw, 600px'
+                    : '(max-width: 767px) 100vw, (max-width: 1199px) 33vw, 300px'}
                   loading="lazy"
                   decoding="async"
                 />

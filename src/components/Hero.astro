@@ -2,6 +2,8 @@
 // Above-the-fold company positioning. This reflects the portfolio's current
 // legal status and future launch horizon instead of presenting the DBAs as
 // active, staffed divisions.
+import { Image } from 'astro:assets';
+import logoMedallion from '../assets/images/corporate/logo-medallion.webp';
 ---
 
 <section class="section hero-section" id="hero" data-theme="corporate">
@@ -17,12 +19,14 @@
         Federally incorporated · Ontario · 2029-2035 planning horizon
       </p>
 
-      <img
+      <Image
         class="hero-brand-mark"
-        src="/images/corporate/logo-medallion.webp"
+        src={logoMedallion}
         alt="Fluxology, Inc. circular flux-wave emblem"
-        width="640"
-        height="640"
+        widths={[160, 320, 440]}
+        width={440}
+        sizes="(max-width: 767px) 140px, 220px"
+        loading="eager"
         decoding="async"
         fetchpriority="high"
       />

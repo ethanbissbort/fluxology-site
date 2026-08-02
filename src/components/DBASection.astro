@@ -1,9 +1,10 @@
 ---
+import { Image, getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
 interface ImageAsset {
-  src: string;
+  src: ImageMetadata;
   alt: string;
-  width: number;
-  height: number;
   caption?: string;
 }
 
@@ -47,7 +48,7 @@ interface Props {
   processSteps: ProcessStep[];
   boundary: Boundary;
   showcaseImages?: ImageAsset[];
-  sectionBackground?: string;
+  sectionBackground?: ImageMetadata;
   detailHref: string;
   ctaText?: string;
   ctaNote?: string;
@@ -90,13 +91,25 @@ const textureLayers = {
   'greenhouse': ['natural-texture', 'parallax-foliage'],
   'orchard': ['orchard-landscape', 'parallax-trees']
 }[id] ?? [];
+
+// Decorative section texture stays a CSS background, but the URL now points
+// at a build-time optimized rendition instead of the raw public/ file.
+const optimizedSectionBackground = sectionBackground
+  ? await getImage({ src: sectionBackground, width: 1600, format: 'webp' })
+  : undefined;
+
+// Shared responsive ladder (also used by DBADetailPage so renditions dedupe
+// across pages). Variants are capped below the source width to avoid shipping
+// full-size re-encodes; the fallback width equals the largest variant.
+const responsiveWidths = (img: ImageMetadata) => [480, 800, 1200].filter((w) => w < img.width);
+const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img));
 ---
 
 <section
   id={id}
   data-theme={theme}
   class="section dba-section"
-  style={sectionBackground ? `--section-image: url('${sectionBackground}')` : undefined}
+  style={optimizedSectionBackground ? `--section-image: url('${optimizedSectionBackground.src}')` : undefined}
 >
   <div class="background-layer">
     <div class="parallax-bg"></div>
@@ -143,11 +156,12 @@ const textureLayers = {
             <article class:list={['service-card', { 'service-card--with-image': Boolean(service.image) }] }>
               <div class:list={['service-media', { 'service-media--placeholder': !service.image }] }>
                 {service.image ? (
-                  <img
+                  <Image
                     src={service.image.src}
                     alt={service.image.alt}
-                    width={service.image.width}
-                    height={service.image.height}
+                    widths={responsiveWidths(service.image.src)}
+                    width={fallbackWidth(service.image.src)}
+                    sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 570px"
                     loading="lazy"
                     decoding="async"
                   />
@@ -197,11 +211,14 @@ const textureLayers = {
           <div class={`showcase-grid showcase-count-${showcaseImages.length}`}>
             {showcaseImages.map((image, index) => (
               <figure class:list={['showcase-item', { 'showcase-item--primary': index === 0 }]}>
-                <img
+                <Image
                   src={image.src}
                   alt={image.alt}
-                  width={image.width}
-                  height={image.height}
+                  widths={responsiveWidths(image.src)}
+                  width={fallbackWidth(image.src)}
+                  sizes={index === 0
+                    ? '(max-width: 767px) 100vw, (max-width: 1279px) 92vw, 1200px'
+                    : '(max-width: 767px) 100vw, (max-width: 1279px) 40vw, 480px'}
                   loading="lazy"
                   decoding="async"
                 />

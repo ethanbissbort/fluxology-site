@@ -1,8 +1,33 @@
+import type { ImageMetadata } from 'astro';
+
+// Optimized build-time assets (astro:assets). Each import carries intrinsic
+// width/height metadata, so ImageAsset no longer stores dimensions manually.
+import fabricationShowcaseImg from '../assets/images/fabrication/welding-showcase.webp';
+import fabricationCustomImg from '../assets/images/fabrication/custom-fabrication.webp';
+import fabricationWeldingImg from '../assets/images/fabrication/precision-welding.webp';
+import fabricationRepairImg from '../assets/images/fabrication/metal-repair.webp';
+import labShowcaseImg from '../assets/images/3d-lab/lab-showcase.webp';
+import labPrintingImg from '../assets/images/3d-lab/3d-printing.webp';
+import labScanningImg from '../assets/images/3d-lab/3d-scanning.webp';
+import labWireframeBackgroundImg from '../assets/images/3d-lab/wireframe-background.webp';
+import greenhouseShowcaseMainImg from '../assets/images/greenhouse/showcase-main.webp';
+import greenhouseShowcaseSunlitImg from '../assets/images/greenhouse/showcase-sunlit.webp';
+import greenhouseShowcaseAisleImg from '../assets/images/greenhouse/showcase-growing-aisle.webp';
+import greenhouseShowcaseWorkspaceImg from '../assets/images/greenhouse/showcase-workspace.webp';
+import greenhouseGingerImg from '../assets/images/greenhouse/ginger-production.webp';
+import greenhouseCoffeeImg from '../assets/images/greenhouse/coffee-cultivation.webp';
+import greenhouseCocoaImg from '../assets/images/greenhouse/cocoa-growing.webp';
+import greenhouseSpecialtyImg from '../assets/images/greenhouse/specialty-crops.webp';
+import orchardShowcaseMainImg from '../assets/images/orchard/showcase-main.webp';
+import orchardShowcaseUnderstoryImg from '../assets/images/orchard/showcase-understory.webp';
+import orchardFruitTreeImg from '../assets/images/orchard/fruit-tree-production.webp';
+import orchardNutImg from '../assets/images/orchard/nut-cultivation.webp';
+import orchardPerennialImg from '../assets/images/orchard/perennial-crops.webp';
+import orchardFoodForestImg from '../assets/images/orchard/food-forest-systems.webp';
+
 export interface ImageAsset {
-  src: string;
+  src: ImageMetadata;
   alt: string;
-  width: number;
-  height: number;
   caption?: string;
 }
 
@@ -45,7 +70,7 @@ export interface DbaOverview {
     description: string;
   };
   showcaseImages: ImageAsset[];
-  sectionBackground?: string;
+  sectionBackground?: ImageMetadata;
   ctaText: string;
   ctaNote: string;
   detailHref: string;
@@ -100,167 +125,125 @@ export interface DbaPlan {
 }
 
 const fabricationShowcase: ImageAsset = {
-  src: '/images/fabrication/welding-showcase.webp',
+  src: fabricationShowcaseImg,
   alt: 'Welder working on a large steel assembly as sparks cross the workshop',
-  width: 1599,
-  height: 900,
   caption: 'Mobile first · fixed workshop later'
 };
 
 const fabricationCustom: ImageAsset = {
-  src: '/images/fabrication/custom-fabrication.webp',
+  src: fabricationCustomImg,
   alt: 'Fabricator measuring a newly assembled steel component on a workbench',
-  width: 960,
-  height: 960,
   caption: 'Small assemblies and practical fixtures'
 };
 
 const fabricationWelding: ImageAsset = {
-  src: '/images/fabrication/precision-welding.webp',
+  src: fabricationWeldingImg,
   alt: 'Close view of a bright welding arc joining steel',
-  width: 960,
-  height: 960,
   caption: 'Controlled process and documented scope'
 };
 
 const fabricationRepair: ImageAsset = {
-  src: '/images/fabrication/metal-repair.webp',
+  src: fabricationRepairImg,
   alt: 'Angle grinder restoring a worn industrial metal component',
-  width: 960,
-  height: 960,
   caption: 'Repair before replacement where practical'
 };
 
 const labShowcase: ImageAsset = {
-  src: '/images/3d-lab/lab-showcase.webp',
+  src: labShowcaseImg,
   alt: 'Large-format 3D printer operating in a dark digital fabrication laboratory',
-  width: 1599,
-  height: 900,
   caption: 'One reliable process at a time'
 };
 
 const labPrinting: ImageAsset = {
-  src: '/images/3d-lab/3d-printing.webp',
+  src: labPrintingImg,
   alt: 'FDM printer producing a complex white lattice under cyan and magenta light',
-  width: 960,
-  height: 960,
   caption: 'Prototypes, jigs, fixtures and low-volume parts'
 };
 
 const labScanning: ImageAsset = {
-  src: '/images/3d-lab/3d-scanning.webp',
+  src: labScanningImg,
   alt: 'Cyan scanning beams capturing an engine component as a digital point cloud',
-  width: 960,
-  height: 960,
   caption: 'Capture geometry when measurement alone is inefficient'
 };
 
 const greenhouseShowcase: ImageAsset[] = [
   {
-    src: '/images/greenhouse/showcase-main.webp',
+    src: greenhouseShowcaseMainImg,
     alt: 'Sunlit greenhouse aisle filled with ginger, coffee, and tropical food crops',
-    width: 1599,
-    height: 900,
     caption: 'Household food infrastructure first'
   },
   {
-    src: '/images/greenhouse/showcase-sunlit.webp',
+    src: greenhouseShowcaseSunlitImg,
     alt: 'Warm sunlight crossing a greenhouse filled with vegetables and tropical plants',
-    width: 1440,
-    height: 960,
     caption: 'Season extension and crop reliability'
   },
   {
-    src: '/images/greenhouse/showcase-growing-aisle.webp',
+    src: greenhouseShowcaseAisleImg,
     alt: 'Narrow greenhouse growing aisle bordered by coffee plants and fresh crops',
-    width: 1599,
-    height: 900,
     caption: 'Small, modular and repairable systems'
   },
   {
-    src: '/images/greenhouse/showcase-workspace.webp',
+    src: greenhouseShowcaseWorkspaceImg,
     alt: 'Working greenhouse with hand tools, irrigation hose, and mature plantings',
-    width: 1440,
-    height: 960,
     caption: 'Manual fallback behind every automation layer'
   }
 ];
 
 const greenhouseServiceImages: ImageAsset[] = [
   {
-    src: '/images/greenhouse/ginger-production.webp',
+    src: greenhouseGingerImg,
     alt: 'Ginger plants and harvested rhizomes arranged inside a productive greenhouse',
-    width: 960,
-    height: 960,
     caption: 'Staple and preservation crop study'
   },
   {
-    src: '/images/greenhouse/coffee-cultivation.webp',
+    src: greenhouseCoffeeImg,
     alt: 'Long-season plants growing among terracotta containers beneath greenhouse glazing',
-    width: 960,
-    height: 960,
     caption: 'Protected long-season crop concept'
   },
   {
-    src: '/images/greenhouse/cocoa-growing.webp',
+    src: greenhouseCocoaImg,
     alt: 'Tropical greenhouse planting with companion crops',
-    width: 960,
-    height: 960,
     caption: 'Controlled-environment research concept'
   },
   {
-    src: '/images/greenhouse/specialty-crops.webp',
+    src: greenhouseSpecialtyImg,
     alt: 'Dense collection of specialty crops growing in terracotta pots and raised beds',
-    width: 960,
-    height: 960,
     caption: 'Crop-diversity trial concept'
   }
 ];
 
 const orchardShowcase: ImageAsset[] = [
   {
-    src: '/images/orchard/showcase-main.webp',
+    src: orchardShowcaseMainImg,
     alt: 'Wide food forest orchard at golden hour with layered perennial plantings',
-    width: 1599,
-    height: 900,
     caption: 'Land improvement first · revenue last'
   },
   {
-    src: '/images/orchard/showcase-understory.webp',
+    src: orchardShowcaseUnderstoryImg,
     alt: 'Orchard path crossing a dense edible understory beneath mature trees',
-    width: 1440,
-    height: 960,
     caption: 'Every vegetation layer needs a defined function'
   }
 ];
 
 const orchardServiceImages: ImageAsset[] = [
   {
-    src: '/images/orchard/fruit-tree-production.webp',
+    src: orchardFruitTreeImg,
     alt: 'Young fruit trees surrounded by layered edible understory planting',
-    width: 960,
-    height: 960,
     caption: 'Small annual planting cohorts'
   },
   {
-    src: '/images/orchard/nut-cultivation.webp',
+    src: orchardNutImg,
     alt: 'Mixed orchard canopy above a biodiverse herbaceous understory',
-    width: 960,
-    height: 960,
     caption: 'Diverse cultivars and harvest windows'
   },
   {
-    src: '/images/orchard/perennial-crops.webp',
+    src: orchardPerennialImg,
     alt: 'Perennial vegetables and flowering companions arranged beneath orchard trees',
-    width: 960,
-    height: 960,
     caption: 'Perennial understory with practical functions'
   },
   {
-    src: '/images/orchard/food-forest-systems.webp',
+    src: orchardFoodForestImg,
     alt: 'Established food forest path winding through trees, shrubs, and groundcover',
-    width: 960,
-    height: 960,
     caption: 'Access, harvest and maintenance remain designed in'
   }
 ];
@@ -471,7 +454,7 @@ export const dbaPlans: DbaPlan[] = [
         description:
           'Material, temperature, UV, chemical exposure, tolerance, load and failure consequence determine whether a printed part is appropriate. Fluxology does not present modelling work as licensed engineering or make unverified safety-critical claims.'
       },
-      sectionBackground: '/images/3d-lab/wireframe-background.webp',
+      sectionBackground: labWireframeBackgroundImg,
       showcaseImages: [labShowcase],
       ctaText: 'Explore the Full 3D Lab Plan',
       ctaNote: 'Detailed scan workflow, equipment ladder, data controls and validation gates',
