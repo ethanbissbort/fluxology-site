@@ -74,13 +74,14 @@ fluxology-site/
 ├── .dockerignore               # Build-context exclusions (incl. all .env files)
 ├── .env.example                # Sample environment variables
 ├── netlify.toml                # Netlify (primary) build + headers config
-├── docker/
-│   └── apache/
-│       ├── httpd.conf          # Main Apache config (headers, caching, brotli/gzip)
-│       └── vhost.conf          # Virtual host config (:6080 active, :443 commented)
-└── logs/
-    └── apache/                 # Apache logs (bind-mounted from the container)
+└── docker/
+    └── apache/
+        ├── httpd.conf          # Main Apache config (headers, caching, brotli/gzip)
+        └── vhost.conf          # Virtual host config (:6080 active, :443 commented)
 ```
+
+Apache logs go to the container's stdout/stderr — there is no log directory or
+bind mount; read them with `docker compose logs`.
 
 ## Configuration
 
@@ -193,13 +194,17 @@ The builder stage runs:
 
 ```dockerfile
 RUN npm ci --ignore-scripts   # installs ALL deps (dev deps needed for the build)
-RUN npm run build             # astro build → /app/dist
+RUN npm run build             # astro build → /app/dist, then the postbuild hook
 ```
 
 Notes:
 
 - `npm ci` installs **all dependencies, not just production ones** — the build
-  needs devDependencies such as `terser` and `typescript`.
+  needs devDependencies such as `terser`, `typescript`, `sharp`
+  (astro:assets image processing), and `@astrojs/sitemap`.
+- `npm run build` also triggers the npm **`postbuild`** hook, which
+  terser-minifies `dist/service-worker.js` and prunes unreferenced image
+  originals from `dist/_assets` before the production stage copies `dist/`.
 - `--ignore-scripts` hardens the install. The toolchain ships native binaries
   via `optionalDependencies`, not lifecycle scripts, so the build still works.
 - The production stage copies `/app/dist` into
@@ -251,8 +256,9 @@ docker-compose logs -f fluxology-web
 ```
 
 Apache writes access/error logs to the container's stdout/stderr
-(`/proc/self/fd/1` and `/proc/self/fd/2`), and `docker-compose.yml`
-bind-mounts `./logs/apache` to `/usr/local/apache2/logs`.
+(`/proc/self/fd/1` and `/proc/self/fd/2`); `docker compose logs` /
+`docker logs` is the only way to read them. There is no log bind mount or
+named volume — the former `./logs/apache` mount was a no-op and was removed.
 
 > There is **no `/server-status` endpoint** — `mod_status` is deliberately not
 > loaded. Use `docker logs` / `docker stats` for observability.
@@ -337,13 +343,28 @@ and code changes:
 
 ### Caching strategy (from `httpd.conf`)
 
-- **HTML:** `Cache-Control: no-cache, no-store, must-revalidate` (always fresh).
-- **CSS / JS:** `Cache-Control: public, max-age=31536000, immutable`
-  (safe because Astro emits content-hashed filenames).
-- **Images:** `public, max-age=31536000, immutable`.
+- **`/_assets/*`** (all content-hashed build output: CSS, JS, fonts, hashed
+  images): `Cache-Control: public, max-age=31536000, immutable` via a
+  path-scoped `LocationMatch`.
+- **HTML:** `Cache-Control: no-cache, no-store, must-revalidate` plus
+  `Pragma: no-cache` and `Expires: 0` (always fresh).
+- **CSS / JS** (by extension): `public, max-age=31536000, immutable` — safe
+  because all shipped CSS/JS is content-hashed under `/_assets/`; the only
+  unhashed `.js` is `service-worker.js`, which its own rule overrides.
+- **Unhashed images** (`/images/**` and root icons — favicon, apple-touch,
+  `icon-*.png`, `badge-72.png`; matched by extension):
+  `public, max-age=604800` (7 days), with a matching 7-day `Expires` from
+  `mod_expires`. These live at stable public URLs, so a year of `immutable`
+  would pin an old logo forever; hashed images under `/_assets/` get the
+  1-year rule above.
 - **Fonts:** `public, max-age=31536000, immutable` plus
   `Access-Control-Allow-Origin: *`.
-- **`service-worker.js`:** `no-cache, no-store, must-revalidate`.
+- **`.webmanifest`:** `public, max-age=3600` (icon/name changes propagate
+  within an hour).
+- **`service-worker.js`:** `no-cache, no-store, must-revalidate` plus
+  `Service-Worker-Allowed: /`.
+- **Everything else** (`robots.txt`, generated sitemap XML, …): `mod_expires`
+  default of `access plus 1 month`.
 
 ### Compression
 
@@ -408,9 +429,9 @@ docker ps
 # Health status
 docker inspect fluxology-website | grep -A 5 Health
 
-# Shell into the container and test Apache
+# Shell into the container and test Apache (it listens on 6080, not 80)
 docker exec -it fluxology-website sh
-curl http://localhost/
+curl http://localhost:6080/
 ```
 
 ### Apache config checks
@@ -463,6 +484,7 @@ self-hosted alternative described above. Configuration lives in `netlify.toml`:
   (`Strict-Transport-Security = "max-age=31536000; includeSubDomains"`), which
   is safe because **Netlify always serves over HTTPS**.
 - **Caching:** `/_assets/*` is `public, max-age=31536000, immutable`;
+  `/images/*` is `public, max-age=604800, stale-while-revalidate=86400`;
   `/service-worker.js` is `no-cache, no-store, must-revalidate`.
 
 > **Netlify Forms caveat.** The contact form relies on **Netlify Forms**, which

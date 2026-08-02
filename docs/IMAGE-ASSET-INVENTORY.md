@@ -2,8 +2,16 @@
 
 This integration uses 28 of the 30 files supplied in `Fluxology Images - Round 2.zip`.
 The production files are resized, stripped of unnecessary metadata, converted to WebP,
-and stored under `public/images/` with semantic names. The resulting web payload is about
-4.5 MB, down from the 70.7 MB source archive.
+and stored under `src/assets/images/` with semantic names (about 4.9 MB of source
+assets, down from the 70.7 MB source archive). At build time `astro:assets` emits
+content-hashed responsive renditions (480/800/1200 width ladder) into `dist/_assets/`,
+and clients fetch a single appropriately sized variant per image via `srcset`; a
+postbuild script (`scripts/prune-unused-images.mjs`) removes the unreferenced
+originals from the build output.
+
+Two files are additionally kept at stable URLs in `public/images/corporate/`:
+`flux-background.webp` (referenced by a CSS background in `src/styles/themes.css`)
+and `logo-medallion.webp` (the absolute `og:image` URL in `BaseLayout.astro`).
 
 ## Coverage by site area
 
@@ -43,6 +51,10 @@ slot, and the Orchard set contains one. They are not discarded: the homepage use
 mosaics and every DBA detail route includes a larger themed gallery.
 
 ## Source-to-production map
+
+Production filenames are relative to `src/assets/images/`. They are imported as
+typed `ImageMetadata` in `src/data/dbaPlans.ts` (and directly in `Hero.astro` /
+`About.astro`), so renaming a file requires updating those imports.
 
 | Source filename | Production filename |
 | --- | --- |

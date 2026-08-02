@@ -16,6 +16,8 @@ only a small set of interactive Svelte "islands" hydrate in the browser.
 - **[@astrojs/svelte 9.0.1](https://docs.astro.build/en/guides/integrations-guide/svelte/)** — Svelte integration for Astro
 - **TypeScript 5.7** — `astro/tsconfigs/strict`, JSX preserved with `jsxImportSource: "svelte"`
 - **[astro:fonts](https://docs.astro.build/en/guides/fonts/)** — self-hosted Google Fonts (no manual font files)
+- **[astro:assets](https://docs.astro.build/en/guides/images/)** — responsive optimized images from `src/assets/images/` (sharp devDependency)
+- **[@astrojs/sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/)** — build-time sitemap generation; built-in **prefetch** (`prefetchAll`, viewport strategy) warms cross-page links
 
 ### Requirements
 
@@ -37,15 +39,28 @@ is configured in `astro.config.mjs`:
 There is **no separate `astro-compress` step** — Vite/terser minify JS/CSS and
 `compressHTML` handles HTML, so it would be redundant.
 
+After `astro build`, the npm **`postbuild`** hook runs automatically (via
+`npm run build`): it terser-minifies `dist/service-worker.js` (files in
+`public/` bypass the bundler) and then runs `scripts/prune-unused-images.mjs`,
+which deletes `.webp` originals in `dist/_assets` that no built HTML/CSS/JS
+references (Vite copies every imported source image even when only the
+`astro:assets` renditions are used).
+
 ## Project Structure
 
 ```
 fluxology-site/
 ├── public/
-│   ├── images/                   # Optimized images (AVIF, WebP, JPG)
-│   ├── favicon.svg
-│   └── service-worker.js         # PWA service worker
+│   ├── images/corporate/         # Two stable-URL WebP files only (CSS texture, og:image)
+│   ├── favicon.svg / favicon-32.png / apple-touch-icon.png
+│   ├── icon-192.png, icon-512.png (+ maskable), badge-72.png   # PWA icons
+│   ├── site.webmanifest          # PWA manifest
+│   ├── robots.txt                # Points at the generated /sitemap-index.xml
+│   ├── offline.html              # Service-worker offline fallback page
+│   └── service-worker.js         # PWA service worker (minified postbuild)
 ├── src/
+│   ├── assets/
+│   │   └── images/               # Source WebP images, optimized via astro:assets
 │   ├── components/
 │   │   ├── Navigation.astro      # Static: fixed navigation markup
 │   │   ├── Hero.astro            # Static: hero section
@@ -59,13 +74,15 @@ fluxology-site/
 │   │   ├── ThemeTransition.svelte# Island (legacy): scroll-driven theme switch
 │   │   ├── ParticleSystem.svelte # Island (runes): themed particle animation
 │   │   ├── ContactForm.svelte    # Island (runes): contact form + validation
-│   │   ├── NavigationMenu.svelte # Island (legacy): mobile menu behaviour
-│   │   └── BackToTop.svelte      # Island (runes): back-to-top button
+│   │   ├── NavigationMenu.svelte # Island (legacy): mobile menu behaviour + focus trap
+│   │   ├── BackToTop.svelte      # Island (runes): back-to-top button
+│   │   └── CursorEffects.svelte  # Island (runes): themed cursor for fine pointers
 │   ├── layouts/
 │   │   └── BaseLayout.astro      # HTML wrapper, CSS imports, fonts, service worker
 │   ├── pages/
 │   │   ├── index.astro           # Long-form company homepage
-│   │   └── [dba].astro           # Four generated DBA detail pages
+│   │   ├── [dba].astro           # Four generated DBA detail pages
+│   │   └── 404.astro             # Branded 404 (noindex)
 │   ├── data/
 │   │   └── dbaPlans.ts           # Shared plan-based content and image map
 │   └── styles/
@@ -77,12 +94,17 @@ fluxology-site/
 │       ├── utilities.css         # Performance / utility classes
 │       └── responsive.css        # Media queries
 ├── scripts/
-├── astro.config.mjs              # Astro configuration (integrations, fonts, Vite)
+│   └── prune-unused-images.mjs   # Postbuild pruning of unreferenced dist/_assets images
+├── astro.config.mjs              # Astro configuration (integrations, prefetch, fonts, Vite)
 ├── svelte.config.js              # Svelte preprocessing (required by @astrojs/svelte 9)
 ├── tsconfig.json                 # TypeScript config (strict)
 ├── netlify.toml                  # Netlify build + headers config
 └── package.json
 ```
+
+All production images are **WebP**; sources live in `src/assets/images/` and
+are emitted as content-hashed responsive renditions by `astro:assets`. The
+sitemap is generated at build time by `@astrojs/sitemap` (not in `public/`).
 
 ## The Island Architecture
 
@@ -116,12 +138,16 @@ The directives below are used across the homepage and DBA routes:
 | `NavigationMenu` | `client:load` | Legacy | Mobile menu open/close behaviour |
 | `ParticleSystem` | `client:visible` | Runes (`$state`, `$props`) | Themed particle animation per section |
 | `ContactForm` | `client:visible` | Runes (`$state`) | Contact form with client-side validation + AJAX submit |
+| `CursorEffects` | `client:idle` | Runes (`$state`) | Themed cursor dot/ring, site-wide from `BaseLayout.astro` |
 
 - **`client:load`** — hydrates as soon as the page loads. Used for chrome that
   must respond to scroll immediately (progress bar, theme, back-to-top, mobile menu).
 - **`client:visible`** — hydrates only when the component scrolls into view.
   Used for the per-section particle systems and the contact form, which live
   further down the page.
+- **`client:idle`** — hydrates when the browser goes idle. Used for the
+  decorative `CursorEffects` island, which is enhancement-only (fine pointers,
+  no `prefers-reduced-motion`).
 
 ### Svelte 5 runes vs legacy mode
 
@@ -129,7 +155,7 @@ Svelte 5 supports both runes and the legacy reactivity model, and this repo uses
 both intentionally:
 
 - **Runes** (`$state` / `$props`): `ScrollProgress`, `BackToTop`, `ParticleSystem`,
-  `ContactForm` — components with genuine reactive component state.
+  `ContactForm`, `CursorEffects` — components with genuine reactive component state.
 - **Legacy mode**: `NavigationMenu` and `ThemeTransition` — these run
   imperative `onMount` DOM logic (Intersection Observer, class toggling) and
   don't need rune-based reactivity.
@@ -157,11 +183,13 @@ each exposing a CSS variable consumed by `src/styles/variables.css`:
 | Quicksand | `--font-quicksand` | `300 700` (variable) |
 
 All families use the `latin` subset and a `sans-serif` fallback. In
-`BaseLayout.astro`, each family is emitted with an `<Font>` component; the two
-above-the-fold corporate fonts (`--font-outfit`, `--font-open-sans`) are
-`preload`ed, while the theme fonts further down the page load on demand.
-`astro:fonts` generates **fallback metrics automatically**, which is a key
-contributor to the site's **CLS of 0**.
+`BaseLayout.astro`, each family is emitted with an `<Font>` component. Preloads
+are **theme-aware**: every page preloads the corporate fonts (`--font-outfit`,
+`--font-open-sans`), and each themed page additionally preloads its hero
+heading family — Rajdhani (narrowed to the weight-700 file) on `/fabrication/`,
+Space Grotesk on `/3d-lab/`, Sora on `/greenhouse/` and `/orchard/`. The
+remaining fonts load on demand. `astro:fonts` generates **fallback metrics
+automatically**, which is a key contributor to the site's **CLS of 0**.
 
 ## Styling
 
@@ -184,7 +212,9 @@ static HTML:
    bot parses this to register the `contact` form.
 2. The visible **`ContactForm.svelte`** island, which validates input and
    submits via **AJAX** (URL-encoded `POST` to `/`), showing in-page
-   success/error states.
+   success/error states. `novalidate` is hydration-gated, so the
+   server-rendered form keeps native browser validation until the island's JS
+   validation takes over.
 
 Spam protection uses a **`bot-field` honeypot** (`netlify-honeypot="bot-field"`);
 a hidden `form-name` input identifies the form to Netlify.

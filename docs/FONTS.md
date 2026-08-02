@@ -11,7 +11,10 @@ and optimized automatically by [`astro:fonts`](https://docs.astro.build/en/guide
   generates optimized fallback metrics (to prevent layout shift), and emits
   content-hashed `.woff2` files under `dist/_assets/fonts/`.
 - `src/layouts/BaseLayout.astro` renders `<Font>` components that inject the
-  `@font-face` rules and preload the above-the-fold corporate fonts.
+  `@font-face` rules. Preloads are theme-aware: the corporate fonts (Outfit,
+  Open Sans) are preloaded on every page, and each themed DBA page also
+  preloads its hero heading family (Rajdhani weight 700 / Space Grotesk /
+  Sora).
 - `src/styles/variables.css` maps the generated `--font-*` variables to the
   design's semantic roles (e.g. `--font-corporate-heading: var(--font-outfit)`).
 
@@ -22,5 +25,5 @@ and optimized automatically by [`astro:fonts`](https://docs.astro.build/en/guide
    (add `preload` only for above-the-fold fonts).
 3. Reference it via a semantic variable in `src/styles/variables.css`.
 
-The build requires outbound access to Google Fonts. This directory intentionally
-contains no font files.
+The build requires outbound access to Google Fonts. No font files are committed
+to the repository — they are downloaded and emitted at build time.
