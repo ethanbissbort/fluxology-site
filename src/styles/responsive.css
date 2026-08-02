@@ -56,7 +56,7 @@
   }
 
   .about-stats {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-md);
   }
 
@@ -242,6 +242,10 @@
     gap: var(--spacing-xl);
   }
 
+  .values-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .about-paragraph {
     font-size: var(--font-size-sm);
   }
@@ -310,10 +314,6 @@
   /* Showcase */
   .dba-showcase {
     margin-bottom: var(--spacing-xl);
-  }
-
-  .showcase-placeholder {
-    height: 250px;
   }
 
   /* Contact section */
@@ -443,6 +443,11 @@
     font-size: 14px;
   }
 
+  .hero-brand-mark {
+    width: 140px;
+    margin-bottom: var(--spacing-md);
+  }
+
   .hero-title-main {
     font-size: var(--font-size-xl);
   }
@@ -457,6 +462,20 @@
 
   .dba-name {
     font-size: var(--font-size-lg);
+  }
+
+  .values-list {
+    grid-template-columns: 1fr;
+  }
+
+  .value-item {
+    grid-template-columns: 64px minmax(0, 1fr);
+    min-height: 96px;
+  }
+
+  .value-item img {
+    width: 64px;
+    height: 64px;
   }
 
   .container {
@@ -582,19 +601,63 @@
    defeated the scroll-driven theme crossfade for dark-preference users. */
 
 /* ========================================
-   COMPACT NAV ZONE (768-849px)
+   NAV COLLAPSE (homepage + DBA detail pages)
    ======================================== */
-/* Desktop nav layout but very little width: 7 links + the emblem/wordmark
-   lockup had near-zero slack here. Compact the links and drop the "Inc."
-   suffix instead of moving the hamburger breakpoint (which would drag the
-   whole mobile layout along with it). */
-@media (min-width: 768px) and (max-width: 849px) {
-  .nav-link {
-    font-size: var(--font-size-xs);
-    padding: var(--spacing-sm) 0.4rem;
+/* Eight top-level destinations need more width than the previous seven-link
+   menu. Collapse navigation independently of the rest of the tablet layout. */
+@media (max-width: 1150px) {
+  .nav-toggle {
+    display: flex;
   }
 
-  .logo-inc {
+  .nav-links {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+    flex-direction: column;
+    gap: 0;
+    padding: var(--spacing-lg);
+    background: rgba(27, 58, 75, 0.98);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-100%);
+    transition: transform var(--transition-base) var(--ease-out-cubic),
+                opacity var(--transition-base) var(--ease-out-cubic),
+                visibility var(--transition-base) var(--ease-out-cubic);
+  }
+
+  .nav-links.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .nav-link {
+    width: 100%;
+    min-height: 44px;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+  }
+
+  .nav-link::after {
     display: none;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-line:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .nav-toggle[aria-expanded="true"] .nav-toggle-line:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
   }
 }

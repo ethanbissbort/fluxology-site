@@ -1,5 +1,7 @@
 ---
-// Hero section component
+// Above-the-fold company positioning. This reflects the portfolio's current
+// legal status and future launch horizon instead of presenting the DBAs as
+// active, staffed divisions.
 ---
 
 <section class="section hero-section" id="hero" data-theme="corporate">
@@ -10,32 +12,131 @@
 
   <div class="content-layer">
     <div class="container">
-      <!-- Above-the-fold hero content renders immediately (no reveal-on-load
-           gating): this is the LCP region, so it must not wait for JS
-           hydration or a fade-in transition. -->
+      <p class="hero-status">
+        <span class="hero-status-dot" aria-hidden="true"></span>
+        Federally incorporated · Ontario · 2029-2035 planning horizon
+      </p>
+
+      <img
+        class="hero-brand-mark"
+        src="/images/corporate/logo-medallion.webp"
+        alt="Fluxology, Inc. circular flux-wave emblem"
+        width="640"
+        height="640"
+        decoding="async"
+        fetchpriority="high"
+      />
       <h1 class="hero-title">
-        <span class="hero-title-main">Fluxology Inc.</span>
-        <span class="hero-title-sub">Innovation Across Industries</span>
+        <span class="hero-title-main">Fluxology, Inc.</span>
+        <span class="hero-title-sub">Trade-led. Technology-enabled. Homestead-integrated.</span>
       </h1>
 
       <p class="hero-description">
-        A Canadian Controlled Private Corporation driving excellence through four distinct business divisions,
-        combining traditional craftsmanship with cutting-edge technology and sustainable agriculture.
+        A one-owner Canadian-controlled private corporation building a disciplined path from mobile repair and
+        fabrication to digital production support and subsistence-first homestead agriculture.
       </p>
 
+      <ul class="hero-facts" role="list">
+        <li><strong>1</strong><span>corporation</span></li>
+        <li><strong>4</strong><span>proposed operating names</span></li>
+        <li><strong>2029</strong><span>earliest commercial launch</span></li>
+      </ul>
+
       <div class="hero-cta-group">
-        <a href="#about" class="cta-button cta-primary">Explore Our Businesses</a>
-        <a href="#contact" class="cta-button cta-secondary">Get in Touch</a>
+        <a href="#operating-model" class="cta-button cta-primary">See how the pieces fit</a>
+        <a href="#roadmap" class="cta-button cta-secondary">View the staged roadmap</a>
       </div>
 
-      <!-- Purely decorative affordance; aria-label is invalid on a generic
-           div with no role, so hide it from assistive tech instead. -->
       <div class="hero-scroll-indicator" aria-hidden="true">
         <span class="scroll-arrow">↓</span>
-        <span class="scroll-text">Scroll to discover</span>
+        <span class="scroll-text">Explore the operating plan</span>
       </div>
     </div>
   </div>
 
   <div class="accent-layer" id="heroParticles"></div>
 </section>
+
+<style>
+  .hero-status {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: center;
+    align-items: center;
+    width: fit-content;
+    margin: 0 auto var(--spacing-lg);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: 1px solid rgba(168, 218, 220, 0.28);
+    border-radius: var(--radius-full);
+    background: rgba(9, 30, 45, 0.58);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .hero-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--corporate-accent-blue);
+    box-shadow: 0 0 0 5px rgba(58, 134, 255, 0.13);
+  }
+
+  .hero-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    max-width: 760px;
+    margin: calc(var(--spacing-xl) * -1) auto var(--spacing-2xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .hero-facts li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--spacing-md);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-lg);
+    background: rgba(9, 30, 45, 0.38);
+    text-align: center;
+    backdrop-filter: blur(8px);
+  }
+
+  .hero-facts strong {
+    color: var(--corporate-accent-silver);
+    font-family: var(--font-corporate-heading);
+    font-size: var(--font-size-lg);
+  }
+
+  .hero-facts span {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: var(--font-size-xs);
+  }
+
+  @media (max-width: 767px) {
+    .hero-status {
+      max-width: 100%;
+      text-align: center;
+    }
+
+    .hero-facts {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-sm);
+      margin-top: 0;
+    }
+
+    .hero-facts li {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr);
+      text-align: left;
+    }
+
+    .hero-facts strong {
+      font-size: var(--font-size-md);
+    }
+  }
+</style>

@@ -1,5 +1,10 @@
 ---
-// Static navigation component
+// Homepage links stay as in-page anchors. From a DBA detail page, company
+// links return to the homepage while division links open the dedicated page.
+const isHomepage = Astro.url.pathname === '/';
+const homeSection = (id: string) => isHomepage ? `#${id}` : `/#${id}`;
+const divisionLink = (id: string) => isHomepage ? `#${id}` : `/${id}/`;
+const isCurrentDivision = (id: string) => Astro.url.pathname === `/${id}/`;
 ---
 
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -8,7 +13,7 @@
   <div class="nav-container">
     <!-- No aria-label: the visible wordmark text is the accessible name
          (an override tripped WCAG 2.5.3 label-in-name). -->
-    <a class="nav-logo" id="navLogo" href="#hero">
+    <a class="nav-logo" id="navLogo" href={isHomepage ? '#hero' : '/'}>
       <img
         class="nav-logo-mark"
         src="/favicon.svg"
@@ -18,7 +23,7 @@
         height="36"
       />
       <span class="logo-wordmark">
-        <span class="logo-text">Fluxology</span>
+        <span class="logo-text">Fluxology,</span>
         <span class="logo-inc">Inc.</span>
       </span>
     </a>
@@ -36,13 +41,14 @@
     </button>
 
     <ul class="nav-links" id="navLinks" role="list">
-      <li><a href="#hero" class="nav-link active" data-section="hero">Home</a></li>
-      <li><a href="#about" class="nav-link" data-section="about">About</a></li>
-      <li><a href="#fabrication" class="nav-link" data-section="fabrication">Fabrication</a></li>
-      <li><a href="#3d-lab" class="nav-link" data-section="3d-lab">3D Lab</a></li>
-      <li><a href="#greenhouse" class="nav-link" data-section="greenhouse">Greenhouse</a></li>
-      <li><a href="#orchard" class="nav-link" data-section="orchard">Orchard</a></li>
-      <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
+      <li><a href={homeSection('about')} class="nav-link" data-section="about">Company</a></li>
+      <li><a href={homeSection('operating-model')} class="nav-link" data-section="operating-model">Model</a></li>
+      <li><a href={divisionLink('fabrication')} class:list={['nav-link', { active: isCurrentDivision('fabrication') }]} aria-current={isCurrentDivision('fabrication') ? 'page' : undefined} data-section="fabrication">Fabrication</a></li>
+      <li><a href={divisionLink('3d-lab')} class:list={['nav-link', { active: isCurrentDivision('3d-lab') }]} aria-current={isCurrentDivision('3d-lab') ? 'page' : undefined} data-section="3d-lab">3D Lab</a></li>
+      <li><a href={divisionLink('greenhouse')} class:list={['nav-link', { active: isCurrentDivision('greenhouse') }]} aria-current={isCurrentDivision('greenhouse') ? 'page' : undefined} data-section="greenhouse">Greenhouse</a></li>
+      <li><a href={divisionLink('orchard')} class:list={['nav-link', { active: isCurrentDivision('orchard') }]} aria-current={isCurrentDivision('orchard') ? 'page' : undefined} data-section="orchard">Orchard</a></li>
+      <li><a href={homeSection('roadmap')} class="nav-link" data-section="roadmap">Roadmap</a></li>
+      <li><a href={homeSection('contact')} class="nav-link" data-section="contact">Contact</a></li>
     </ul>
   </div>
 </nav>

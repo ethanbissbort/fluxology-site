@@ -7,10 +7,10 @@
  */
 
 // Bump BOTH names on each deploy that changes cached behavior/content.
-const CACHE_NAME = 'fluxology-v2.2.0';
+const CACHE_NAME = 'fluxology-v2.3.0';
 // Versioned so the activate handler evicts stale runtime entries on each
 // release instead of serving poisoned/outdated assets indefinitely.
-const RUNTIME_CACHE = 'fluxology-runtime-v2.2.0';
+const RUNTIME_CACHE = 'fluxology-runtime-v2.3.0';
 
 // Precache only the app shell. All other assets (content-hashed CSS/JS and
 // the astro:fonts woff2 files under /_assets) are cached at runtime by the
@@ -152,7 +152,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('Fluxology Inc.', options)
+    self.registration.showNotification('Fluxology, Inc.', options)
   );
 });
 

@@ -1,5 +1,6 @@
 ---
-// About section component
+// Company-level facts and operating principles are drawn from the reworked
+// 2029+ portfolio. The DBA names are proposals, not separate legal entities.
 ---
 
 <section class="section about-section" id="about" data-theme="corporate">
@@ -11,40 +12,86 @@
   <div class="content-layer">
     <div class="container">
       <header class="section-header observe-fade">
-        <h2 class="section-title">About Fluxology Inc.</h2>
-        <p class="section-subtitle">Building the future through diversity and innovation</p>
+        <p class="about-eyebrow">Company structure</p>
+        <h2 class="section-title">One corporation. Four staged operating lines.</h2>
+        <p class="section-subtitle">A trade-led, one-owner micro-enterprise designed to integrate with a future homestead.</p>
       </header>
+
+      <div class="legal-status observe-fade">
+        <span class="status-dot" aria-hidden="true"></span>
+        <p>
+          <strong>Fluxology, Inc. is federally incorporated and registered to operate in Ontario.</strong>
+          The four operating names presented on this site are proposed and have not yet been registered.
+        </p>
+      </div>
 
       <div class="about-content observe-slide-up">
         <div class="about-text">
           <p class="about-paragraph">
-            Fluxology Inc. is a Canadian Controlled Private Corporation (CCPC) that operates at the intersection
-            of traditional industry, advanced technology, and sustainable agriculture. Our diverse portfolio of
-            businesses allows us to leverage synergies across sectors while maintaining specialized excellence
-            in each domain.
+            Fluxology is not a holding company, staffing plan or collection of separate corporations. It is one
+            Canadian-controlled private corporation with internal cost centres for repair and fabrication, digital
+            production support, protected growing, and perennial food systems.
           </p>
 
           <p class="about-paragraph">
-            From precision metalworking and cutting-edge 3D printing to sustainable greenhouse production and
-            perennial food forestry, we are committed to innovation, quality, and environmental stewardship.
-            Our integrated approach creates value for our clients while building a sustainable future.
+            The plan begins with mobile/local welding no earlier than 2029, while the owner continues separate T4
+            trade employment. The 3D Lab starts as a compact internal capability and becomes a public service only
+            after demand is proven. The greenhouse and orchard begin after a compatible homestead is acquired and
+            prioritize household food, preservation and propagation before any sale.
+          </p>
+
+          <p class="about-paragraph about-paragraph--accent">
+            Growth is allowed to move later. It is not allowed to become larger, more leveraged or more labour-heavy
+            merely to preserve a date or forecast.
           </p>
         </div>
 
         <div class="about-values">
-          <h3 class="values-title">Our Core Values</h3>
+          <h3 class="values-title">Operating principles</h3>
           <ul class="values-list" role="list">
             <li class="value-item">
-              <strong>Excellence:</strong> Uncompromising quality in every project
+              <img
+                src="/images/corporate/value-excellence.webp"
+                alt="Polished achievement trophy"
+                width="360"
+                height="360"
+                loading="lazy"
+                decoding="async"
+              />
+              <span><strong>Controlled scope</strong> Accept only work that fits qualification, access, schedule, insurance and one-person capacity.</span>
             </li>
             <li class="value-item">
-              <strong>Innovation:</strong> Embracing new technologies and methods
+              <img
+                src="/images/corporate/value-innovation.webp"
+                alt="Luminous modular technology cube"
+                width="360"
+                height="360"
+                loading="lazy"
+                decoding="async"
+              />
+              <span><strong>Demand-gated capability</strong> Add technology to solve measured problems, not to fill a speculative equipment catalogue.</span>
             </li>
             <li class="value-item">
-              <strong>Sustainability:</strong> Environmental responsibility in all operations
+              <img
+                src="/images/corporate/value-sustainability.webp"
+                alt="Geometric green and blue leaf"
+                width="360"
+                height="360"
+                loading="lazy"
+                decoding="async"
+              />
+              <span><strong>Subsistence before surplus</strong> Secure household food, preservation and propagation needs before agricultural sales.</span>
             </li>
             <li class="value-item">
-              <strong>Integrity:</strong> Honest, transparent business practices
+              <img
+                src="/images/corporate/value-integrity.webp"
+                alt="Handshake set in a protective shield"
+                width="360"
+                height="360"
+                loading="lazy"
+                decoding="async"
+              />
+              <span><strong>Clear separation</strong> Keep employment, corporate revenue, personal costs and each operating line explicitly documented.</span>
             </li>
           </ul>
         </div>
@@ -52,16 +99,20 @@
 
       <div class="about-stats observe-slide-up">
         <div class="stat-card">
+          <span class="stat-number">1</span>
+          <span class="stat-label">Owner + legal entity</span>
+        </div>
+        <div class="stat-card">
           <span class="stat-number">4</span>
-          <span class="stat-label">Business Divisions</span>
+          <span class="stat-label">Proposed operating names</span>
         </div>
         <div class="stat-card">
-          <span class="stat-number">CCPC</span>
-          <span class="stat-label">Canadian Corporation</span>
+          <span class="stat-number">2029</span>
+          <span class="stat-label">Earliest customer launch</span>
         </div>
         <div class="stat-card">
-          <span class="stat-number">100%</span>
-          <span class="stat-label">Commitment to Quality</span>
+          <span class="stat-number">24 mo</span>
+          <span class="stat-label">Base-case equipment payback gate</span>
         </div>
       </div>
     </div>
@@ -69,3 +120,62 @@
 
   <div class="accent-layer" id="aboutParticles"></div>
 </section>
+
+<style>
+  .about-eyebrow {
+    margin-bottom: var(--spacing-sm);
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+
+  .legal-status {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--spacing-md);
+    align-items: start;
+    max-width: 1060px;
+    margin: calc(var(--spacing-xl) * -1) auto var(--spacing-3xl);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border: 1px solid rgba(168, 218, 220, 0.24);
+    border-radius: var(--radius-lg);
+    background: rgba(9, 30, 45, 0.62);
+  }
+
+  .status-dot {
+    width: 12px;
+    height: 12px;
+    margin-top: 0.45rem;
+    border-radius: 50%;
+    background: var(--corporate-accent-blue);
+    box-shadow: 0 0 0 6px rgba(58, 134, 255, 0.13);
+  }
+
+  .legal-status p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.76);
+    line-height: var(--line-height-loose);
+  }
+
+  .legal-status strong {
+    color: white;
+  }
+
+  .about-paragraph--accent {
+    padding: var(--spacing-lg);
+    border-left: 4px solid var(--corporate-accent-blue);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    background: rgba(58, 134, 255, 0.08);
+    color: white;
+    font-weight: var(--font-weight-semibold);
+  }
+
+  @media (max-width: 767px) {
+    .legal-status {
+      margin-top: 0;
+      padding: var(--spacing-md);
+    }
+  }
+</style>

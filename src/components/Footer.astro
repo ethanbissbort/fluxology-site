@@ -9,26 +9,29 @@ const year = new Date().getFullYear();
   <div class="container">
     <div class="footer-content">
       <div class="footer-brand">
-        <h3 class="footer-logo">Fluxology Inc.</h3>
-        <p class="footer-tagline">Innovation Across Industries</p>
+        <h3 class="footer-logo">Fluxology, Inc.</h3>
+        <p class="footer-tagline">Trade-led. Technology-enabled. Homestead-integrated.</p>
+        <p class="footer-status">Federally incorporated · Ontario · Operating names proposed</p>
       </div>
 
       <div class="footer-links">
         <div class="footer-column">
-          <h4 class="footer-heading">Business Divisions</h4>
+          <h4 class="footer-heading">Operating Plans</h4>
           <ul class="footer-list" role="list">
-            <li><a href="#fabrication">Fabrication & Welding</a></li>
-            <li><a href="#3d-lab">3D Lab</a></li>
-            <li><a href="#greenhouse">Greenhouse</a></li>
-            <li><a href="#orchard">Orchard & Food Forest</a></li>
+            <li><a href="/fabrication/">Fabrication & Welding</a></li>
+            <li><a href="/3d-lab/">3D Lab</a></li>
+            <li><a href="/greenhouse/">Greenhouse</a></li>
+            <li><a href="/orchard/">Orchard & Food Forest</a></li>
           </ul>
         </div>
 
         <div class="footer-column">
           <h4 class="footer-heading">Company</h4>
           <ul class="footer-list" role="list">
-            <li><a href="#about">About Us</a></li>
-            <li><a href="#contact">Contact</a></li>
+            <li><a href="/#about">About Fluxology</a></li>
+            <li><a href="/#operating-model">Operating Model</a></li>
+            <li><a href="/#roadmap">2026-2035 Roadmap</a></li>
+            <li><a href="/#contact">Planning Inquiries</a></li>
             <!-- TODO: restore once real Privacy Policy / Terms pages exist.
                  They previously pointed at href="#", which just jumped the
                  page to the top — worse than omitting them.
@@ -42,8 +45,18 @@ const year = new Date().getFullYear();
 
     <div class="footer-bottom">
       <p class="footer-copyright">
-        &copy; <span id="currentYear">{year}</span> Fluxology Inc. All rights reserved. Canadian Controlled Private Corporation.
+        &copy; <span id="currentYear">{year}</span> Fluxology, Inc. All rights reserved. Canadian-controlled private corporation.
       </p>
     </div>
   </div>
 </footer>
+
+<style>
+  .footer-status {
+    max-width: 420px;
+    margin-top: var(--spacing-md);
+    color: rgba(255, 255, 255, 0.62);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-loose);
+  }
+</style>

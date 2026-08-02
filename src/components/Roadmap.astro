@@ -1,0 +1,401 @@
+---
+const phases = [
+  {
+    years: '2026-2028',
+    title: 'Foundation',
+    description: 'Trade school, apprenticeship or employment entry, corporate maintenance and personal savings.',
+    gate: 'Training complete; employment path established; no premature capital build.'
+  },
+  {
+    years: '2029',
+    title: 'Controlled launch',
+    description: 'Register and insure Fabrication & Welding, begin limited mobile service and establish internal 3D capability.',
+    gate: 'Positive job-level contribution with a controlled one-person schedule.'
+  },
+  {
+    years: '2030-2031',
+    title: 'Validation',
+    description: 'Build repeat local customers, refine estimates, add selective used tools and test external 3D demand.',
+    gate: 'Corporate activity covers fixed overhead and a replacement reserve.'
+  },
+  {
+    years: '2032-2033',
+    title: 'Property integration',
+    description: 'Acquire a compatible homestead, commission the fixed shop, and establish greenhouse and orchard systems.',
+    gate: 'The property supports operations without excessive new debt.'
+  },
+  {
+    years: '2034-2035',
+    title: 'One-person maturity',
+    description: 'Maintain a stable trade side line, selective 3D work, reliable household food production and genuine surplus sales.',
+    gate: 'Workload remains sustainable and the corporation stays cash-positive.'
+  }
+];
+
+const capitalRules = [
+  ['Safety first', 'Legal filings, contracts, insurance, PPE and fire controls precede revenue equipment.'],
+  ['Revenue tools next', 'Mobile tools that directly permit safe paid work receive priority.'],
+  ['Remove proven bottlenecks', 'Upgrades follow job records showing repeated lost time, outsourcing cost or rejected demand.'],
+  ['Fixed systems last', 'The homestead shop and farm lines wait for property, zoning, utilities and actual-use review.']
+];
+---
+
+<section class="section roadmap-section" id="roadmap" data-theme="corporate">
+  <div class="background-layer">
+    <div class="parallax-bg"></div>
+    <div class="roadmap-grid" aria-hidden="true"></div>
+  </div>
+
+  <div class="content-layer">
+    <div class="container">
+      <header class="section-header observe-fade">
+        <p class="section-eyebrow">2026-2035 roadmap</p>
+        <h2 class="section-title">Preparation first. Launch gates second.</h2>
+        <p class="section-subtitle">
+          No business projection begins before 2029. Property-based phases move later if financing, site selection,
+          zoning or utility capacity is not ready.
+        </p>
+      </header>
+
+      <div class="roadmap-callout observe-fade">
+        <strong>Dates after 2029 are gates, not promises.</strong>
+        <span>Mobile welding and compact digital work can continue without forcing the fixed shop or farm timeline.</span>
+      </div>
+
+      <ol class="timeline observe-slide-up">
+        {phases.map((phase, index) => (
+          <li>
+            <div class="timeline-marker" aria-hidden="true">{String(index + 1).padStart(2, '0')}</div>
+            <article>
+              <p class="phase-years">{phase.years}</p>
+              <h3>{phase.title}</h3>
+              <p>{phase.description}</p>
+              <div class="phase-gate">
+                <span>Success gate</span>
+                <strong>{phase.gate}</strong>
+              </div>
+            </article>
+          </li>
+        ))}
+      </ol>
+
+      <div class="capital-panel observe-scale">
+        <div class="capital-intro">
+          <p class="section-eyebrow">Capital discipline</p>
+          <h3>Smaller, staged and repairable by design</h3>
+          <p>
+            The base plan allocates $24.9k of corporate capital from 2029 through 2035, excluding property,
+            buildings, ordinary household systems and any replacement vehicle. Every optional asset must have a
+            credible utilization case and base-case payback within 24 months.
+          </p>
+        </div>
+        <ol class="capital-rules">
+          {capitalRules.map(([title, text], index) => (
+            <li>
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <h4>{title}</h4>
+                <p>{text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div class="roadmap-actions observe-fade">
+        <p>
+          Fluxology is currently in the foundation period. Future-fit customer needs, supplier relationships and
+          local collaboration conversations are welcome; active service booking is not yet open.
+        </p>
+        <a class="cta-button cta-primary" href="#contact">Start a future-fit conversation</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .roadmap-section {
+    min-height: auto;
+    background: linear-gradient(145deg, #0b1f31 0%, var(--corporate-primary-slate) 100%);
+  }
+
+  .roadmap-grid {
+    position: absolute;
+    inset: 0;
+    opacity: 0.22;
+    background-image:
+      linear-gradient(rgba(168, 218, 220, 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168, 218, 220, 0.07) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+  }
+
+  .section-eyebrow {
+    margin-bottom: var(--spacing-sm);
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+
+  .roadmap-callout {
+    display: flex;
+    gap: var(--spacing-md) var(--spacing-xl);
+    justify-content: center;
+    align-items: baseline;
+    margin: calc(var(--spacing-xl) * -1) auto var(--spacing-3xl);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border: 1px solid rgba(58, 134, 255, 0.32);
+    border-radius: var(--radius-full);
+    background: rgba(58, 134, 255, 0.09);
+    color: rgba(255, 255, 255, 0.74);
+    text-align: center;
+  }
+
+  .roadmap-callout strong {
+    color: white;
+  }
+
+  .timeline {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin: 0 0 var(--spacing-4xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 29px;
+    right: 8%;
+    left: 8%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--corporate-accent-blue), var(--corporate-accent-silver));
+  }
+
+  .timeline li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .timeline-marker {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: var(--spacing-lg);
+    border: 3px solid var(--corporate-accent-blue);
+    border-radius: 50%;
+    background: var(--corporate-primary-navy);
+    color: white;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    box-shadow: 0 0 0 8px rgba(58, 134, 255, 0.09);
+  }
+
+  .timeline article {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
+    padding: var(--spacing-xl);
+    border: 1px solid rgba(168, 218, 220, 0.17);
+    border-radius: var(--radius-lg);
+    background: rgba(8, 25, 39, 0.76);
+    box-shadow: 0 20px 42px rgba(0, 0, 0, 0.18);
+  }
+
+  .phase-years {
+    margin-bottom: var(--spacing-xs);
+    color: var(--corporate-accent-blue);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
+  }
+
+  .timeline h3,
+  .capital-panel h3 {
+    color: white;
+    font-size: var(--font-size-lg);
+  }
+
+  .timeline article > p:not(.phase-years),
+  .capital-intro > p:not(.section-eyebrow) {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: var(--line-height-loose);
+  }
+
+  .timeline article > p:not(.phase-years) {
+    font-size: var(--font-size-xs);
+  }
+
+  .phase-gate {
+    margin-top: auto;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid rgba(255, 255, 255, 0.11);
+  }
+
+  .phase-gate span {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .phase-gate strong {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-normal);
+  }
+
+  .capital-panel {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+    gap: var(--spacing-3xl);
+    margin-bottom: var(--spacing-3xl);
+    padding: clamp(var(--spacing-xl), 4vw, var(--spacing-3xl));
+    border: 1px solid rgba(168, 218, 220, 0.2);
+    border-radius: var(--radius-xl);
+    background: rgba(8, 25, 39, 0.82);
+  }
+
+  .capital-rules {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .capital-rules li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .capital-rules li > span {
+    color: var(--corporate-accent-blue);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .capital-rules h4 {
+    margin-bottom: var(--spacing-xs);
+    color: white;
+    font-size: var(--font-size-md);
+  }
+
+  .capital-rules p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.66);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-loose);
+  }
+
+  .roadmap-actions {
+    display: flex;
+    gap: var(--spacing-xl);
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-xl);
+    border-left: 4px solid var(--corporate-accent-blue);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .roadmap-actions p {
+    max-width: 800px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.78);
+    line-height: var(--line-height-loose);
+  }
+
+  .roadmap-actions .cta-button {
+    flex: 0 0 auto;
+  }
+
+  @media (max-width: 1199px) {
+    .timeline {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+    }
+
+    .timeline::before {
+      top: 28px;
+      bottom: 28px;
+      left: 28px;
+      width: 2px;
+      height: auto;
+    }
+
+    .timeline li {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: var(--spacing-lg);
+      align-items: start;
+    }
+
+    .timeline-marker {
+      margin-bottom: 0;
+    }
+
+    .timeline article {
+      width: auto;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .roadmap-callout,
+    .roadmap-actions {
+      align-items: stretch;
+      flex-direction: column;
+      border-radius: var(--radius-lg);
+      text-align: left;
+    }
+
+    .capital-panel,
+    .capital-rules {
+      grid-template-columns: 1fr;
+    }
+
+    .capital-panel {
+      gap: var(--spacing-xl);
+      padding: var(--spacing-lg);
+    }
+
+    .timeline li {
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: var(--spacing-md);
+    }
+
+    .timeline-marker {
+      width: 44px;
+      height: 44px;
+      box-shadow: 0 0 0 5px rgba(58, 134, 255, 0.09);
+    }
+
+    .timeline::before {
+      top: 22px;
+      bottom: 22px;
+      left: 21px;
+    }
+
+    .timeline article {
+      padding: var(--spacing-lg);
+    }
+  }
+</style>

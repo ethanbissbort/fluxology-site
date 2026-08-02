@@ -59,6 +59,25 @@
   function updateActiveNavLink(sectionId) {
     const navLinks = document.querySelectorAll('.nav-link');
 
+    // DBA detail routes keep the matching division link active while their
+    // local sections (role, offer, workflow, etc.) intersect. Those section
+    // IDs intentionally do not appear in the global navigation.
+    if (window.location.pathname !== '/') {
+      const currentPath = window.location.pathname;
+
+      navLinks.forEach(link => {
+        const isCurrentPage = link.getAttribute('href') === currentPath;
+
+        link.classList.toggle('active', isCurrentPage);
+        if (isCurrentPage) {
+          link.setAttribute('aria-current', 'page');
+        } else {
+          link.removeAttribute('aria-current');
+        }
+      });
+      return;
+    }
+
     navLinks.forEach(link => {
       const href = link.getAttribute('href')?.substring(1);
 

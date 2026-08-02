@@ -37,7 +37,7 @@
     }
 
     if (!formData.serviceInterest) {
-      errors.serviceInterest = 'Please select a service';
+      errors.serviceInterest = 'Please select an inquiry topic';
     }
 
     if (!formData.message || formData.message.trim().length < 10) {
@@ -102,7 +102,7 @@
       errors = {};
 
       submitStatus = 'success';
-      submitMessage = 'Thank you for your message! We will get back to you soon.';
+      submitMessage = 'Your inquiry has been received. We will respond as the planning schedule permits.';
     } catch (error) {
       submitStatus = 'error';
       submitMessage =
@@ -122,61 +122,29 @@
 
 <div class="contact-content observe-fade">
   <div class="contact-info">
-    <!-- TODO: restore with the real street address — the previous block
-         shipped bracketed placeholders ("[Street Address]") to production.
-    <div class="info-block">
-      <h3 class="info-title">Address</h3>
-      <p class="info-text">
-        [Street Address]<br />
-        [City, Province, Postal Code]<br />
-        Canada
-      </p>
-    </div>
-    -->
-
     <div class="info-block">
       <h3 class="info-title">Contact</h3>
       <p class="info-text">
         Email: <a href="mailto:info@fluxology.ca">info@fluxology.ca</a>
-        <!-- TODO: restore with the real phone number — (123) 456-7890 was a
-             dummy value.
-        <br />Phone: <a href="tel:+1234567890">(123) 456-7890</a>
-        -->
       </p>
     </div>
 
     <div class="info-block">
-      <h3 class="info-title">Business Hours</h3>
+      <h3 class="info-title">Current Phase</h3>
       <p class="info-text">
-        Monday - Friday: 8:00 AM - 6:00 PM<br />
-        Saturday: 9:00 AM - 4:00 PM<br />
-        Sunday: Closed
+        2026-2028 foundation period<br />
+        Training, employment entry, corporate maintenance and launch preparation<br />
+        Earliest commercial target: 2029
       </p>
     </div>
 
-    <!-- TODO: restore with real profile URLs — all five icons pointed at
-         href="#", which just jumped the page to the top.
     <div class="info-block">
-      <h3 class="info-title">Follow Us</h3>
-      <div class="social-links">
-        <a href="#" class="social-link" aria-label="Facebook">
-          <span class="social-icon">📘</span>
-        </a>
-        <a href="#" class="social-link" aria-label="Instagram">
-          <span class="social-icon">📷</span>
-        </a>
-        <a href="#" class="social-link" aria-label="LinkedIn">
-          <span class="social-icon">💼</span>
-        </a>
-        <a href="#" class="social-link" aria-label="Twitter">
-          <span class="social-icon">🐦</span>
-        </a>
-        <a href="#" class="social-link" aria-label="YouTube">
-          <span class="social-icon">📹</span>
-        </a>
-      </div>
+      <h3 class="info-title">Useful Inquiries</h3>
+      <p class="info-text">
+        Future customer problems, local market validation, supplier relationships, used-equipment leads,
+        rural collaboration and questions about the operating plan.
+      </p>
     </div>
-    -->
   </div>
 
   <form
@@ -285,7 +253,7 @@
     <div class="form-row">
       <div class="form-group" class:error={errors.serviceInterest}>
         <label for="serviceInterest" class="form-label">
-          Service Interest <span class="required">*</span>
+          Inquiry Topic <span class="required">*</span>
         </label>
         <select
           id="serviceInterest"
@@ -297,13 +265,13 @@
           aria-invalid={!!errors.serviceInterest}
           aria-describedby={errors.serviceInterest ? 'serviceInterest-error' : undefined}
         >
-          <option value="">Select a service...</option>
-          <option value="fabrication">Fabrication & Welding</option>
-          <option value="3d-lab">3D Lab</option>
-          <option value="greenhouse">Greenhouse</option>
-          <option value="orchard">Orchard & Food Forest</option>
-          <option value="multiple">Multiple Services</option>
-          <option value="general">General Inquiry</option>
+          <option value="">Select an inquiry topic...</option>
+          <option value="fabrication">Future Fabrication & Welding Need</option>
+          <option value="3d-lab">Future 3D Lab Need</option>
+          <option value="greenhouse">Greenhouse / Growing-System Interest</option>
+          <option value="orchard">Orchard & Food Forest Interest</option>
+          <option value="multiple">Cross-Division Collaboration</option>
+          <option value="general">Company / General Inquiry</option>
         </select>
         {#if errors.serviceInterest}
           <span class="form-error" id="serviceInterest-error" role="alert">{errors.serviceInterest}</span>
@@ -326,7 +294,7 @@
           required
           aria-invalid={!!errors.message}
           aria-describedby={errors.message ? 'message-error' : undefined}
-          placeholder="Tell us about your project or inquiry..."
+          placeholder="Describe the future need, collaboration or question, including location and timing where relevant..."
         ></textarea>
         {#if errors.message}
           <span class="form-error" id="message-error" role="alert">{errors.message}</span>
@@ -349,7 +317,7 @@
       class="cta-button cta-primary form-submit"
       disabled={isSubmitting}
     >
-      {isSubmitting ? 'Sending...' : 'Send Message'}
+      {isSubmitting ? 'Sending...' : 'Send Inquiry'}
     </button>
   </form>
 </div>
