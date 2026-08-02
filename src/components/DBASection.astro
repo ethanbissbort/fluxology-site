@@ -11,19 +11,46 @@ interface Service {
   icon: string;
   title: string;
   description: string;
+  meta?: string;
   image?: ImageAsset;
+}
+
+interface Fact {
+  label: string;
+  value: string;
+}
+
+interface ProcessStep {
+  title: string;
+  description: string;
+}
+
+interface Boundary {
+  title: string;
+  description: string;
 }
 
 interface Props {
   id: string;
   theme: string;
   name: string;
-  naics: string;
+  eyebrow?: string;
+  status: string;
+  classification: string;
   description: string;
+  facts: Fact[];
+  servicesTitle?: string;
+  servicesIntro?: string;
   services: Service[];
+  processTitle: string;
+  processIntro?: string;
+  processSteps: ProcessStep[];
+  boundary: Boundary;
   showcaseImages?: ImageAsset[];
   sectionBackground?: string;
+  detailHref: string;
   ctaText?: string;
+  ctaNote?: string;
   /** Consumed by the ParticleSystem slotted into this section. */
   particleVariant?: string;
 }
@@ -32,26 +59,31 @@ const {
   id,
   theme,
   name,
-  naics,
+  eyebrow = 'Proposed operating name',
+  status,
+  classification,
   description,
+  facts,
+  servicesTitle = 'Planned scope',
+  servicesIntro,
   services,
+  processTitle,
+  processIntro,
+  processSteps,
+  boundary,
   showcaseImages = [],
   sectionBackground,
-  ctaText = "Learn More"
+  detailHref,
+  ctaText = 'Start a Future-Fit Conversation',
+  ctaNote = 'Planning-stage inquiries only'
 } = Astro.props;
 
-// Theme-specific CTA class — themes.css styles .industrial-cta / .tech-cta /
-// .natural-cta scoped to the section ids; without one of these the CTA
-// renders with only the base .cta-button skeleton (near-invisible).
 const ctaClass = {
   industrial: 'industrial-cta',
   tech: 'tech-cta',
   natural: 'natural-cta'
 }[theme] ?? 'cta-primary';
 
-// Decorative background layers per section — themes.css styles these class
-// names (scoped to each section id) but the markup stopped rendering them in
-// the Astro migration, leaving 3 of 4 sections with a flat background.
 const textureLayers = {
   'fabrication': ['industrial-texture'],
   '3d-lab': ['tech-gradient', 'parallax-wireframe'],
@@ -75,39 +107,90 @@ const textureLayers = {
 
   <div class="content-layer">
     <div class="container">
-      <div class="dba-header observe-fade">
+      <header class="dba-header observe-fade">
+        <p class="dba-eyebrow">{eyebrow}</p>
         <h2 class="dba-name">{name}</h2>
-        <p class="dba-naics">{naics}</p>
-      </div>
+        <p class="dba-status">{status}</p>
+      </header>
 
       <div class="dba-description observe-fade">
         <p>{description}</p>
       </div>
 
-      <div class="services-grid observe-slide-up">
-        {services.map((service) => (
-          <article class:list={['service-card', { 'service-card--with-image': Boolean(service.image) }]}>
-            <div class:list={['service-media', { 'service-media--placeholder': !service.image }]}>
-              {service.image ? (
-                <img
-                  src={service.image.src}
-                  alt={service.image.alt}
-                  width={service.image.width}
-                  height={service.image.height}
-                  loading="lazy"
-                  decoding="async"
-                />
-              ) : (
-                <span class="service-media-icon" aria-hidden="true">{service.icon}</span>
-              )}
-            </div>
-            <div class="service-card-content">
-              <h3 class="service-title">{service.title}</h3>
-              <p class="service-description">{service.description}</p>
-            </div>
+      <div class="dba-facts observe-slide-up">
+        {facts.map((fact) => (
+          <article>
+            <span>{fact.label}</span>
+            <strong>{fact.value}</strong>
           </article>
         ))}
       </div>
+
+      <p class="dba-classification observe-fade">
+        <span>Planning classification</span>
+        {classification}
+      </p>
+
+      <section class="scope-block" aria-labelledby={`${id}-scope-title`}>
+        <header class="subsection-header observe-fade">
+          <p class="subsection-kicker">What this line is designed to do</p>
+          <h3 id={`${id}-scope-title`}>{servicesTitle}</h3>
+          {servicesIntro && <p>{servicesIntro}</p>}
+        </header>
+
+        <div class="services-grid observe-slide-up">
+          {services.map((service) => (
+            <article class:list={['service-card', { 'service-card--with-image': Boolean(service.image) }] }>
+              <div class:list={['service-media', { 'service-media--placeholder': !service.image }] }>
+                {service.image ? (
+                  <img
+                    src={service.image.src}
+                    alt={service.image.alt}
+                    width={service.image.width}
+                    height={service.image.height}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <span class="service-media-icon" aria-hidden="true">{service.icon}</span>
+                )}
+              </div>
+              <div class="service-card-content">
+                {service.meta && <p class="service-meta">{service.meta}</p>}
+                <h4 class="service-title">{service.title}</h4>
+                <p class="service-description">{service.description}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="process-panel observe-slide-up" aria-labelledby={`${id}-process-title`}>
+        <header class="process-heading">
+          <p class="subsection-kicker">Operating method</p>
+          <h3 id={`${id}-process-title`}>{processTitle}</h3>
+          {processIntro && <p>{processIntro}</p>}
+        </header>
+        <ol class:list={['process-steps', `process-count-${processSteps.length}`]}>
+          {processSteps.map((step, index) => (
+            <li>
+              <span class="process-number">{String(index + 1).padStart(2, '0')}</span>
+              <div>
+                <h4>{step.title}</h4>
+                <p>{step.description}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <aside class="boundary-note observe-fade">
+        <span class="boundary-label">Operating boundary</span>
+        <div>
+          <h3>{boundary.title}</h3>
+          <p>{boundary.description}</p>
+        </div>
+      </aside>
 
       {showcaseImages.length > 0 && (
         <div class="dba-showcase observe-scale">
@@ -129,7 +212,11 @@ const textureLayers = {
         </div>
       )}
 
-      <a class={`cta-button ${ctaClass} observe-fade`} href="#contact">{ctaText}</a>
+      <div class="dba-action observe-fade">
+        <a class={`cta-button ${ctaClass}`} href={detailHref}>{ctaText}</a>
+        <a class="dba-contact-link" href="#contact">Discuss future fit</a>
+        <span>{ctaNote}</span>
+      </div>
     </div>
   </div>
 
@@ -139,17 +226,13 @@ const textureLayers = {
 </section>
 
 <style>
-  /* CSS Containment for performance. auto + a realistic estimate keeps
-     anchor navigation accurate (see utilities.css for details). */
   .dba-section {
+    min-height: auto;
     content-visibility: auto;
     contain: layout style paint;
-    contain-intrinsic-size: auto 1500px;
+    contain-intrinsic-size: auto 2600px;
   }
 
-  /* All decorative background layers fill the section. Without this only
-     .parallax-bg (sized in base.css) was visible — pattern/texture layers
-     rendered as zero-height divs. */
   .background-layer > div {
     position: absolute;
     inset: 0;
@@ -165,6 +248,108 @@ const textureLayers = {
     opacity: 0.38;
   }
 
+  .dba-eyebrow,
+  .subsection-kicker,
+  .boundary-label,
+  .service-meta,
+  .dba-classification span {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+
+  .dba-eyebrow,
+  .subsection-kicker,
+  .boundary-label,
+  .service-meta {
+    color: var(--current-accent-primary);
+  }
+
+  .dba-status {
+    display: inline-flex;
+    align-items: center;
+    margin: var(--spacing-md) auto 0;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: 1px solid color-mix(in srgb, var(--current-accent-primary) 42%, transparent);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--current-accent-primary) 10%, transparent);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+  }
+
+  .dba-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    max-width: 1120px;
+    margin: 0 auto var(--spacing-xl);
+  }
+
+  .dba-facts article {
+    min-height: 132px;
+    padding: var(--spacing-lg);
+    border: 1px solid color-mix(in srgb, var(--current-accent-primary) 28%, transparent);
+    border-radius: var(--radius-lg);
+    background: rgba(0, 0, 0, 0.18);
+    box-shadow: var(--shadow-md);
+  }
+
+  .dba-facts span {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--current-accent-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .dba-facts strong {
+    color: var(--current-text-primary);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-normal);
+  }
+
+  .dba-classification {
+    max-width: 980px;
+    margin: 0 auto var(--spacing-4xl);
+    color: color-mix(in srgb, var(--current-text-secondary) 92%, transparent);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-loose);
+    text-align: center;
+  }
+
+  .dba-classification span {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    color: var(--current-accent-primary);
+  }
+
+  .subsection-header {
+    max-width: 900px;
+    margin: 0 auto var(--spacing-2xl);
+    text-align: center;
+  }
+
+  .subsection-header h3,
+  .process-heading h3 {
+    color: var(--current-text-primary);
+    font-size: var(--font-size-2xl);
+  }
+
+  .subsection-header > p:not(.subsection-kicker),
+  .process-heading > p:not(.subsection-kicker) {
+    color: var(--current-text-secondary);
+    line-height: var(--line-height-loose);
+  }
+
+  .scope-block {
+    margin-bottom: var(--spacing-4xl);
+  }
+
   .service-card {
     display: flex;
     flex-direction: column;
@@ -178,6 +363,8 @@ const textureLayers = {
   }
 
   .service-media {
+    position: relative;
+    z-index: 1;
     aspect-ratio: 16 / 9;
     overflow: hidden;
     background: rgba(0, 0, 0, 0.24);
@@ -206,6 +393,83 @@ const textureLayers = {
 
   .service-card:hover .service-media img {
     transform: scale(1.045);
+  }
+
+  .service-meta {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .process-panel {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.7fr) minmax(0, 1.3fr);
+    gap: var(--spacing-3xl);
+    margin-bottom: var(--spacing-2xl);
+    padding: clamp(var(--spacing-xl), 4vw, var(--spacing-3xl));
+    border: 1px solid color-mix(in srgb, var(--current-accent-primary) 28%, transparent);
+    border-radius: var(--radius-xl);
+    background: rgba(0, 0, 0, 0.22);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  }
+
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .process-steps li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.055);
+  }
+
+  .process-number {
+    color: var(--current-accent-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .process-steps h4 {
+    margin-bottom: var(--spacing-xs);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-md);
+  }
+
+  .process-steps p {
+    margin: 0;
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-loose);
+  }
+
+  .boundary-note {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.25fr) minmax(0, 1fr);
+    gap: var(--spacing-xl);
+    align-items: start;
+    margin-bottom: var(--spacing-3xl);
+    padding: var(--spacing-xl);
+    border-left: 5px solid var(--current-accent-primary);
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .boundary-note h3 {
+    margin-bottom: var(--spacing-sm);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-lg);
+  }
+
+  .boundary-note p {
+    margin: 0;
+    color: var(--current-text-secondary);
+    line-height: var(--line-height-loose);
   }
 
   .showcase-grid {
@@ -269,9 +533,71 @@ const textureLayers = {
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.82));
   }
 
+  .dba-action {
+    display: flex;
+    gap: var(--spacing-md) var(--spacing-xl);
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .dba-action span {
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-xs);
+  }
+
+  .dba-contact-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: 1px solid color-mix(in srgb, var(--current-accent-primary) 48%, transparent);
+    border-radius: var(--radius-full);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+  }
+
+  .dba-contact-link:hover,
+  .dba-contact-link:focus {
+    border-color: var(--current-accent-primary);
+    background: color-mix(in srgb, var(--current-accent-primary) 12%, transparent);
+  }
+
+  a.cta-button {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  @media (max-width: 1023px) {
+    .process-panel {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-xl);
+    }
+  }
+
   @media (max-width: 767px) {
-    .service-card-content {
+    .dba-facts,
+    .process-steps,
+    .boundary-note {
+      grid-template-columns: 1fr;
+    }
+
+    .dba-facts article {
+      min-height: auto;
+    }
+
+    .service-card-content,
+    .process-panel,
+    .boundary-note {
       padding: var(--spacing-lg);
+    }
+
+    .subsection-header h3,
+    .process-heading h3 {
+      font-size: var(--font-size-xl);
     }
 
     .showcase-grid,
@@ -290,12 +616,11 @@ const textureLayers = {
       min-height: 230px;
       aspect-ratio: 16 / 10;
     }
-  }
 
-  /* CTAs are anchors (they link to #contact); keep button-like display. */
-  a.cta-button {
-    display: inline-block;
-    text-decoration: none;
-    text-align: center;
+    .dba-action {
+      align-items: stretch;
+      flex-direction: column;
+      text-align: center;
+    }
   }
 </style>

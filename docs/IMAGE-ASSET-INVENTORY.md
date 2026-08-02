@@ -10,22 +10,26 @@ and stored under `public/images/` with semantic names. The resulting web payload
 | Site area | Production assets | Use | Coverage |
 | --- | ---: | --- | --- |
 | Corporate | 6 | Hero medallion, full-section texture, four value icons | Complete |
-| Fabrication & Welding | 4 | Three service cards and one showcase | Parts Manufacturing still needs a dedicated 1:1 image |
-| 3D Lab | 4 | Two service cards, one showcase, and the section texture | Rapid Prototyping and Resin Art still need dedicated 1:1 images |
-| Greenhouse | 8 | Four service cards and a four-image showcase mosaic | Complete |
-| Orchard & Food Forest | 6 | Four service cards and a two-image showcase | Complete |
+| Fabrication & Welding | 4 | Three homepage scope cards, hero/showcase, and four-image detail gallery | Fence & Gate Work needs a dedicated 1:1 image |
+| 3D Lab | 4 | Two homepage scope cards, hero/showcase, detail gallery, and section texture | CAD/Model Cleanup and Fit-up/Reverse Modelling need dedicated 1:1 images |
+| Greenhouse | 8 | Four homepage priority cards, four-image showcase, and eight-image detail gallery | Complete asset count; three concepts still reflect the earlier exotic-crop framing |
+| Orchard & Food Forest | 6 | Four homepage scope cards, two-image showcase, and six-image detail gallery | Complete |
 
 ## Remaining image gaps
 
-1. **Parts Manufacturing** — a 1:1 image of short-run custom components, fixtures,
-   or machined/fabricated parts laid out for inspection.
-2. **Rapid Prototyping** — a 1:1 image showing an iteration sequence, CAD reference,
-   calipers, and multiple physical prototype revisions.
-3. **Resin Art** — a 1:1 image of a finished translucent resin piece with controlled
-   cyan/magenta studio lighting.
+1. **Fence & Gate Work** — a 1:1 mobile-service image showing hinge/latch repair,
+   gate alignment, or a modest rural enclosure repair.
+2. **CAD & Model Cleanup** — a 1:1 image showing scan data, reference dimensions,
+   and cleaned CAD geometry on a workstation.
+3. **Fit-up & Reverse Modelling** — a 1:1 hybrid metal/polymer repair scene with
+   measurement, a printed fit-check, and the final fabricated component.
+4. **Corrected greenhouse crop emphasis** — dedicated household-staple, season-
+   extension, and propagation imagery would align more directly with the reworked
+   business plan than the existing coffee/cocoa concept studies.
 
-The three uncovered cards intentionally use themed graphical placeholders so the current
-layout remains complete without pretending that a nearby image represents the wrong service.
+The three uncovered trade/technical cards intentionally use themed graphical placeholders.
+The greenhouse concepts remain in use as clearly captioned protected-crop studies rather than
+claims that coffee or cocoa are base-case commercial crops.
 
 ## Surplus or source-only files
 
@@ -35,9 +39,8 @@ layout remains complete without pretending that a nearby image represents the wr
 | `fluxology-logo-options-array.png` | Excluded | Logo-development reference sheet, not a production web asset. |
 
 The Greenhouse set contains three showcase alternatives beyond the original single showcase
-slot, and the Orchard set contains one. They are not discarded: the section template now
-supports responsive mosaics so these useful alternates appear without duplicating service-card
-content.
+slot, and the Orchard set contains one. They are not discarded: the homepage uses responsive
+mosaics and every DBA detail route includes a larger themed gallery.
 
 ## Source-to-production map
 

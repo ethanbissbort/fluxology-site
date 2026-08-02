@@ -21,22 +21,22 @@ interface Props {
 
 const {
   title,
-  description = "Fluxology Inc. - Canadian Controlled Private Corporation operating diverse businesses including fabrication, 3D printing, greenhouse production, and orchards."
+  description = "Fluxology, Inc. is a one-owner Canadian-controlled private corporation developing a staged trade-led homestead micro-enterprise for a 2029-2035 planning horizon."
 } = Astro.props;
 
 // Absolute URLs for canonical/social tags (Astro.site is set in astro.config.mjs).
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const socialImageURL = new URL('/icon-512.png', Astro.site);
+const socialImageURL = new URL('/images/corporate/logo-medallion.webp', Astro.site);
 
 const organizationSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  name: 'Fluxology Inc.',
+  name: 'Fluxology, Inc.',
   url: Astro.site?.toString(),
   logo: socialImageURL.toString(),
   email: 'info@fluxology.ca',
   description:
-    'Canadian Controlled Private Corporation operating four business divisions: fabrication & welding, 3D printing and digital fabrication, greenhouse production, and orchard & food forest.',
+    'One-owner Canadian-controlled private corporation developing staged operating plans for fabrication and welding, digital production support, subsistence-first protected growing, and perennial food systems.',
 });
 ---
 
@@ -46,15 +46,15 @@ const organizationSchema = JSON.stringify({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content={description}>
-  <meta name="keywords" content="welding, fabrication, 3D printing, greenhouse, orchard, metalworking, Canadian corporation">
-  <meta name="author" content="Fluxology Inc.">
+  <meta name="keywords" content="Fluxology, mobile welding, custom fabrication, 3D scanning, FDM printing, homestead greenhouse, orchard, food forest, Ontario">
+  <meta name="author" content="Fluxology, Inc.">
 
   <title>{title}</title>
 
   <!-- Canonical + social sharing -->
   <link rel="canonical" href={canonicalURL}>
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Fluxology Inc.">
+  <meta property="og:site_name" content="Fluxology, Inc.">
   <meta property="og:title" content={title}>
   <meta property="og:description" content={description}>
   <meta property="og:url" content={canonicalURL}>

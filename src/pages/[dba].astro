@@ -1,0 +1,19 @@
+---
+import DBADetailPage from '../components/DBADetailPage.astro';
+import { dbaPlans, type DbaPlan } from '../data/dbaPlans';
+
+export function getStaticPaths() {
+  return dbaPlans.map((plan) => ({
+    params: { dba: plan.slug },
+    props: { plan }
+  }));
+}
+
+interface Props {
+  plan: DbaPlan;
+}
+
+const { plan } = Astro.props;
+---
+
+<DBADetailPage plan={plan} />

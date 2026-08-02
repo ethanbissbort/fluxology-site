@@ -1,0 +1,424 @@
+---
+// Public-facing translation of the portfolio's personal/corporate cash
+// architecture and deliberately asymmetric 2035 planning mix.
+const corporateActivities = [
+  {
+    order: '01',
+    title: 'Mobile welding',
+    text: 'Customer repair calls, local fabrication and controlled site work establish the first external revenue.'
+  },
+  {
+    order: '02',
+    title: 'Homestead workshop',
+    text: 'A later hot-work base supports bench fabrication, jigs and local drop-off work after property due diligence.'
+  },
+  {
+    order: '03',
+    title: '3D Lab',
+    text: 'Scanning, modelling and printing improve fit-up, restore unavailable parts and earn selective technical revenue.'
+  },
+  {
+    order: '04',
+    title: 'Farm surplus',
+    text: 'Greenhouse and orchard output is sold only after household use, preservation and propagation needs are secured.'
+  }
+];
+
+const planningMix = [
+  { label: 'Fabrication', value: 76, className: 'mix-fabrication' },
+  { label: '3D Lab', value: 15, className: 'mix-3d' },
+  { label: 'Greenhouse', value: 7, className: 'mix-greenhouse' },
+  { label: 'Orchard', value: 2, className: 'mix-orchard' }
+];
+---
+
+<section class="section operating-model-section" id="operating-model" data-theme="corporate">
+  <div class="background-layer">
+    <div class="parallax-bg"></div>
+    <div class="corporate-flux"></div>
+  </div>
+
+  <div class="content-layer">
+    <div class="container">
+      <header class="section-header observe-fade">
+        <p class="section-eyebrow">Operating architecture</p>
+        <h2 class="section-title">One company, deliberately asymmetric portfolio</h2>
+        <p class="section-subtitle">
+          Stable trade employment protects the owner from forcing the company to grow. Inside Fluxology,
+          fabrication leads revenue, digital tools multiply capability, and agriculture serves the homestead first.
+        </p>
+      </header>
+
+      <div class="architecture-grid observe-slide-up">
+        <article class="lane-card personal-lane">
+          <div class="lane-heading">
+            <span class="lane-index">Outside Fluxology revenue</span>
+            <h3>Personal stability lane</h3>
+          </div>
+          <p>
+            The owner's T4 trade employment supplies wages, benefits, apprenticeship hours, an employment record
+            and personal savings. It is intentionally separate from corporate sales and forecasts.
+          </p>
+          <div class="lane-route" aria-label="Personal stability sequence">
+            <span>Trade employment</span>
+            <span aria-hidden="true">→</span>
+            <span>Living costs + savings</span>
+            <span aria-hidden="true">→</span>
+            <span>Documented funding, if needed</span>
+          </div>
+        </article>
+
+        <article class="lane-card corporate-lane">
+          <div class="lane-heading">
+            <span class="lane-index">Fluxology revenue + assets</span>
+            <h3>Corporate capability lane</h3>
+          </div>
+          <ol class="activity-list">
+            {corporateActivities.map((activity) => (
+              <li>
+                <span class="activity-order">{activity.order}</span>
+                <div>
+                  <h4>{activity.title}</h4>
+                  <p>{activity.text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </article>
+      </div>
+
+      <div class="portfolio-hierarchy observe-scale">
+        <div class="hierarchy-copy">
+          <p class="section-eyebrow">Base-case portfolio hierarchy</p>
+          <h3>Customer revenue remains trade-led</h3>
+          <p>
+            The 2035 planning model is not a scale mandate. It is a workload and capital-allocation model for one
+            owner, with no employees, outside-equity requirement or speculative print-farm assumptions.
+          </p>
+        </div>
+
+        <div class="mix-visual">
+          <div
+            class="mix-bar"
+            role="img"
+            aria-label="Illustrative 2035 corporate revenue mix: fabrication 76 percent, 3D Lab 15 percent, greenhouse surplus 7 percent, orchard surplus 2 percent"
+          >
+            {planningMix.map((item) => (
+              <span
+                class:list={['mix-segment', item.className]}
+                style={`--segment-width: ${item.value}%`}
+                title={`${item.label}: ${item.value}%`}
+              ></span>
+            ))}
+          </div>
+          <ul class="mix-legend" role="list">
+            {planningMix.map((item) => (
+              <li>
+                <span class:list={['legend-swatch', item.className]} aria-hidden="true"></span>
+                <span>{item.label}</span>
+                <strong>{item.value}%</strong>
+              </li>
+            ))}
+          </ul>
+          <p class="mix-note">Illustrative 2035 corporate revenue mix; T4 employment is excluded.</p>
+        </div>
+      </div>
+
+      <div class="model-guardrails observe-slide-up">
+        <article>
+          <span class="guardrail-number">01</span>
+          <h3>Mobile before fixed</h3>
+          <p>Customer demand can be validated without an industrial lease or premature homestead build-out.</p>
+        </article>
+        <article>
+          <span class="guardrail-number">02</span>
+          <h3>Demand before equipment</h3>
+          <p>Used, testable and repairable assets are added only for proven work or a documented bottleneck.</p>
+        </article>
+        <article>
+          <span class="guardrail-number">03</span>
+          <h3>Property before farm sales</h3>
+          <p>Workshop, greenhouse and orchard phases move later if the right mixed-use property is not secured.</p>
+        </article>
+      </div>
+
+      <p class="status-note observe-fade">
+        <strong>Current status:</strong> Fluxology, Inc. exists as the legal corporation. The four operating names
+        described below are proposed and will be registered only at their real public launch gates.
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .operating-model-section {
+    min-height: auto;
+    background: linear-gradient(160deg, #102a3c 0%, var(--corporate-primary-navy) 58%, #11263a 100%);
+  }
+
+  .operating-model-section .corporate-flux {
+    opacity: 0.22;
+  }
+
+  .section-eyebrow {
+    margin-bottom: var(--spacing-sm);
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+
+  .architecture-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.42fr);
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-3xl);
+  }
+
+  .lane-card,
+  .portfolio-hierarchy,
+  .model-guardrails article,
+  .status-note {
+    border: 1px solid rgba(168, 218, 220, 0.18);
+    background: rgba(8, 25, 39, 0.74);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+  }
+
+  .lane-card {
+    padding: clamp(var(--spacing-lg), 3vw, var(--spacing-2xl));
+    border-radius: var(--radius-xl);
+  }
+
+  .personal-lane {
+    border-top: 4px solid var(--corporate-accent-blue);
+  }
+
+  .corporate-lane {
+    border-top: 4px solid var(--corporate-accent-silver);
+  }
+
+  .lane-heading {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .lane-index {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--corporate-accent-blue);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .lane-card h3,
+  .portfolio-hierarchy h3 {
+    margin-bottom: var(--spacing-md);
+    color: white;
+    font-size: var(--font-size-xl);
+  }
+
+  .lane-card > p,
+  .hierarchy-copy > p,
+  .model-guardrails p {
+    color: rgba(255, 255, 255, 0.78);
+    line-height: var(--line-height-loose);
+  }
+
+  .lane-route {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+    margin-top: var(--spacing-xl);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: var(--font-size-xs);
+  }
+
+  .lane-route span:not([aria-hidden]) {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid rgba(58, 134, 255, 0.28);
+    border-radius: var(--radius-full);
+    background: rgba(58, 134, 255, 0.08);
+  }
+
+  .activity-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .activity-list li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .activity-order,
+  .guardrail-number {
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
+  }
+
+  .activity-list h4 {
+    margin-bottom: var(--spacing-xs);
+    color: white;
+    font-size: var(--font-size-md);
+  }
+
+  .activity-list p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-loose);
+  }
+
+  .portfolio-hierarchy {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+    gap: var(--spacing-3xl);
+    align-items: center;
+    margin-bottom: var(--spacing-3xl);
+    padding: clamp(var(--spacing-xl), 4vw, var(--spacing-3xl));
+    border-radius: var(--radius-xl);
+  }
+
+  .mix-bar {
+    display: flex;
+    width: 100%;
+    height: 28px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .mix-segment {
+    display: block;
+    width: var(--segment-width);
+    min-width: 3px;
+  }
+
+  .mix-fabrication { background: var(--industrial-accent-orange); }
+  .mix-3d { background: var(--tech-accent-cyan); }
+  .mix-greenhouse { background: var(--natural-primary-moss); }
+  .mix-orchard { background: var(--natural-accent-gold); }
+
+  .mix-legend {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-sm) var(--spacing-xl);
+    margin: var(--spacing-lg) 0 var(--spacing-md);
+    padding: 0;
+    list-style: none;
+  }
+
+  .mix-legend li {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+    gap: var(--spacing-sm);
+    align-items: center;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--font-size-xs);
+  }
+
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .mix-legend strong {
+    color: white;
+  }
+
+  .mix-note {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.54);
+    font-size: var(--font-size-xs);
+  }
+
+  .model-guardrails {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .model-guardrails article {
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+  }
+
+  .model-guardrails h3 {
+    margin: var(--spacing-md) 0 var(--spacing-sm);
+    color: white;
+    font-size: var(--font-size-lg);
+  }
+
+  .model-guardrails p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+  }
+
+  .status-note {
+    margin: 0;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-left: 4px solid var(--corporate-accent-blue);
+    border-radius: var(--radius-md);
+    color: rgba(255, 255, 255, 0.78);
+    line-height: var(--line-height-loose);
+  }
+
+  .status-note strong {
+    color: white;
+  }
+
+  @media (max-width: 1023px) {
+    .architecture-grid,
+    .portfolio-hierarchy {
+      grid-template-columns: 1fr;
+    }
+
+    .portfolio-hierarchy {
+      gap: var(--spacing-xl);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .activity-list,
+    .model-guardrails,
+    .mix-legend {
+      grid-template-columns: 1fr;
+    }
+
+    .lane-route {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .lane-route span[aria-hidden] {
+      align-self: center;
+      transform: rotate(90deg);
+    }
+
+    .portfolio-hierarchy {
+      min-width: 0;
+      padding: var(--spacing-lg);
+    }
+
+    .mix-bar {
+      height: 22px;
+    }
+  }
+</style>

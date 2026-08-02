@@ -1,27 +1,31 @@
-# Fluxology Inc. Website
+# Fluxology, Inc. Website
 
-A high-performance, single-page marketing website for Fluxology Inc., built with
-[Astro](https://astro.build/) and [Svelte](https://svelte.dev/). Static Astro
-components render the page structure, while interactive Svelte islands add
-themed particle systems, scroll progress, a mobile menu, and a Netlify-backed
-contact form.
+A static corporate-planning website for Fluxology, Inc., built with
+[Astro](https://astro.build/) and [Svelte](https://svelte.dev/). The homepage
+remains a long-form, single-page overview; four generated DBA routes provide
+deeper operating-plan content. Interactive Svelte islands add themed particles,
+scroll progress, responsive navigation, and a Netlify-backed inquiry form.
 
 ## Overview
 
-Fluxology Inc. is a Canadian Controlled Private Corporation (CCPC) operating
-four distinct business divisions:
+Fluxology, Inc. is a federally incorporated, one-owner Canadian-controlled
+private corporation registered to operate in Ontario. Commercial activity is
+planned no earlier than 2029. The four operating names are proposed and not yet
+registered:
 
-1. **Fluxology Fabrication & Welding** — Precision metalworking and custom
-   fabrication (NAICS 332710)
-2. **Fluxology 3D Lab** — 3D printing, scanning, and rapid prototyping
-   (NAICS 541990)
-3. **Fluxology Greenhouse** — Controlled-environment specialty crop production
-   (NAICS 111419)
-4. **Fluxology Orchard & Food Forest** — Regenerative perennial food systems
-   (NAICS 111330)
+1. **Fluxology Fabrication & Welding** — mobile repair, local fabrication, and
+   selective shop overflow; provisional primary NAICS 811310 if repair work
+   leads actual corporate revenue.
+2. **Fluxology 3D Lab** — scanning, modelling, FDM printing, and hybrid
+   fabrication support; provisional service NAICS 541420.
+3. **Fluxology Greenhouse** — household food infrastructure with genuine
+   surplus sales only; secondary NAICS 111419 when commercial activity exists.
+4. **Fluxology Orchard & Food Forest** — perennial household food and land
+   improvement with late-stage surplus; secondary NAICS 111330 when applicable.
 
-The site presents each division with its own visual theme, smooth scroll-driven
-transitions, and ambient particle animations.
+The homepage explains the shared operating model and 2026-2035 roadmap. Each
+DBA detail page adds the relevant scope table, workflow, capital gates,
+controls, milestones, and full image gallery.
 
 ## Tech Stack
 
@@ -87,7 +91,10 @@ fluxology-site/
 ├── docker-compose.yml          # Local/self-hosted container orchestration
 ├── src/
 │   ├── pages/
-│   │   └── index.astro         # The single page; holds the dbaSections data array
+│   │   ├── index.astro         # Long-form, single-page company overview
+│   │   └── [dba].astro         # Generates the four DBA detail routes
+│   ├── data/
+│   │   └── dbaPlans.ts         # Shared source for homepage and detail-page content
 │   ├── layouts/
 │   │   └── BaseLayout.astro     # <head>, font preloads, global CSS imports, SW registration
 │   ├── components/
@@ -95,6 +102,9 @@ fluxology-site/
 │   │   ├── Hero.astro           # Above-the-fold hero
 │   │   ├── About.astro          # About section
 │   │   ├── DBASection.astro     # Reusable business-division section
+│   │   ├── DBADetailPage.astro  # Reusable detailed DBA page
+│   │   ├── OperatingModel.astro # Company operating architecture
+│   │   ├── Roadmap.astro        # 2026-2035 staged roadmap
 │   │   ├── Footer.astro         # Static footer
 │   │   ├── ContactForm.svelte   # Netlify contact form (runes)
 │   │   ├── ParticleSystem.svelte# Themed ambient particles (runes)
@@ -127,10 +137,10 @@ matches the import order shown above.
 
 ### Astro components vs. Svelte islands
 
-The page is assembled in `src/pages/index.astro`. Static, non-interactive
-content is rendered by Astro components (`Navigation`, `Hero`, `About`,
-`DBASection`, `Footer`). Interactive behavior lives in Svelte island
-components, hydrated only where needed:
+The homepage is assembled in `src/pages/index.astro`; `src/pages/[dba].astro`
+generates the four detail routes from `src/data/dbaPlans.ts`. Static content is
+rendered by Astro components, while interactive behavior lives in Svelte
+islands hydrated only where needed:
 
 | Component            | Hydration        | Notes                                    |
 | -------------------- | ---------------- | ---------------------------------------- |
@@ -138,7 +148,7 @@ components, hydrated only where needed:
 | `ThemeTransition`    | `client:load`    | Svelte legacy mode (lifecycle only)      |
 | `BackToTop`          | `client:load`    | Svelte 5 runes                           |
 | `NavigationMenu`     | `client:load`    | Svelte legacy mode (lifecycle only)      |
-| `ParticleSystem`     | `client:visible` | Svelte 5 runes; one per division section |
+| `ParticleSystem`     | `client:visible` | Svelte 5 runes; themed section ambience  |
 | `ContactForm`        | `client:visible` | Svelte 5 runes                           |
 
 `ContactForm`, `ParticleSystem`, `BackToTop`, and `ScrollProgress` use Svelte 5
@@ -226,21 +236,13 @@ for navigations (so content and security fixes reach already-visited clients) an
 a **cache-first** strategy for static assets, backed by a **versioned** runtime
 cache that is evicted on each release.
 
-## Performance
+## Validation
 
-Measured with Lighthouse:
-
-- **Desktop:** 100 / 100 / 100 / 100 (Performance / Accessibility / Best
-  Practices / SEO)
-- **Mobile:** 99 Performance
-- **LCP:** ~0.5s desktop, ~2.1s mobile
-- **CLS:** 0
-- **TBT:** 0
-
-Contributing factors include immediate above-the-fold rendering, deferred
-island hydration (`client:visible`), preloaded critical fonts with generated
-fallback metrics, terser-minified JS with console stripping, and lightningcss
-minified CSS.
+The production build emits the homepage, 404 page, and four DBA routes. Before
+publishing, run `npm run sync`, `npm run build`, `tsc --noEmit`, an internal
+route/image check, and fresh desktop/mobile browser audits. Historical
+Lighthouse figures are not treated as current after major content or layout
+changes.
 
 ## Progressive Web App
 
@@ -257,11 +259,10 @@ The worker is registered from `BaseLayout.astro` on `window.load`.
 
 ### Business content
 
-Division content (name, NAICS code, description, image-backed service cards,
-showcase galleries, optional section imagery, and CTA text) lives in the
-`dbaSections` data array at the top of `src/pages/index.astro`. Edit that array
-to change what each division shows or to add/remove a division. The production
-image map and outstanding coverage gaps are documented in
+Company and DBA content lives in `src/data/dbaPlans.ts`. Each record contains a
+homepage overview and the corresponding detail-page content, keeping status,
+classification, scope, milestones, and image references synchronized. The
+production image map and outstanding coverage gaps are documented in
 `docs/IMAGE-ASSET-INVENTORY.md`.
 
 ### Colors and fonts

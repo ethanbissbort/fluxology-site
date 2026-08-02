@@ -200,12 +200,12 @@ The contact form is wired to Netlify Forms:
 - Service worker (`public/service-worker.js`) registered from `BaseLayout.astro`
   for PWA/offline support.
 
-## Performance
+## Historical performance baseline
 
-Measured results after the overhaul:
-
-- Lighthouse **100 desktop / 99 mobile**.
-- LCP ~**0.5s**, CLS **0**, TBT **0**.
+Before the 2026 content and multi-route expansion, the migration build measured
+Lighthouse **100 desktop / 99 mobile**, LCP about **0.5s**, CLS **0**, and TBT
+**0**. These are historical baseline figures, not claims about the current
+layout; run a fresh audit after material changes.
 - The hero renders immediately (no hydration gate on above-the-fold content).
 - A `<noscript>` style block reveals all scroll-animated content
   (`.observe-fade`, `.observe-slide-up`, `.observe-scale`) so nothing is ever

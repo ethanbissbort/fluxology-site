@@ -3,7 +3,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Navigation from '../components/Navigation.astro';
 import Hero from '../components/Hero.astro';
 import About from '../components/About.astro';
+import OperatingModel from '../components/OperatingModel.astro';
 import DBASection from '../components/DBASection.astro';
+import Roadmap from '../components/Roadmap.astro';
 import Footer from '../components/Footer.astro';
 
 import ScrollProgress from '../components/ScrollProgress.svelte';
@@ -13,315 +15,27 @@ import ContactForm from '../components/ContactForm.svelte';
 import NavigationMenu from '../components/NavigationMenu.svelte';
 import BackToTop from '../components/BackToTop.svelte';
 
-// DBA Section Data
-const dbaSections = [
-  {
-    id: 'fabrication',
-    theme: 'industrial',
-    name: 'Fluxology Fabrication & Welding',
-    naics: 'NAICS 332710 - Machine Shops',
-    description:
-      'Precision metalworking and fabrication services delivering custom solutions for industrial, commercial, and residential applications. Our experienced team combines traditional craftsmanship with modern techniques to create durable, high-quality metal products.',
-    services: [
-      {
-        icon: '⚙️',
-        title: 'Custom Fabrication',
-        description:
-          'Bespoke metal fabrication tailored to your exact specifications, from concept to completion.',
-        image: {
-          src: '/images/fabrication/custom-fabrication.webp',
-          alt: 'Fabricator measuring a newly assembled steel component on a workbench',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '🔥',
-        title: 'Precision Welding',
-        description:
-          'Expert welding services including MIG, TIG, and stick welding for all types of metals.',
-        image: {
-          src: '/images/fabrication/precision-welding.webp',
-          alt: 'Close view of a bright welding arc joining structural steel',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '🔧',
-        title: 'Metal Repair',
-        description:
-          'Professional repair and restoration services for damaged metal components and structures.',
-        image: {
-          src: '/images/fabrication/metal-repair.webp',
-          alt: 'Angle grinder restoring a worn industrial metal component',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '⚒️',
-        title: 'Parts Manufacturing',
-        description:
-          'Production of custom metal parts and components for industrial machinery and equipment.'
-      }
-    ],
-    showcaseImages: [
-      {
-        src: '/images/fabrication/welding-showcase.webp',
-        alt: 'Welder working on a large steel assembly as sparks cross the workshop',
-        width: 1599,
-        height: 900,
-        caption: 'Precision under pressure'
-      }
-    ],
-    ctaText: 'Request a Quote'
-  },
-  {
-    id: '3d-lab',
-    theme: 'tech',
-    name: 'Fluxology 3D Lab',
-    naics: 'NAICS 541990 - All Other Professional, Scientific and Technical Services',
-    description:
-      'State-of-the-art 3D printing and digital fabrication services bringing your ideas to life with precision and speed. From rapid prototyping to artistic creations, we leverage advanced additive manufacturing technologies to deliver exceptional results.',
-    services: [
-      {
-        icon: '🖨️',
-        title: '3D Printing Services',
-        description:
-          'Professional-grade FDM and resin printing for functional prototypes and finished products.',
-        image: {
-          src: '/images/3d-lab/3d-printing.webp',
-          alt: 'FDM printer producing a complex white lattice under cyan and magenta light',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '⚡',
-        title: 'Rapid Prototyping',
-        description:
-          'Fast-turnaround prototype development to accelerate your product development cycle.'
-      },
-      {
-        icon: '📐',
-        title: '3D Scanning',
-        description:
-          'High-precision 3D scanning services for reverse engineering and digital archiving.',
-        image: {
-          src: '/images/3d-lab/3d-scanning.webp',
-          alt: 'Cyan scanning beams capturing an engine component as a digital point cloud',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '🎨',
-        title: 'Resin Art',
-        description:
-          'Custom artistic pieces and decorative objects created with advanced resin printing techniques.'
-      }
-    ],
-    sectionBackground: '/images/3d-lab/wireframe-background.webp',
-    showcaseImages: [
-      {
-        src: '/images/3d-lab/lab-showcase.webp',
-        alt: 'Large-format 3D printer operating in a dark digital fabrication laboratory',
-        width: 1599,
-        height: 900,
-        caption: 'Digital fabrication in motion'
-      }
-    ],
-    ctaText: 'Start Your Project'
-  },
-  {
-    id: 'greenhouse',
-    theme: 'natural',
-    particleVariant: 'mist',
-    name: 'Fluxology Greenhouse',
-    naics: 'NAICS 111419 - Other Food Crops Grown Under Cover',
-    description:
-      'Sustainable greenhouse production specializing in exotic and specialty crops. Our controlled-environment agriculture ensures year-round production of premium quality ginger, coffee, cocoa, and other high-value food crops.',
-    services: [
-      {
-        icon: '🫚',
-        title: 'Ginger Production',
-        description:
-          'Premium fresh ginger grown in optimal greenhouse conditions for superior flavor and quality.',
-        image: {
-          src: '/images/greenhouse/ginger-production.webp',
-          alt: 'Ginger plants and harvested rhizomes arranged inside a productive greenhouse',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '☕',
-        title: 'Coffee Cultivation',
-        description:
-          'Specialty coffee plants producing unique beans with exceptional terroir characteristics.',
-        image: {
-          src: '/images/greenhouse/coffee-cultivation.webp',
-          alt: 'Coffee plants growing among terracotta containers beneath greenhouse glazing',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '🍫',
-        title: 'Cocoa Growing',
-        description:
-          'Small-batch cocoa production with focus on flavor and sustainable farming practices.',
-        image: {
-          src: '/images/greenhouse/cocoa-growing.webp',
-          alt: 'Tropical greenhouse planting with cocoa and companion crops',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '🌱',
-        title: 'Specialty Crops',
-        description:
-          'Diverse selection of exotic and hard-to-find food crops grown in controlled environments.',
-        image: {
-          src: '/images/greenhouse/specialty-crops.webp',
-          alt: 'Dense collection of specialty crops growing in terracotta pots and raised beds',
-          width: 960,
-          height: 960
-        }
-      }
-    ],
-    showcaseImages: [
-      {
-        src: '/images/greenhouse/showcase-main.webp',
-        alt: 'Sunlit greenhouse aisle filled with ginger, coffee, and tropical food crops',
-        width: 1599,
-        height: 900,
-        caption: 'Controlled climate, abundant growth'
-      },
-      {
-        src: '/images/greenhouse/showcase-sunlit.webp',
-        alt: 'Warm sunlight crossing a greenhouse filled with vegetables and tropical plants',
-        width: 1440,
-        height: 960,
-        caption: 'Year-round production'
-      },
-      {
-        src: '/images/greenhouse/showcase-growing-aisle.webp',
-        alt: 'Narrow greenhouse growing aisle bordered by coffee plants and fresh crops',
-        width: 1599,
-        height: 900,
-        caption: 'Specialty crop diversity'
-      },
-      {
-        src: '/images/greenhouse/showcase-workspace.webp',
-        alt: 'Working greenhouse with hand tools, irrigation hose, and mature plantings',
-        width: 1440,
-        height: 960,
-        caption: 'Cultivation infrastructure'
-      }
-    ],
-    ctaText: 'Explore Our Crops'
-  },
-  {
-    id: 'orchard',
-    theme: 'natural',
-    particleVariant: 'leaf',
-    name: 'Fluxology Orchard & Food Forest',
-    naics: 'NAICS 111330 - Noncitrus Fruit and Tree Nut Farming',
-    description:
-      'Regenerative agriculture through perennial food production systems. Our orchard and food forest combine traditional fruit and nut cultivation with permaculture principles to create biodiverse, sustainable ecosystems that produce abundant harvests.',
-    services: [
-      {
-        icon: '🍎',
-        title: 'Fruit Tree Production',
-        description:
-          'Diverse selection of fruit trees producing fresh, seasonal harvests throughout the year.',
-        image: {
-          src: '/images/orchard/fruit-tree-production.webp',
-          alt: 'Young fruit trees surrounded by layered edible understory planting',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '🌰',
-        title: 'Nut Cultivation',
-        description:
-          'Premium nut varieties grown using sustainable practices for maximum flavor and nutrition.',
-        image: {
-          src: '/images/orchard/nut-cultivation.webp',
-          alt: 'Mixed orchard canopy above a biodiverse herbaceous understory',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '🌿',
-        title: 'Perennial Crops',
-        description:
-          'Long-lived food crops that provide consistent yields with minimal environmental impact.',
-        image: {
-          src: '/images/orchard/perennial-crops.webp',
-          alt: 'Perennial vegetables and flowering companions arranged beneath orchard trees',
-          width: 960,
-          height: 960
-        }
-      },
-      {
-        icon: '🌳',
-        title: 'Food Forest Systems',
-        description:
-          'Multi-layered edible ecosystems designed for biodiversity and sustainable food production.',
-        image: {
-          src: '/images/orchard/food-forest-systems.webp',
-          alt: 'Established food forest path winding through trees, shrubs, and groundcover',
-          width: 960,
-          height: 960
-        }
-      }
-    ],
-    showcaseImages: [
-      {
-        src: '/images/orchard/showcase-main.webp',
-        alt: 'Wide food forest orchard at golden hour with layered perennial plantings',
-        width: 1599,
-        height: 900,
-        caption: 'Regenerative perennial production'
-      },
-      {
-        src: '/images/orchard/showcase-understory.webp',
-        alt: 'Orchard path crossing a dense edible understory beneath mature trees',
-        width: 1440,
-        height: 960,
-        caption: 'Trees, shrubs, crops, groundcover'
-      }
-    ],
-    ctaText: 'Visit the Orchard'
-  }
-];
+import { dbaOverviews } from '../data/dbaPlans';
 ---
 
-<BaseLayout title="Fluxology Inc. - Innovation Across Industries">
-  <!-- Interactive Svelte components -->
+<BaseLayout
+  title="Fluxology, Inc. | Trade-Led Homestead Micro-Enterprise"
+  description="Fluxology, Inc. is a one-owner Canadian corporation planning four staged operating lines: mobile fabrication and welding, a supporting 3D Lab, a subsistence-first greenhouse, and a perennial orchard and food forest."
+>
   <ScrollProgress client:load />
   <ThemeTransition client:load />
   <BackToTop client:load />
 
-  <!-- Static navigation -->
   <Navigation />
   <NavigationMenu client:load />
 
-  <!-- Main content. tabindex="-1" lets the skip link move programmatic
-       focus here reliably across browsers/screen readers. -->
   <main id="main-content" tabindex="-1">
     <Hero />
     <About />
+    <OperatingModel />
 
-    <!-- DBA Sections with particle systems -->
     {
-      dbaSections.map((dba) => (
+      dbaOverviews.map((dba) => (
         <DBASection {...dba}>
           <ParticleSystem
             slot="particles"
@@ -333,7 +47,8 @@ const dbaSections = [
       ))
     }
 
-    <!-- Contact Section -->
+    <Roadmap />
+
     <section id="contact" data-theme="corporate" class="section contact-section">
       <div class="background-layer">
         <div class="corporate-flux"></div>
@@ -342,19 +57,16 @@ const dbaSections = [
       <div class="content-layer">
         <div class="container">
           <header class="section-header observe-fade">
-            <h2 class="section-title">Get In Touch</h2>
-            <p class="section-subtitle">We'd love to hear from you</p>
+            <p class="contact-eyebrow">Foundation period · pre-launch</p>
+            <h2 class="section-title">Planning & Future Project Inquiries</h2>
+            <p class="section-subtitle">
+              Share a future customer need, supplier relationship, local collaboration idea or question about the
+              staged operating plan. Active service booking is not yet open.
+            </p>
           </header>
 
           <ContactForm client:visible />
 
-          {/*
-            Netlify Forms detection form. Netlify's build bot registers forms by
-            parsing the STATIC HTML at deploy time, but the real form above is
-            rendered by a client-hydrated Svelte island. This hidden plain-HTML
-            form (matching field names) ensures Netlify registers the "contact"
-            form; the visible Svelte form then submits to it via AJAX.
-          */}
           <form
             name="contact"
             method="POST"
@@ -368,12 +80,12 @@ const dbaSections = [
             <input type="email" name="email" />
             <input type="tel" name="phone" />
             <select name="serviceInterest">
-              <option value="fabrication">Fabrication &amp; Welding</option>
-              <option value="3d-lab">3D Lab</option>
-              <option value="greenhouse">Greenhouse</option>
-              <option value="orchard">Orchard &amp; Food Forest</option>
-              <option value="multiple">Multiple Services</option>
-              <option value="general">General Inquiry</option>
+              <option value="fabrication">Future Fabrication &amp; Welding Need</option>
+              <option value="3d-lab">Future 3D Lab Need</option>
+              <option value="greenhouse">Greenhouse / Growing-System Interest</option>
+              <option value="orchard">Orchard &amp; Food Forest Interest</option>
+              <option value="multiple">Cross-Division Collaboration</option>
+              <option value="general">Company / General Inquiry</option>
             </select>
             <textarea name="message"></textarea>
             <input name="bot-field" />
@@ -387,6 +99,16 @@ const dbaSections = [
     </section>
   </main>
 
-  <!-- Footer -->
   <Footer />
 </BaseLayout>
+
+<style>
+  .contact-eyebrow {
+    margin-bottom: var(--spacing-sm);
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+</style>

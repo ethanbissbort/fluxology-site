@@ -1,0 +1,986 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navigation from './Navigation.astro';
+import Footer from './Footer.astro';
+import ScrollProgress from './ScrollProgress.svelte';
+import ThemeTransition from './ThemeTransition.svelte';
+import NavigationMenu from './NavigationMenu.svelte';
+import BackToTop from './BackToTop.svelte';
+import ParticleSystem from './ParticleSystem.svelte';
+import type { DbaPlan } from '../data/dbaPlans';
+
+interface Props {
+  plan: DbaPlan;
+}
+
+const { plan } = Astro.props;
+const { overview, detail } = plan;
+const themeClass = `theme-${overview.theme}`;
+const localNav = [
+  ['role', 'Strategic role'],
+  ['offer', 'Scope'],
+  ['workflow', 'Workflow'],
+  ['capital', 'Capital'],
+  ['controls', 'Controls'],
+  ['milestones', 'Milestones'],
+  ['gallery', 'Gallery']
+];
+---
+
+<BaseLayout title={detail.pageTitle} description={detail.metaDescription}>
+  <ScrollProgress client:load />
+  <ThemeTransition client:load />
+  <BackToTop client:load />
+  <Navigation />
+  <NavigationMenu client:load />
+
+  <main id="main-content" tabindex="-1" class:list={['detail-page', themeClass]}>
+    <section class="section detail-hero" id={`${plan.slug}-detail`} data-theme={overview.theme}>
+      <div class="background-layer">
+        <div class="parallax-bg"></div>
+        {overview.sectionBackground && (
+          <div
+            class="detail-section-texture"
+            style={`--detail-texture: url('${overview.sectionBackground}')`}
+            aria-hidden="true"
+          ></div>
+        )}
+      </div>
+
+      <div class="content-layer">
+        <div class="container detail-hero-grid">
+          <div class="detail-hero-copy">
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+              <a href="/">Fluxology, Inc.</a>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{plan.shortName}</span>
+            </nav>
+
+            <p class="detail-eyebrow">{overview.eyebrow ?? 'Proposed operating name'}</p>
+            <h1>{overview.name}</h1>
+            <p class="detail-status">{overview.status}</p>
+            <p class="detail-lead">{overview.description}</p>
+
+            <div class="detail-hero-actions">
+              <a class="cta-button detail-primary" href="/#contact">Start a future-fit conversation</a>
+              <a class="cta-button detail-secondary" href="/">Return to company overview</a>
+            </div>
+          </div>
+
+          <figure class="detail-hero-figure">
+            <img
+              src={detail.heroImage.src}
+              alt={detail.heroImage.alt}
+              width={detail.heroImage.width}
+              height={detail.heroImage.height}
+              decoding="async"
+              fetchpriority="high"
+            />
+            {detail.heroImage.caption && <figcaption>{detail.heroImage.caption}</figcaption>}
+          </figure>
+        </div>
+      </div>
+
+      <div class="accent-layer">
+        <ParticleSystem
+          theme={overview.theme}
+          variant={overview.particleVariant}
+          client:visible
+        />
+      </div>
+    </section>
+
+    <nav class="detail-local-nav" aria-label={`${plan.shortName} page sections`}>
+      <div class="container">
+        <ul role="list">
+          {localNav.map(([href, label]) => <li><a href={`#${href}`}>{label}</a></li>)}
+        </ul>
+      </div>
+    </nav>
+
+    <section class="section detail-section role-section" id="role" data-theme={overview.theme}>
+      <div class="content-layer">
+        <div class="container">
+          <header class="detail-section-header observe-fade">
+            <p class="detail-eyebrow">{detail.roleEyebrow}</p>
+            <h2>{detail.roleTitle}</h2>
+          </header>
+
+          <div class="role-grid observe-slide-up">
+            <div class="role-copy">
+              {detail.roleParagraphs.map((paragraph) => <p>{paragraph}</p>)}
+              <aside class="classification-note">
+                <span>Planning classification</span>
+                <p>{overview.classification}</p>
+              </aside>
+            </div>
+
+            <div class="role-points">
+              {detail.rolePoints.map((point, index) => (
+                <article>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <h3>{point.title}</h3>
+                  <p>{point.text}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div class="detail-facts observe-scale">
+            {overview.facts.map((fact) => (
+              <article>
+                <span>{fact.label}</span>
+                <strong>{fact.value}</strong>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section detail-section table-section" id="offer" data-theme={overview.theme}>
+      <div class="content-layer">
+        <div class="container">
+          <header class="detail-section-header observe-fade">
+            <p class="detail-eyebrow">{detail.offer.eyebrow}</p>
+            <h2>{detail.offer.title}</h2>
+            <p>{detail.offer.intro}</p>
+          </header>
+
+          <div class="detail-table-wrap observe-slide-up" tabindex="0" role="region" aria-label={`${plan.shortName} scope table`}>
+            <table>
+              <thead>
+                <tr>{detail.offer.headers.map((header) => <th scope="col">{header}</th>)}</tr>
+              </thead>
+              <tbody>
+                {detail.offer.rows.map((row) => (
+                  <tr>{row.map((cell, index) => index === 0 ? <th scope="row">{cell}</th> : <td>{cell}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section detail-section workflow-section" id="workflow" data-theme={overview.theme}>
+      <div class="content-layer">
+        <div class="container">
+          <header class="detail-section-header observe-fade">
+            <p class="detail-eyebrow">Operating method</p>
+            <h2>{overview.processTitle}</h2>
+            <p>{overview.processIntro}</p>
+          </header>
+
+          <ol class="detail-workflow observe-slide-up">
+            {overview.processSteps.map((step, index) => (
+              <li>
+                <span class="workflow-index">{String(index + 1).padStart(2, '0')}</span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <aside class="detail-boundary observe-fade">
+            <span>Operating boundary</span>
+            <div>
+              <h3>{overview.boundary.title}</h3>
+              <p>{overview.boundary.description}</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section detail-section table-section" id="capital" data-theme={overview.theme}>
+      <div class="content-layer">
+        <div class="container">
+          <header class="detail-section-header observe-fade">
+            <p class="detail-eyebrow">{detail.capital.eyebrow}</p>
+            <h2>{detail.capital.title}</h2>
+            <p>{detail.capital.intro}</p>
+          </header>
+
+          <div class="capital-filter observe-scale">
+            <article><span>01</span><strong>Need proven</strong><p>Paid work, recurring own-use need or a measured bottleneck.</p></article>
+            <article><span>02</span><strong>Inspectable</strong><p>Condition, service history, consumables, manuals and support can be checked.</p></article>
+            <article><span>03</span><strong>Price disciplined</strong><p>All-in used cost remains meaningfully below a supportable new equivalent.</p></article>
+            <article><span>04</span><strong>Payback bounded</strong><p>Base-case payback fits within 24 months or the asset waits.</p></article>
+          </div>
+
+          <div class="detail-table-wrap observe-slide-up" tabindex="0" role="region" aria-label={`${plan.shortName} capital table`}>
+            <table>
+              <thead>
+                <tr>{detail.capital.headers.map((header) => <th scope="col">{header}</th>)}</tr>
+              </thead>
+              <tbody>
+                {detail.capital.rows.map((row) => (
+                  <tr>{row.map((cell, index) => index === 0 ? <th scope="row">{cell}</th> : <td>{cell}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section detail-section controls-section" id="controls" data-theme={overview.theme}>
+      <div class="content-layer">
+        <div class="container">
+          <header class="detail-section-header observe-fade">
+            <p class="detail-eyebrow">Operating controls</p>
+            <h2>{detail.controlsTitle}</h2>
+            <p>{detail.controlsIntro}</p>
+          </header>
+
+          <div class="controls-grid observe-slide-up">
+            {detail.controls.map((control, index) => (
+              <article>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                <h3>{control.title}</h3>
+                <p>{control.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section detail-section milestones-section" id="milestones" data-theme={overview.theme}>
+      <div class="content-layer">
+        <div class="container">
+          <header class="detail-section-header observe-fade">
+            <p class="detail-eyebrow">Evidence before expansion</p>
+            <h2>{detail.milestonesTitle}</h2>
+            <p>{detail.milestonesIntro}</p>
+          </header>
+
+          <ol class="milestone-list observe-slide-up">
+            {detail.milestones.map((milestone) => (
+              <li>
+                <span class="milestone-code">{milestone.code}</span>
+                <div>
+                  <h3>{milestone.title}</h3>
+                  <p>{milestone.evidence}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="section detail-section gallery-section" id="gallery" data-theme={overview.theme}>
+      <div class="content-layer">
+        <div class="container">
+          <header class="detail-section-header observe-fade">
+            <p class="detail-eyebrow">Visual content</p>
+            <h2>{detail.galleryTitle}</h2>
+            <p>{detail.galleryIntro}</p>
+          </header>
+
+          <div class="detail-gallery observe-scale">
+            {detail.gallery.map((image, index) => (
+              <figure class:list={{ 'gallery-primary': index === 0 }}>
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  width={image.width}
+                  height={image.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+                {image.caption && <figcaption>{image.caption}</figcaption>}
+              </figure>
+            ))}
+          </div>
+
+          <aside class="planning-note observe-fade">
+            <span>Planning status</span>
+            <p>{detail.planningNote}</p>
+          </aside>
+
+          <div class="detail-final-actions observe-fade">
+            <a class="cta-button detail-primary" href="/#contact">Start a future-fit conversation</a>
+            <a class="cta-button detail-secondary" href="/#operating-model">See the full company model</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  .detail-page {
+    --detail-surface: rgba(0, 0, 0, 0.2);
+    --detail-surface-strong: rgba(0, 0, 0, 0.34);
+    --detail-border: color-mix(in srgb, var(--current-accent-primary) 28%, transparent);
+  }
+
+  .detail-page .section {
+    min-height: auto;
+  }
+
+  .detail-hero {
+    min-height: 100vh !important;
+    padding-top: calc(var(--section-padding-y) + 44px);
+  }
+
+  .detail-section-texture {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(135deg, rgba(10, 14, 39, 0.78), rgba(10, 14, 39, 0.88)),
+      var(--detail-texture);
+    background-position: center;
+    background-size: cover;
+    opacity: 0.42;
+  }
+
+  .detail-hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(440px, 1.1fr);
+    gap: clamp(var(--spacing-2xl), 6vw, var(--spacing-5xl));
+    align-items: center;
+  }
+
+  .breadcrumb {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-2xl);
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-xs);
+  }
+
+  .breadcrumb a {
+    color: var(--current-accent-primary);
+    text-decoration: none;
+  }
+
+  .detail-eyebrow,
+  .classification-note span,
+  .detail-boundary > span,
+  .planning-note > span {
+    color: var(--current-accent-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+
+  .detail-hero h1 {
+    margin-bottom: var(--spacing-lg);
+    color: var(--current-text-primary);
+    font-size: clamp(var(--font-size-2xl), 5vw, var(--font-size-4xl));
+  }
+
+  .detail-status {
+    display: inline-flex;
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--detail-border);
+    border-radius: var(--radius-full);
+    background: color-mix(in srgb, var(--current-accent-primary) 10%, transparent);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .detail-lead {
+    max-width: 760px;
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-loose);
+  }
+
+  .detail-hero-actions,
+  .detail-final-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-2xl);
+  }
+
+  .detail-primary {
+    border-color: var(--current-accent-primary);
+    background: var(--current-accent-primary);
+    color: white;
+  }
+
+  .theme-tech .detail-primary {
+    color: #06101c;
+  }
+
+  .detail-secondary {
+    border-color: color-mix(in srgb, var(--current-text-primary) 54%, transparent);
+    background: rgba(0, 0, 0, 0.12);
+    color: var(--current-text-primary);
+  }
+
+  .detail-primary:hover,
+  .detail-primary:focus,
+  .detail-secondary:hover,
+  .detail-secondary:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px color-mix(in srgb, var(--current-accent-primary) 28%, transparent);
+  }
+
+  .detail-hero-figure {
+    position: relative;
+    min-height: 520px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--detail-border);
+    border-radius: var(--radius-xl);
+    background: var(--detail-surface-strong);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+  }
+
+  .detail-hero-figure img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 520px;
+    object-fit: cover;
+  }
+
+  .detail-hero-figure figcaption,
+  .detail-gallery figcaption {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: var(--spacing-2xl) var(--spacing-lg) var(--spacing-lg);
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.88));
+    color: white;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .detail-local-nav {
+    position: sticky;
+    top: 68px;
+    z-index: calc(var(--z-navigation) - 1);
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(11, 26, 44, 0.94);
+    backdrop-filter: blur(14px);
+  }
+
+  .detail-local-nav ul {
+    display: flex;
+    gap: var(--spacing-xs);
+    justify-content: center;
+    margin: 0;
+    padding: var(--spacing-sm) 0;
+    list-style: none;
+  }
+
+  .detail-local-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-full);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+  }
+
+  .detail-local-nav a:hover,
+  .detail-local-nav a:focus {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+  }
+
+  .detail-section {
+    scroll-margin-top: 132px;
+    background: color-mix(in srgb, var(--current-bg-primary) 94%, black);
+  }
+
+  .detail-section:nth-of-type(even) {
+    background: color-mix(in srgb, var(--current-bg-primary) 88%, black);
+  }
+
+  .detail-section-header {
+    max-width: 960px;
+    margin: 0 auto var(--spacing-3xl);
+    text-align: center;
+  }
+
+  .detail-section-header h2 {
+    color: var(--current-text-primary);
+    font-size: var(--font-size-3xl);
+  }
+
+  .detail-section-header > p:not(.detail-eyebrow) {
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-loose);
+  }
+
+  .role-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--spacing-3xl);
+    margin-bottom: var(--spacing-3xl);
+  }
+
+  .role-copy > p {
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-loose);
+  }
+
+  .classification-note,
+  .detail-boundary,
+  .planning-note {
+    padding: var(--spacing-xl);
+    border-left: 5px solid var(--current-accent-primary);
+    border-radius: var(--radius-md);
+    background: var(--detail-surface-strong);
+  }
+
+  .classification-note p,
+  .planning-note p {
+    margin: var(--spacing-sm) 0 0;
+    color: var(--current-text-secondary);
+    line-height: var(--line-height-loose);
+  }
+
+  .role-points,
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-md);
+  }
+
+  .role-points article,
+  .controls-grid article,
+  .detail-facts article,
+  .capital-filter article {
+    padding: var(--spacing-xl);
+    border: 1px solid var(--detail-border);
+    border-radius: var(--radius-lg);
+    background: var(--detail-surface);
+    box-shadow: var(--shadow-md);
+  }
+
+  .role-points article > span,
+  .controls-grid article > span,
+  .capital-filter article > span {
+    color: var(--current-accent-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .role-points h3,
+  .controls-grid h3 {
+    margin: var(--spacing-md) 0 var(--spacing-sm);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-lg);
+  }
+
+  .role-points p,
+  .controls-grid p {
+    margin: 0;
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-loose);
+  }
+
+  .detail-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-lg);
+  }
+
+  .detail-facts span {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    color: var(--current-accent-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .detail-facts strong {
+    color: var(--current-text-primary);
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-normal);
+  }
+
+  .detail-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--detail-border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.2);
+  }
+
+  .detail-table-wrap:focus-visible {
+    outline: 3px solid var(--current-accent-primary);
+    outline-offset: 4px;
+  }
+
+  table {
+    width: 100%;
+    min-width: 780px;
+    border-collapse: collapse;
+    color: var(--current-text-secondary);
+    background: var(--detail-surface-strong);
+  }
+
+  th,
+  td {
+    padding: var(--spacing-lg);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+    vertical-align: top;
+    line-height: var(--line-height-loose);
+  }
+
+  thead th {
+    background: color-mix(in srgb, var(--current-accent-primary) 15%, rgba(0, 0, 0, 0.7));
+    color: var(--current-text-primary);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  tbody th {
+    color: var(--current-text-primary);
+    font-size: var(--font-size-sm);
+  }
+
+  tbody td {
+    font-size: var(--font-size-xs);
+  }
+
+  tbody tr:hover {
+    background: color-mix(in srgb, var(--current-accent-primary) 7%, transparent);
+  }
+
+  .detail-workflow {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin: 0 0 var(--spacing-3xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .detail-workflow::before {
+    content: '';
+    position: absolute;
+    top: 26px;
+    right: 8%;
+    left: 8%;
+    height: 2px;
+    background: var(--current-accent-primary);
+    opacity: 0.36;
+  }
+
+  .detail-workflow li {
+    position: relative;
+    z-index: 1;
+    padding: var(--spacing-xl);
+    border: 1px solid var(--detail-border);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--current-bg-primary) 84%, black);
+    box-shadow: var(--shadow-md);
+  }
+
+  .workflow-index {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: calc(var(--spacing-xl) * -1) 0 var(--spacing-lg);
+    border: 3px solid var(--current-accent-primary);
+    border-radius: 50%;
+    background: var(--current-bg-primary);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .detail-workflow h3,
+  .detail-boundary h3 {
+    color: var(--current-text-primary);
+    font-size: var(--font-size-lg);
+  }
+
+  .detail-workflow p,
+  .detail-boundary p {
+    margin: 0;
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-loose);
+  }
+
+  .detail-boundary {
+    display: grid;
+    grid-template-columns: minmax(140px, 0.25fr) minmax(0, 1fr);
+    gap: var(--spacing-xl);
+  }
+
+  .capital-filter {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .capital-filter article {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .capital-filter strong {
+    margin: var(--spacing-md) 0 var(--spacing-sm);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-md);
+  }
+
+  .capital-filter p {
+    margin: 0;
+    color: var(--current-text-secondary);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-loose);
+  }
+
+  .controls-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .milestone-list {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+  }
+
+  .milestone-list li {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
+    gap: var(--spacing-xl);
+    padding: var(--spacing-xl) 0;
+    border-bottom: 1px solid var(--detail-border);
+  }
+
+  .milestone-code {
+    display: grid;
+    place-items: center;
+    width: 70px;
+    height: 48px;
+    border: 1px solid var(--current-accent-primary);
+    border-radius: var(--radius-full);
+    color: var(--current-accent-primary);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .milestone-list h3 {
+    margin-bottom: var(--spacing-xs);
+    color: var(--current-text-primary);
+    font-size: var(--font-size-lg);
+  }
+
+  .milestone-list p {
+    margin: 0;
+    color: var(--current-text-secondary);
+    line-height: var(--line-height-loose);
+  }
+
+  .detail-gallery {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: 240px;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-3xl);
+  }
+
+  .detail-gallery figure {
+    position: relative;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--detail-border);
+    border-radius: var(--radius-lg);
+    background: var(--detail-surface-strong);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .detail-gallery .gallery-primary {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+
+  .detail-gallery img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow) var(--ease-out-cubic);
+  }
+
+  .detail-gallery figure:hover img {
+    transform: scale(1.035);
+  }
+
+  .planning-note {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  .detail-final-actions {
+    justify-content: center;
+  }
+
+  @media (max-width: 1199px) {
+    .detail-hero-grid,
+    .role-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-hero-figure,
+    .detail-hero-figure img {
+      min-height: 420px;
+    }
+
+    .detail-workflow {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-workflow::before {
+      top: 0;
+      bottom: 0;
+      left: 25px;
+      width: 2px;
+      height: auto;
+    }
+
+    .detail-workflow li {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: var(--spacing-lg);
+      align-items: start;
+    }
+
+    .workflow-index {
+      margin: 0;
+    }
+
+    .controls-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .capital-filter {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .detail-gallery {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .detail-hero {
+      padding-top: var(--spacing-5xl);
+    }
+
+    .detail-hero-figure,
+    .detail-hero-figure img {
+      min-height: 280px;
+    }
+
+    .detail-hero-actions,
+    .detail-final-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .detail-local-nav {
+      top: 58px;
+      overflow-x: auto;
+    }
+
+    .detail-local-nav ul {
+      width: max-content;
+      justify-content: flex-start;
+    }
+
+    .detail-section {
+      scroll-margin-top: 114px;
+    }
+
+    .detail-section-header h2 {
+      font-size: var(--font-size-xl);
+    }
+
+    .role-points,
+    .controls-grid,
+    .detail-facts,
+    .capital-filter,
+    .detail-boundary {
+      grid-template-columns: 1fr;
+    }
+
+    .role-points article,
+    .controls-grid article,
+    .detail-facts article,
+    .capital-filter article,
+    .classification-note,
+    .detail-boundary,
+    .planning-note {
+      padding: var(--spacing-lg);
+    }
+
+    .detail-workflow li {
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: var(--spacing-md);
+      padding: var(--spacing-lg);
+    }
+
+    .workflow-index {
+      width: 44px;
+      height: 44px;
+    }
+
+    .detail-workflow::before {
+      left: 21px;
+    }
+
+    .milestone-list li {
+      grid-template-columns: 60px minmax(0, 1fr);
+      gap: var(--spacing-md);
+    }
+
+    .milestone-code {
+      width: 56px;
+      height: 42px;
+    }
+
+    .detail-gallery {
+      grid-template-columns: 1fr;
+      grid-auto-rows: 260px;
+    }
+
+    .detail-gallery .gallery-primary {
+      grid-column: auto;
+      grid-row: auto;
+    }
+  }
+</style>

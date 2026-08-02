@@ -1,12 +1,13 @@
-# Fluxology Inc. Website — Astro Architecture
+# Fluxology, Inc. Website — Astro Architecture
 
 This document describes the **Astro + Svelte** architecture and developer
 workflow for the Fluxology Inc. site. For the business overview, division
 descriptions, and general project information, see [`README.md`](./README.md).
 
-The site is a single-page, statically generated marketing site that ships
-almost no JavaScript: static content is pre-rendered to HTML, and only a small
-set of interactive Svelte "islands" hydrate in the browser.
+The site is statically generated and ships little JavaScript. The homepage is
+a long-form single-page overview, while a dynamic Astro route generates four
+DBA detail pages from shared typed data. Static content is pre-rendered to HTML;
+only a small set of interactive Svelte "islands" hydrate in the browser.
 
 ## Technology Stack
 
@@ -50,6 +51,9 @@ fluxology-site/
 │   │   ├── Hero.astro            # Static: hero section
 │   │   ├── About.astro           # Static: about section
 │   │   ├── DBASection.astro      # Static: reusable business-division template
+│   │   ├── DBADetailPage.astro   # Static: reusable detailed DBA route
+│   │   ├── OperatingModel.astro  # Static: company operating architecture
+│   │   ├── Roadmap.astro         # Static: staged implementation roadmap
 │   │   ├── Footer.astro          # Static: footer
 │   │   ├── ScrollProgress.svelte # Island (runes): scroll progress bar
 │   │   ├── ThemeTransition.svelte# Island (legacy): scroll-driven theme switch
@@ -60,7 +64,10 @@ fluxology-site/
 │   ├── layouts/
 │   │   └── BaseLayout.astro      # HTML wrapper, CSS imports, fonts, service worker
 │   ├── pages/
-│   │   └── index.astro           # The single page
+│   │   ├── index.astro           # Long-form company homepage
+│   │   └── [dba].astro           # Four generated DBA detail pages
+│   ├── data/
+│   │   └── dbaPlans.ts           # Shared plan-based content and image map
 │   └── styles/
 │       ├── reset.css             # CSS reset
 │       ├── variables.css         # Design tokens + font CSS variables
@@ -90,13 +97,16 @@ Pre-rendered to HTML at build time, no client JavaScript:
 - `BaseLayout.astro` — HTML shell, meta tags, global CSS imports, fonts, service worker
 - `Navigation.astro`, `Hero.astro`, `About.astro`, `Footer.astro`
 - `DBASection.astro` — reusable template for each business division. It renders
-  image-backed service cards, responsive one/two/four-image showcase layouts,
-  optional section imagery, and exposes a `particles` slot that `index.astro`
-  fills with a `ParticleSystem` island.
+  status and classification, image-backed scope cards, workflow, operating
+  boundary, responsive galleries, and a detail-page link.
+- `DBADetailPage.astro` — reusable detail route with scope and capital tables,
+  operating controls, milestones, gallery, and local page navigation.
+- `OperatingModel.astro` and `Roadmap.astro` — company architecture and staged
+  2026-2035 plan.
 
 ### Svelte islands and their directives
 
-The directives below are exactly what `src/pages/index.astro` uses:
+The directives below are used across the homepage and DBA routes:
 
 | Component | Directive | Reactivity | Purpose |
 |---|---|---|---|
@@ -193,18 +203,12 @@ npm run sync         # regenerate Astro-generated types (.astro/types.d.ts)
 Run `npm run sync` after changing content collections or when TypeScript
 complains about missing generated types.
 
-## Performance
+## Performance validation
 
-Measured results for the current build:
-
-- **Lighthouse Performance:** 100 (desktop) / 99 (mobile)
-- **Cumulative Layout Shift (CLS):** 0
-- **Total Blocking Time (TBT):** 0
-- **Largest Contentful Paint (LCP):** ~0.5s (desktop)
-
-These come from the island model (minimal JS), terser/lightningcss
-minification, and `astro:fonts` fallback metrics eliminating font-swap layout
-shift.
+The island model, deferred hydration, minification, and generated font fallback
+metrics remain in place. Re-run Lighthouse on desktop and mobile after any
+substantial content or layout change; older scores are historical and should
+not be quoted as current without a fresh audit.
 
 ## Deployment
 
