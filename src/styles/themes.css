@@ -45,7 +45,11 @@
   --current-bg-primary: var(--industrial-primary-charcoal);
   --current-text-primary: var(--industrial-neutral-white);
   --current-text-secondary: var(--industrial-neutral-silver);
-  --current-accent-primary: var(--industrial-accent-orange);
+  /* Amber, not orange: the small uppercase labels that consume this variable
+     render #FF6B35 at 4.43:1 on charcoal and ~3.9:1 on the gunmetal end of
+     the section gradient; amber holds 6.41:1 / 5.00:1. Surfaces that need
+     the canonical orange reference --industrial-accent-orange directly. */
+  --current-accent-primary: var(--industrial-accent-amber);
   --current-font-heading: var(--font-industrial-heading);
 }
 
@@ -129,7 +133,9 @@
 
 #fabrication .industrial-cta {
   background: var(--industrial-accent-orange);
-  color: var(--industrial-neutral-white);
+  /* Dark ink instead of white: white on orange is 2.69:1; the ink holds
+     6.74:1 here and 4.59:1 on the red hover state (AA needs 4.5:1). */
+  color: var(--industrial-ink);
   font-family: var(--font-industrial-heading);
   font-weight: var(--font-weight-bold);
   text-transform: uppercase;
@@ -240,8 +246,12 @@
 }
 
 #\33 d-lab .tech-cta {
-  background: linear-gradient(135deg, var(--tech-accent-cyan) 0%, var(--tech-accent-purple) 100%);
-  color: var(--tech-neutral-white);
+  /* Dark ink on a cyan->bright-purple gradient: white text was 1.70:1 over
+     the cyan stop; the ink is 11.19:1 on cyan and 4.80:1 on the lightened
+     purple stop, so the whole gradient clears AA. Mirrors the
+     .theme-tech .detail-primary treatment on the 3D Lab detail page. */
+  background: linear-gradient(135deg, var(--tech-accent-cyan) 0%, var(--tech-accent-purple-bright) 100%);
+  color: var(--tech-ink);
   font-family: var(--font-tech-heading);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-wide);
@@ -277,18 +287,26 @@
   --current-bg-primary: var(--natural-primary-forest);
   --current-text-primary: var(--natural-neutral-white);
   --current-text-secondary: var(--natural-neutral-cream);
-  --current-accent-primary: var(--natural-accent-terracotta);
+  /* Text-safe terracotta: the canonical #C77D58 fails AA (3.06:1) for the
+     small uppercase labels that consume this variable throughout the
+     greenhouse/orchard sections and detail pages. Elements that need the
+     canonical tone as a surface (.natural-cta, BackToTop) reference
+     --natural-accent-terracotta directly. */
+  --current-accent-primary: var(--natural-accent-terracotta-text);
   --current-font-heading: var(--font-natural-heading);
 }
 
+/* Deep-sage endpoints (were sage/moss): these sections are tall, so most
+   content sat on the lightened middle of the old gradients, where neither
+   the accent labels nor cream body copy could reach WCAG AA. */
 #greenhouse,
 #orchard {
-  background: linear-gradient(135deg, var(--natural-primary-forest) 0%, var(--natural-primary-sage) 100%);
+  background: linear-gradient(135deg, var(--natural-primary-forest) 0%, var(--natural-primary-sage-deep) 100%);
 }
 
 #greenhouse .parallax-bg,
 #orchard .parallax-bg {
-  background: linear-gradient(135deg, var(--natural-primary-forest) 0%, var(--natural-primary-moss) 100%);
+  background: linear-gradient(135deg, var(--natural-primary-forest) 0%, var(--natural-primary-sage-deep) 100%);
 }
 
 /* Greenhouse: glasshouse glazing-bar grid with a soft light shaft */
@@ -338,7 +356,10 @@
 
 #greenhouse .service-card,
 #orchard .service-card {
-  background: rgba(107, 142, 107, 0.15);
+  /* Darkening veil (was a lightening sage tint): the sage tint pushed card
+     surfaces light enough that the accent service-meta labels fell to
+     ~3.9:1. Matches the dark-panel treatment of .dba-facts pills. */
+  background: rgba(0, 0, 0, 0.16);
   border: 2px solid rgba(199, 125, 88, 0.3);
   border-radius: var(--radius-xl);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
@@ -347,7 +368,7 @@
 #greenhouse .service-card:hover,
 #orchard .service-card:hover {
   border-color: var(--natural-accent-terracotta);
-  background: rgba(107, 142, 107, 0.25);
+  background: rgba(0, 0, 0, 0.06);
   box-shadow: 0 8px 16px rgba(199, 125, 88, 0.3);
 }
 
@@ -367,7 +388,9 @@
 #greenhouse .natural-cta,
 #orchard .natural-cta {
   background: var(--natural-accent-terracotta);
-  color: var(--natural-neutral-white);
+  /* Forest ink instead of white: white was 3.23:1 on terracotta and 2.23:1
+     on the gold hover; the ink is 4.96:1 and 7.19:1 respectively. */
+  color: var(--natural-ink);
   font-family: var(--font-natural-accent);
   font-weight: var(--font-weight-medium);
   border: 2px solid var(--natural-accent-terracotta);
@@ -409,7 +432,9 @@
 .info-title {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-semibold);
-  color: var(--corporate-accent-blue);
+  /* Text-safe accent blue: #3A86FF is only 2.40:1 on the slate end of the
+     contact gradient (large text needs 3:1). */
+  color: var(--corporate-accent-blue-text);
   margin-bottom: var(--spacing-md);
 }
 
@@ -420,7 +445,9 @@
 }
 
 .info-text a {
-  color: var(--corporate-accent-blue);
+  /* 16px link text: #3A86FF is 3.44:1 on navy / 2.40:1 on slate; the text
+     variant holds >=4.5:1 across the whole contact gradient. */
+  color: var(--corporate-accent-blue-text);
   text-decoration: none;
   transition: color var(--transition-base) var(--ease-out-cubic);
 }
@@ -484,7 +511,7 @@
 }
 
 .required {
-  color: var(--corporate-accent-blue);
+  color: var(--corporate-accent-blue-text);
 }
 
 .optional {
@@ -516,7 +543,10 @@
 
 .form-input::placeholder,
 .form-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  /* 0.4 alpha composites to ~2.4:1 against the input surface at the slate
+     end of the contact gradient; 0.78 clears the 4.5:1 AA bar while staying
+     visibly dimmer than typed (solid white) input text. */
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .form-select {
@@ -542,7 +572,10 @@
 
 .form-error {
   display: block;
-  color: #FF6B6B;
+  /* Lightened from #FF6B6B (3.01:1 on the slate end of the contact
+     gradient) — #FFBDBD is 4.60:1 on the tinted form surface there and
+     7.55:1 on the navy end, keeping the same red hue. */
+  color: #FFBDBD;
   font-size: var(--font-size-xs);
   margin-top: var(--spacing-xs);
   min-height: 18px;
@@ -551,10 +584,45 @@
 .form-group.error .form-input,
 .form-group.error .form-select,
 .form-group.error .form-textarea {
-  border-color: #FF6B6B;
+  border-color: #FFBDBD;
 }
 
 .form-submit {
   width: 100%;
   margin-top: var(--spacing-lg);
+}
+
+/* ========================================
+   ACCESSIBILITY CONTRAST OVERRIDES
+   Cross-component fixes for accent colors that fail WCAG AA where the
+   original rules live in Astro-scoped component styles. ID/extra-class
+   selectors intentionally out-rank the scoped rules.
+   ======================================== */
+
+/* Small (12.8px) corporate-accent labels: #3A86FF is 3.44:1 on navy and
+   2.40:1 on slate — swap for the text-safe accent (>=4.5:1). */
+#roadmap .phase-years,
+#roadmap .capital-rules li > span {
+  color: var(--corporate-accent-blue-text);
+}
+
+#operating-model .lane-index {
+  color: var(--corporate-accent-blue-text);
+}
+
+/* Detail-page primary CTAs paint white text on the theme accent surface
+   (2.69:1 on industrial orange, 3.23:1 on natural terracotta). Match the
+   dark-ink treatment the tech theme already uses, and pin the canonical
+   accent surface (since --current-accent-primary now resolves to the
+   lighter text-safe variants inside these themes). */
+.detail-page.theme-industrial .cta-button.detail-primary {
+  background: var(--industrial-accent-orange);
+  border-color: var(--industrial-accent-orange);
+  color: var(--industrial-ink);
+}
+
+.detail-page.theme-natural .cta-button.detail-primary {
+  background: var(--natural-accent-terracotta);
+  border-color: var(--natural-accent-terracotta);
+  color: var(--natural-ink);
 }

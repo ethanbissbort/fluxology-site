@@ -33,28 +33,49 @@
   }[kind];
 
   let particles = $state([]);
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  const particleCount = isMobile ? 8 : 15;
 
   const rand = ([min, max]) => Math.random() * (max - min) + min;
 
   onMount(() => {
-    const isReducedMotion =
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // Density derives from a media query (mirroring the reduced-motion CSS
+    // rule) so a rotated phone or resized window gets the right count
+    // instead of whatever hydration happened to see.
+    const smallViewport = window.matchMedia('(max-width: 767px)');
 
-    if (isReducedMotion) {
-      return; // Don't create particles if reduced motion is preferred
+    function regenerate() {
+      if (reducedMotion.matches) {
+        particles = []; // Don't create particles if reduced motion is preferred
+        return;
+      }
+
+      // Generate particles with random properties
+      const particleCount = smallViewport.matches ? 8 : 15;
+      particles = Array.from({ length: particleCount }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        size: rand(geometry.size),
+        duration: rand(geometry.duration),
+        delay: rand(geometry.delay)
+      }));
     }
 
-    // Generate particles with random properties
-    particles = Array.from({ length: particleCount }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: rand(geometry.size),
-      duration: rand(geometry.duration),
-      delay: rand(geometry.delay)
-    }));
+    // Debounce threshold crossings so dragging a window across 768px (or a
+    // quick rotate back and forth) doesn't re-randomize the field repeatedly.
+    let debounce;
+    function onViewportChange() {
+      clearTimeout(debounce);
+      debounce = setTimeout(regenerate, 200);
+    }
+
+    regenerate();
+    smallViewport.addEventListener('change', onViewportChange);
+
+    return () => {
+      clearTimeout(debounce);
+      smallViewport.removeEventListener('change', onViewportChange);
+    };
   });
 </script>
 

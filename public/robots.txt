@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://fluxology.ca/sitemap.xml
+Sitemap: https://fluxology.ca/sitemap-index.xml

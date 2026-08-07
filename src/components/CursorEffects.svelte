@@ -25,21 +25,29 @@
   onMount(() => {
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (!finePointer.matches || reducedMotion.matches) return;
-
-    enabled = true;
-    document.documentElement.classList.add('cursor-fx');
 
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
     let ringX = x;
     let ringY = y;
-    let raf;
+    let raf = null;
+
+    function startLoop() {
+      if (raf === null) raf = requestAnimationFrame(loop);
+    }
+
+    function stopLoop() {
+      if (raf !== null) {
+        cancelAnimationFrame(raf);
+        raf = null;
+      }
+    }
 
     function onMove(e) {
       x = e.clientX;
       y = e.clientY;
       shown = true;
+      startLoop();
       // Grow the ring over anything interactive.
       hovering = !!e.target?.closest?.(
         'a, button, [role="button"], input, textarea, select, label, summary'
@@ -48,6 +56,9 @@
 
     function onLeave() {
       shown = false;
+      // The opacity transition hides the layers, so stop lerping an
+      // invisible cursor instead of re-queueing rAF forever.
+      stopLoop();
     }
 
     function onDown() {
@@ -66,17 +77,49 @@
       raf = requestAnimationFrame(loop);
     }
 
-    document.addEventListener('pointermove', onMove, { passive: true });
-    document.addEventListener('pointerdown', onDown, { passive: true });
-    document.documentElement.addEventListener('pointerleave', onLeave);
-    raf = requestAnimationFrame(loop);
+    function start() {
+      if (enabled) return;
+      enabled = true;
+      document.documentElement.classList.add('cursor-fx');
+      document.addEventListener('pointermove', onMove, { passive: true });
+      document.addEventListener('pointerdown', onDown, { passive: true });
+      document.documentElement.addEventListener('pointerleave', onLeave);
+      // The rAF loop starts on the first pointermove (see startLoop), so an
+      // idle page never lerps invisible layers.
+    }
 
-    return () => {
-      cancelAnimationFrame(raf);
+    function stop() {
+      if (!enabled) return;
+      enabled = false;
+      shown = false;
+      hovering = false;
+      pulsing = false;
+      stopLoop();
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerdown', onDown);
       document.documentElement.removeEventListener('pointerleave', onLeave);
       document.documentElement.classList.remove('cursor-fx');
+    }
+
+    // Track both media queries live: enabling OS reduce-motion mid-session
+    // must tear the cursor down without a reload, and a convertible device
+    // switching from touch to mouse mode should gain the effect.
+    function update() {
+      if (finePointer.matches && !reducedMotion.matches) {
+        start();
+      } else {
+        stop();
+      }
+    }
+
+    finePointer.addEventListener('change', update);
+    reducedMotion.addEventListener('change', update);
+    update();
+
+    return () => {
+      finePointer.removeEventListener('change', update);
+      reducedMotion.removeEventListener('change', update);
+      stop();
     };
   });
 </script>

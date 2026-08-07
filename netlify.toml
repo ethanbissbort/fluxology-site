@@ -34,3 +34,11 @@
   for = "/service-worker.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Images are unhashed but change rarely: cache for a week and serve stale for
+# a day while revalidating (Netlify's default would be max-age=0, forcing a
+# revalidation round-trip per image on every repeat visit).
+[[headers]]
+  for = "/images/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"

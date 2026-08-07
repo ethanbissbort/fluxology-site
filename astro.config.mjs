@@ -1,5 +1,6 @@
 import { defineConfig, fontProviders } from 'astro/config';
 import svelte from '@astrojs/svelte';
+import sitemap from '@astrojs/sitemap';
 
 // Self-hosted Google fonts via astro:fonts. Each family exposes a CSS
 // variable consumed in src/styles/variables.css. Weight ranges mirror the
@@ -20,8 +21,24 @@ export default defineConfig({
   // Canonical origin — used for the canonical link, Open Graph URLs, and the
   // sitemap. Update here if the production domain ever changes.
   site: 'https://fluxology.ca',
-  integrations: [svelte()],
+  integrations: [
+    svelte(),
+    // Generated sitemap (replaces the old hand-maintained public/sitemap.xml,
+    // which drifted whenever routes changed). Emits /sitemap-index.xml +
+    // /sitemap-0.xml; robots.txt points at the index. The 404 page is not a
+    // real route, so keep it out.
+    sitemap({
+      filter: (page) => !page.includes('/404'),
+    }),
+  ],
   output: 'static',
+  // Prefetch cross-page links when they enter the viewport — this is a
+  // 6-page MPA with ~11-19 KB gz HTML per page, so speculative fetches are
+  // cheap and make navigations near-instant.
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'viewport',
+  },
   build: {
     // Custom asset directory (default is '_astro').
     assets: '_assets',
