@@ -7,6 +7,7 @@ The Fluxology application stack exposes no host ports. Caddy reaches these conta
 - `fluxology-apache:6080`
 - `fluxology-contact-api:8081`
 - `fluxology-dashboard-api:8082`
+- `fluxology-mcp:8083`
 
 ## 1. Create the shared Docker network once
 
@@ -30,7 +31,7 @@ Verify connectivity:
 docker network inspect fluxology-edge
 ```
 
-You should see the Caddy container plus `fluxology-apache`, `fluxology-contact-api`, and `fluxology-dashboard-api` after the Fluxology stack is running.
+You should see the Caddy container plus `fluxology-apache`, `fluxology-contact-api`, `fluxology-dashboard-api`, and `fluxology-mcp` after the Fluxology stack is running.
 
 ## 2. Add these site blocks to the VPS Caddyfile
 
@@ -140,9 +141,28 @@ jobs.fluxology.ca {
         reverse_proxy fluxology-apache:6080
     }
 }
+
+# -----------------------------------------------------------------------------
+# MCP connector — authenticated write bridge for approved model clients
+# -----------------------------------------------------------------------------
+# Full deployment notes: docs/MCP-CONNECTOR.md
+mcp.fluxology.ca {
+    encode zstd gzip
+
+    request_body {
+        max_size 512KB
+    }
+
+    # Streamable HTTP may hold a response stream open; do not buffer it.
+    reverse_proxy fluxology-mcp:8083 {
+        flush_interval -1
+    }
+}
 ```
 
 The dashboard API itself returns `Cache-Control: no-store` and does not emit CORS headers. Reads and writes are deliberately same-origin on each dashboard hostname.
+
+The MCP connector also emits no CORS headers and refuses any request carrying an `Origin` header. It authenticates every request itself with OAuth 2.1, so Caddy passes traffic straight through rather than adding its own auth layer.
 
 ## 3. Validate and reload the existing Caddy container
 
@@ -171,6 +191,19 @@ curl -fsS https://jobs.fluxology.ca/data/listings.json | jq '.listings | length'
 ```
 
 The three dashboard health responses include `writeEnabled`. It must be `true` after the corresponding ingest token is configured in `.env` and the dashboard API container is recreated.
+
+The MCP connector deliberately serves no public feed route. An unauthenticated MCP request must be challenged, not served:
+
+```bash
+curl -fsS https://mcp.fluxology.ca/.well-known/oauth-protected-resource | jq
+
+curl -isS -X POST https://mcp.fluxology.ca/mcp \
+  -H 'content-type: application/json' \
+  -H 'accept: application/json, text/event-stream' \
+  --data '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | head -20
+```
+
+The second command must return `401` with a `WWW-Authenticate: Bearer …` header.
 
 ## 5. Direct-write tests
 

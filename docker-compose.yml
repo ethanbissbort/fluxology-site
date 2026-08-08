@@ -7,7 +7,8 @@
 #   existing VPS edge proxy
 #        ├── fluxology-apache:6080
 #        ├── fluxology-contact-api:8081
-#        └── fluxology-dashboard-api:8082
+#        ├── fluxology-dashboard-api:8082
+#        └── fluxology-mcp:8083
 #
 # None of the services below publishes a host port. The edge proxy is the only
 # public entrypoint. See docs/CADDY-INTEGRATION.md for the reverse-proxy rules.
@@ -144,6 +145,79 @@ services:
     logging: *default-logging
     labels:
       - "com.fluxology.description=Office/deals/jobs live feed and direct-ingest API"
+
+  # ---------------------------------------------------------------------------
+  # MCP connector — authenticated write bridge for approved model clients
+  # ---------------------------------------------------------------------------
+  # Not in the public dashboard read path: if this container is down,
+  # office/deals/jobs keep serving. See docs/MCP-CONNECTOR.md.
+  #
+  # Downstream ingest tokens are read from /run/secrets/<scope>_ingest_token
+  # when present, otherwise from the environment values below. To switch to
+  # Docker secrets, create the three files on the VPS, uncomment the `secrets:`
+  # key here and the top-level `secrets:` block, and drop the three token
+  # environment entries. No code change is required.
+  mcp:
+    container_name: fluxology-mcp
+    build:
+      context: .
+      dockerfile: services/fluxology-mcp/Dockerfile
+    image: fluxology-mcp:latest
+    restart: unless-stopped
+    expose:
+      - "8083"
+    depends_on:
+      dashboard-api:
+        condition: service_healthy
+    environment:
+      - TZ=${TIMEZONE:-America/Toronto}
+      - NODE_ENV=production
+      - PORT=8083
+      - MCP_PUBLIC_URL=${MCP_PUBLIC_URL:-https://mcp.fluxology.ca/mcp}
+      - OAUTH_ISSUER=${MCP_OAUTH_ISSUER}
+      - OAUTH_AUDIENCE=${MCP_OAUTH_AUDIENCE:-https://mcp.fluxology.ca/mcp}
+      - OAUTH_JWKS_URI=${MCP_OAUTH_JWKS_URI:-}
+      - DASHBOARD_API_URL=http://fluxology-dashboard-api:8082
+      - OFFICE_INGEST_TOKEN
+      - DEALS_INGEST_TOKEN
+      - JOBS_INGEST_TOKEN
+      - MCP_MAX_BODY_BYTES=${MCP_MAX_BODY_BYTES:-524288}
+      - MCP_MAX_LISTINGS_PER_WRITE=${MCP_MAX_LISTINGS_PER_WRITE:-50}
+      - MCP_READS_PER_MINUTE=${MCP_READS_PER_MINUTE:-120}
+      - MCP_WRITES_PER_MINUTE=${MCP_WRITES_PER_MINUTE:-30}
+      - LOG_LEVEL=${MCP_LOG_LEVEL:-info}
+    # secrets:
+    #   - office_ingest_token
+    #   - deals_ingest_token
+    #   - jobs_ingest_token
+    networks:
+      - edge
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:'+(process.env.PORT||8083)+'/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+    labels:
+      - "com.fluxology.description=Authenticated MCP write bridge for the office/deals/jobs dashboards"
+
+# secrets:
+#   office_ingest_token:
+#     file: ./secrets/office_ingest_token
+#   deals_ingest_token:
+#     file: ./secrets/deals_ingest_token
+#   jobs_ingest_token:
+#     file: ./secrets/jobs_ingest_token
 
 volumes:
   inquiry_data:

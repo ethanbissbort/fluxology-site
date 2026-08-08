@@ -4,7 +4,7 @@ This is the primary operator guide for the self-hosted Fluxology site and its th
 
 ## Architecture
 
-The Fluxology repository runs three application containers:
+The Fluxology repository runs four application containers:
 
 ```text
 VPS-wide Caddy container (managed separately)
@@ -12,7 +12,8 @@ VPS-wide Caddy container (managed separately)
         └── Docker network: fluxology-edge
               ├── fluxology-apache:6080
               ├── fluxology-contact-api:8081
-              └── fluxology-dashboard-api:8082
+              ├── fluxology-dashboard-api:8082
+              └── fluxology-mcp:8083
 ```
 
 The application containers publish no host ports. The existing VPS Caddy container owns public HTTP/HTTPS and reverse-proxies to them over `fluxology-edge`.
@@ -24,6 +25,7 @@ Production hostnames:
 - `office.fluxology.ca`
 - `deals.fluxology.ca`
 - `jobs.fluxology.ca`
+- `mcp.fluxology.ca` — MCP connector, see [`MCP-CONNECTOR.md`](./MCP-CONNECTOR.md)
 
 DNS is managed independently from this repository.
 
