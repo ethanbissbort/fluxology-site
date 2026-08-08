@@ -115,7 +115,7 @@ fluxology.ca {
 	import site-defaults
 
 	# --- Contact API ---------------------------------------------------------
-	# Self-hosted replacement for Netlify Forms. Per the API contract:
+	# Self-hosted contact form handler. Per the API contract:
 	#   POST /api/contact  (accepts JSON and form-urlencoded)
 	#   GET  /api/health
 	#   listens on 8081 inside the compose network
