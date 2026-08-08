@@ -10,6 +10,7 @@ The public corporate site is a static Astro + Svelte build. A small contact API 
 - `https://office.fluxology.ca/` — Office Scout
 - `https://deals.fluxology.ca/` — Deals / shopping searches
 - `https://jobs.fluxology.ca/` — T176 / trades job search
+- `https://mcp.fluxology.ca/mcp` — MCP connector (authenticated; not a browser endpoint)
 
 ## Corporate site
 
@@ -45,13 +46,16 @@ existing VPS Caddy
             ├── fluxology-contact-api:8081
             │     contact form -> persistent inquiry log + optional SMTP
             │
-            └── fluxology-dashboard-api:8082
-                  office/deals/jobs live feeds + authenticated direct writes
+            ├── fluxology-dashboard-api:8082
+            │     office/deals/jobs live feeds + authenticated direct writes
+            │
+            └── fluxology-mcp:8083
+                  authenticated MCP write bridge for approved model clients
 ```
 
 No Fluxology application container publishes a host port.
 
-See [`docs/CADDY-INTEGRATION.md`](./docs/CADDY-INTEGRATION.md) for the site blocks that must be merged into the VPS-wide Caddy configuration.
+See [`docs/CADDY-INTEGRATION.md`](./docs/CADDY-INTEGRATION.md) for the site blocks that must be merged into the VPS-wide Caddy configuration, and [`docs/MCP-CONNECTOR.md`](./docs/MCP-CONNECTOR.md) for the MCP connector's authorization model and deployment steps.
 
 ## Dashboard architecture
 

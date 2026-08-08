@@ -11,7 +11,7 @@ This file is the concise technical ground truth for AI assistants and developers
 
 The VPS already has one independently managed **Caddy** container that owns public ports 80/443 and TLS for multiple services. **Caddy is not part of this repository's Compose project.**
 
-The Fluxology repository runs three application containers only:
+The Fluxology repository runs four application containers only:
 
 ```text
 existing VPS Caddy
@@ -19,14 +19,15 @@ existing VPS Caddy
       └── external Docker network: fluxology-edge
             ├── fluxology-apache:6080
             ├── fluxology-contact-api:8081
-            └── fluxology-dashboard-api:8082
+            ├── fluxology-dashboard-api:8082
+            └── fluxology-mcp:8083
 ```
 
 Rules:
 
 - Never add a Caddy service to `docker-compose.yml`.
-- Never publish Apache, contact-api, or dashboard-api ports to the host.
-- The existing Caddy container and all three Fluxology containers must share `fluxology-edge`.
+- Never publish Apache, contact-api, dashboard-api, or mcp ports to the host.
+- The existing Caddy container and all four Fluxology containers must share `fluxology-edge`.
 - Caddy configuration for Fluxology is documented as integration instructions in `docs/CADDY-INTEGRATION.md`; the actual VPS-wide Caddyfile lives outside this repository.
 - Do not put TLS certificates or ACME state in this repository or its Compose volumes.
 - Never run/recommend `docker compose down -v` casually: it destroys non-reproducible inquiry and dashboard data.
@@ -35,6 +36,7 @@ Primary deployment docs:
 
 - `docs/DEPLOYMENT-VPS.md`
 - `docs/CADDY-INTEGRATION.md`
+- `docs/MCP-CONNECTOR.md`
 - `DOCKER-DEPLOYMENT.md`
 
 ## Runtime services
@@ -98,6 +100,42 @@ Writes require a category-scoped bearer token:
 
 Never put those credentials in public JavaScript, checked-in JSON, screenshots, documentation examples with real values, or browser local storage.
 
+### `fluxology-mcp`
+
+Source: `services/fluxology-mcp/`.
+
+Internal port: 8083. Stateless; no volume.
+
+Public endpoint: `https://mcp.fluxology.ca/mcp` (MCP over Streamable HTTP).
+
+An authenticated write bridge that lets approved model clients publish into the
+three dashboards through the dashboard API. It is **not** a second data store
+and is **not** in the public dashboard read path — its outage must never take
+the dashboards offline.
+
+Five tools, each bound to one OAuth scope:
+
+- `get_dashboard_summary`, `get_dashboard_listing` — `dashboards:read`
+- `upsert_office_listings` — `office:write`
+- `upsert_deal_listings` — `deals:write`
+- `upsert_job_listings` — `jobs:write`
+
+Hard rules:
+
+- No delete tool, no full-feed replacement, no shell, no filesystem, no tool
+  that accepts a URL, path, or token. Retire a listing with `active:false`.
+- No general `dashboards:write` scope: one category's token cannot write another.
+- The connector holds the three ingest tokens server-side, chooses one by tool
+  dispatch, and never returns or logs them.
+- It is an OAuth **resource server** only. Token issuance belongs to a separate
+  standards-compliant authorization server (`MCP_OAUTH_ISSUER`).
+- Development bearer auth exists for local work and makes startup fail outright
+  when `NODE_ENV=production`.
+- Canonical JSON Schemas are copied from `public/*/data/schema.json` at image
+  build time and compiled with Ajv at startup. Never hand-maintain a second copy.
+- `firstSeen`, `lastSeen`, `lastVerified`, `lastChanged` and `priceHistory` are
+  server-owned: stripped from caller input, absent from the tool input schemas.
+
 ## Dashboard public routing
 
 Production hostnames:
@@ -127,6 +165,16 @@ category skill / trusted automation
   -> authenticated dashboard API upsert
   -> persistent live feed
   -> dashboard hourly refresh
+```
+
+For model clients, that authenticated write goes through the MCP connector
+rather than the category ingest token directly:
+
+```text
+model client
+  -> fluxology-mcp tool call (OAuth 2.1, category scope)
+  -> dashboard API upsert
+  -> persistent live feed
 ```
 
 Fallback for runtimes that cannot call the direct write tool:
@@ -199,10 +247,12 @@ fluxology-site/
 ├── docker/apache/
 ├── services/
 │   ├── contact-api/
-│   └── dashboard-api/
+│   ├── dashboard-api/
+│   └── fluxology-mcp/
 ├── docs/
 │   ├── DEPLOYMENT-VPS.md
 │   ├── CADDY-INTEGRATION.md
+│   ├── MCP-CONNECTOR.md
 │   └── DASHBOARDS-V3.md
 ├── public/
 │   ├── office-scout/
@@ -268,8 +318,9 @@ Back both up. The site source can be rebuilt from Git; those volumes cannot.
 - Application containers publish no host ports.
 - The external edge proxy is the sole public network entrypoint.
 - Dashboard read feeds are public; writes require scoped tokens.
-- Contact form and dashboard APIs enforce body-size limits.
+- Contact form, dashboard, and MCP APIs enforce body-size limits.
 - Do not log bearer tokens.
+- Do not give the MCP connector a tool that takes a URL, path, or credential.
 - Do not embed write credentials in frontend code.
 - Keep `connect-src 'self'` compatible by preserving same-origin dashboard feed routing.
 - HSTS belongs at the external TLS terminator, not Apache.
