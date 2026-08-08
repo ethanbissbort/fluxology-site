@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b1a2c">
+  <title>Fluxology Jobs</title>
+  <link rel="icon" href="./favicon.svg">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand"><img src="./favicon.svg" alt=""><div><div class="eyebrow">FLUXOLOGY, INC.</div><h1>Jobs</h1></div></div>
+    <div class="actions"><span class="live"><span class="dot"></span><span id="live">Loading feed…</span></span><button class="btn" id="refresh">Refresh now</button></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div><p class="eyebrow accent">CAREER SEARCH · T176 / TRADES</p><h2>Jobs ranked by <span>career value, not keyword noise.</span></h2><p class="lede">Trade-aligned roles from multiple job sources are normalized into one queue, with fit, training value, transit practicality, and your application workflow kept distinct from the research feed.</p></div>
+      <div class="target"><small>Priority profile</small><strong>T176 <span>TRADES</span></strong><small>Welding · plumbing · millwright · electromechanical · sheet metal</small></div>
+    </section>
+
+    <section class="stats">
+      <article class="stat"><span class="eyebrow">ACTIVE</span><b id="sActive">—</b><small>curated openings</small></article>
+      <article class="stat"><span class="eyebrow">HIGH FIT</span><b id="sHigh">—</b><small>fit score ≥ 80</small></article>
+      <article class="stat"><span class="eyebrow">ENTRY LEVEL</span><b id="sEntry">—</b><small>realistic trainee/helper roles</small></article>
+      <article class="stat"><span class="eyebrow">APPLIED</span><b id="sApplied">—</b><small>local workflow count</small></article>
+    </section>
+
+    <section class="controls">
+      <label class="search">⌕ <input id="q" type="search" placeholder="Search title, company, notes, skills…"></label>
+      <select id="track"><option value="">All tracks</option></select>
+      <select id="source"><option value="">All sources</option></select>
+      <select id="workflow"><option value="">All workflow states</option><option value="unreviewed">Unreviewed</option><option value="saved">Saved</option><option value="applied">Applied</option><option value="interview">Interview</option><option value="rejected">Rejected</option><option value="offer">Offer</option></select>
+      <select id="sort"><option value="fit">Best career fit</option><option value="newest">Newest</option><option value="walk">Shortest final walk</option><option value="pay">Highest pay</option></select>
+      <label class="check"><input type="checkbox" id="activeOnly" checked> Active only</label>
+    </section>
+
+    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant openings</h3></div><div class="meta"><span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
+    <section id="grid" class="grid"></section>
+    <section id="empty" class="empty" hidden><h3>No matching jobs</h3><p>Change the filters or run the job-search skill again.</p></section>
+  </main>
+
+  <footer><span>Fluxology Jobs v3</span><span>Feed refreshes every hour while this tab is open.</span></footer>
+</div>
+<dialog id="dialog"><div class="ds"><button class="close" id="close">×</button><div id="detail"></div></div></dialog>
+<script src="./app.js"></script>
+</body>
+</html>
