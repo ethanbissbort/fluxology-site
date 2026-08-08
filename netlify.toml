@@ -9,6 +9,27 @@
   # Astro 7 requires Node >= 22.12.
   NODE_VERSION = "22"
 
+# Dashboard subdomains. These are internal 200 rewrites, so the browser keeps
+# the clean subdomain URL while Netlify serves the isolated static app path.
+# The corresponding domains must also be assigned to this Netlify site.
+[[redirects]]
+  from = "https://office.fluxology.ca/*"
+  to = "/office-scout/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://deals.fluxology.ca/*"
+  to = "/deals/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://jobs.fluxology.ca/*"
+  to = "/jobs/:splat"
+  status = 200
+  force = true
+
 # Security headers (mirrors the Apache config in docker/apache/httpd.conf).
 # Netlify serves static assets, so these apply to every response.
 [[headers]]
