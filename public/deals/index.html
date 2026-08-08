@@ -12,7 +12,7 @@
 <div class="shell">
   <header class="top">
     <div class="brand"><img src="./favicon.svg" alt=""><div><div class="eyebrow">FLUXOLOGY, INC.</div><h1>Deals</h1></div></div>
-    <div class="actions"><span class="live"><span class="dot"></span><span id="live">Loading feed…</span></span><button class="btn" id="refresh">Refresh now</button></div>
+    <div class="actions"><span class="live"><span class="dot"></span><span id="live" role="status" aria-live="polite">Loading feed…</span></span><button class="btn" id="refresh">Refresh now</button></div>
   </header>
 
   <main>
@@ -28,24 +28,25 @@
       <article class="stat"><span class="eyebrow">UNRESOLVED</span><b id="sUnknown">—</b><small>shipping needs confirmation</small></article>
     </section>
 
-    <section class="controls">
-      <label class="search">⌕ <input id="q" type="search" placeholder="Search title, seller, notes, category…"></label>
-      <select id="category"><option value="">All searches</option></select>
-      <select id="type"><option value="">All listing types</option><option value="auction">Auctions</option><option value="buy_it_now">Buy It Now</option></select>
-      <select id="deal"><option value="">All deal statuses</option><option value="8">≤ $8/lb</option><option value="10">≤ $10/lb</option><option value="unresolved">Shipping unresolved</option></select>
-      <select id="workflow"><option value="">All workflow states</option><option value="unreviewed">Unreviewed</option><option value="watch">Watch</option><option value="saved">Saved</option><option value="purchased">Purchased</option><option value="rejected">Rejected</option></select>
-      <select id="sort"><option value="newest">Newest</option><option value="price">Best landed C$/lb</option><option value="ending">Ending soon</option><option value="weight">Largest lots</option></select>
+    <section class="controls" aria-label="Listing filters">
+      <label class="search">⌕ <input id="q" type="search" aria-label="Search listings" placeholder="Search title, seller, notes, category…"></label>
+      <select id="category" aria-label="Shopping search"><option value="">All searches</option></select>
+      <select id="type" aria-label="Listing type"><option value="">All listing types</option><option value="auction">Auctions</option><option value="buy_it_now">Buy It Now</option></select>
+      <select id="deal" aria-label="Deal status"><option value="">All deal statuses</option><option value="8">≤ $8/lb</option><option value="10">≤ $10/lb</option><option value="unresolved">Shipping unresolved</option></select>
+      <select id="workflow" aria-label="Workflow status"><option value="">All workflow states</option><option value="unreviewed">Unreviewed</option><option value="watch">Watch</option><option value="saved">Saved</option><option value="purchased">Purchased</option><option value="rejected">Rejected</option></select>
+      <select id="sort" aria-label="Sort listings"><option value="newest">Newest</option><option value="price">Best landed C$/lb</option><option value="ending">Ending soon</option><option value="weight">Largest lots</option></select>
+      <label class="check"><input id="activeOnly" type="checkbox" checked> Active only</label>
     </section>
 
-    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant listings</h3></div><div class="meta"><span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
-    <section id="grid" class="grid"></section>
+    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant listings</h3></div><div class="meta"><span id="resultCount">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
+    <section id="grid" class="grid" tabindex="-1"></section>
     <section id="empty" class="empty" hidden><h3>No matching listings</h3><p>Change the filters or wait for the next curated search run.</p></section>
   </main>
 
   <footer><span>Fluxology Deals v3</span><span>Feed refreshes every hour while this tab is open.</span></footer>
 </div>
 
-<dialog id="dialog"><div class="ds"><button class="close" id="close">×</button><div id="detail"></div></div></dialog>
+<dialog id="dialog"><div class="ds"><button class="close" id="close" aria-label="Close listing details" autofocus>×</button><div id="detail"></div></div></dialog>
 <script src="./app.js"></script>
 </body>
 </html>
