@@ -1,66 +1,57 @@
 # Fluxology Office Scout v2.5
 
-This folder is an isolated static application deployed by the main Fluxology site from:
+Isolated static dashboard frontend for:
 
-`public/office-scout/`
+`https://office.fluxology.ca/`
 
-Production route:
+Files:
 
-`https://fluxology.ca/office-scout/`
+- `index.html` — application shell
+- `styles.css` — Office Scout UI
+- `app.js` — filtering, workflow state, price history and hourly refresh
+- `data/listings.json` — checked-in bootstrap/local-development snapshot
+- `data/schema.json` — feed contract
 
-## Architecture
+## Production feed
 
-- `index.html` — static application shell
-- `styles.css` — Office Scout-specific Fluxology UI
-- `app.js` — feed rendering, filtering, local workflow state, price history and hourly refresh
-- `data/listings.json` — canonical curated machine-readable feed
-- `data/schema.json` — feed contract for future automated/scheduled writers
+The frontend requests `./data/listings.json` every hour. On `office.fluxology.ca`, the VPS edge proxy routes `/data/listings.json` to the live self-hosted dashboard API, so production reads come from the persistent `dashboard_data` volume rather than the checked-in snapshot.
 
-No framework build step is required inside this folder. Astro/Netlify serves it as static public assets.
+Trusted automation writes directly with:
 
-## v1 features preserved
+`POST https://office.fluxology.ca/api/upsert`
 
-- responsive card grid
-- click/keyboard detail view
+using the office-scoped bearer token. See `services/dashboard-api/README.md` and `docs/CADDY-INTEGRATION.md`.
+
+## Features
+
+- responsive card grid and detail view
 - hourly feed refresh and manual refresh
 - free-text search
 - municipality and cost-status filters
 - fit/newest/cost/walk sorting
 - active/verified/needs-verification/new-changed counters
 - strict verified / needs verification / over-budget distinction
-- full cost, access, rights, amenities, transit and research detail fields
+- complete cost, access, rights, amenities, transit and research fields
 - Fit score /100
-- Fluxology navy/cream/cyan branding
-
-## v2.5 additions
-
 - personal workflow states: Unreviewed, Saved, Contacted, Tour booked, Rejected, Leased
 - browser-local personal notes
-- export/import of the personal workspace as JSON
-- dedicated Needs Cost Verification queue
+- export/import of personal workspace JSON
+- Needs Cost Verification queue
 - observed price-history sparklines and price-delta sorting
-- recently-changed sort
-- active-only control and workflow filtering
-- backwards-compatible feed loading
-- safer escaped rendering and validated outbound listing links
+- recently-changed sorting
 
-Personal workflow state is intentionally kept outside `listings.json`, in browser `localStorage`,
-so scheduled feed updates cannot overwrite acquisition notes or pipeline status.
+Personal workflow state stays in browser `localStorage` and is never part of the server feed.
 
-## Scheduled search integration contract
+## Writer contract
 
-The canonical feed remains `data/listings.json`.
+Routine writers should use the upsert API and:
 
-A scheduled curator should:
+1. merge by stable `id`;
+2. preserve old/inactive records unless there is an explicit reason to change them;
+3. update `lastVerified` only when actually checked;
+4. keep unknown mandatory costs unknown;
+5. never classify an office as verified unless all mandatory recurring costs are known and included in the all-in amount;
+6. preserve price history; the API also appends a price observation when asking rent or all-in cost changes;
+7. leave browser-local workflow state alone.
 
-1. Read the existing feed before writing.
-2. Merge by stable `id`.
-3. Preserve old listings and mark dead listings `active:false`.
-4. Update `lastVerified` every time a listing is checked.
-5. Update `lastChanged` only for a material listing change.
-6. Never set a listing to verified unless `mandatoryFeesKnown:true` and all mandatory recurring costs are represented in `estimatedAllInMonthly`.
-7. Preserve and append `priceHistory` when asking rent or all-in cost changes.
-8. Avoid writing the file when there is no material feed change.
-9. Keep unknown costs unknown rather than filling them with assumptions.
-
-The dashboard refreshes `data/listings.json` every hour while open.
+The checked-in JSON file is a bootstrap snapshot and fallback transport, not the authoritative live production feed after the API volume has initialized.
