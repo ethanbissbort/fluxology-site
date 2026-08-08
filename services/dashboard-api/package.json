@@ -1,0 +1,14 @@
+{
+  "name": "fluxology-dashboard-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted read/write feed API for Fluxology office, deals, and jobs dashboards.",
+  "type": "module",
+  "main": "server.mjs",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}
