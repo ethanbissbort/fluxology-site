@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fluxology Deals Feed v3",
+  "type": "object",
+  "required": ["schemaVersion", "appVersion", "generatedAt", "listings"],
+  "properties": {
+    "schemaVersion": {"const": 3},
+    "appVersion": {"type": "string"},
+    "generatedAt": {"type": "string"},
+    "searchName": {"type": "string"},
+    "currency": {"const": "CAD"},
+    "listings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "category", "title", "listingType"],
+        "properties": {
+          "id": {"type": "string"},
+          "itemId": {"type": ["string", "null"]},
+          "category": {"type": "string"},
+          "searchName": {"type": ["string", "null"]},
+          "title": {"type": "string"},
+          "marketplace": {"type": ["string", "null"]},
+          "url": {"type": ["string", "null"]},
+          "imageUrl": {"type": ["string", "null"]},
+          "listingType": {"enum": ["auction", "buy_it_now"]},
+          "status": {"type": ["string", "null"]},
+          "active": {"type": ["boolean", "null"]},
+          "seller": {"type": ["string", "null"]},
+          "weightLb": {"type": ["number", "null"]},
+          "priceCad": {"type": ["number", "null"]},
+          "currentBidCad": {"type": ["number", "null"]},
+          "shippingCad": {"type": ["number", "null"]},
+          "shippingResolved": {"type": ["boolean", "null"]},
+          "landedCadPerLb": {"type": ["number", "null"]},
+          "allInCadPerLb": {"type": ["number", "null"]},
+          "maxShippingCad": {"type": ["number", "null"]},
+          "maxBidCad": {"type": ["number", "null"]},
+          "bestOffer": {"type": ["boolean", "null"]},
+          "bidCount": {"type": ["integer", "null"]},
+          "endTime": {"type": ["string", "null"]},
+          "qualityGrade": {"type": ["string", "null"]},
+          "genuineConfidence": {"type": ["string", "null"]},
+          "firstSeen": {"type": ["string", "null"]},
+          "lastSeen": {"type": ["string", "null"]},
+          "lastChanged": {"type": ["string", "null"]},
+          "summary": {"type": ["string", "null"]},
+          "notes": {"type": ["string", "null"]},
+          "calculation": {"type": ["string", "null"]}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
