@@ -1,0 +1,94 @@
+name: Sync dashboard feeds
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - public/office-scout/data/listings.json
+      - public/deals/data/listings.json
+      - public/jobs/data/listings.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed feeds
+        id: changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "office=true" >> "$GITHUB_OUTPUT"
+            echo "deals=true" >> "$GITHUB_OUTPUT"
+            echo "jobs=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          before="${{ github.event.before }}"
+          after="${{ github.sha }}"
+          files="$(git diff --name-only "$before" "$after")"
+
+          grep -qx 'public/office-scout/data/listings.json' <<<"$files" && office=true || office=false
+          grep -qx 'public/deals/data/listings.json' <<<"$files" && deals=true || deals=false
+          grep -qx 'public/jobs/data/listings.json' <<<"$files" && jobs=true || jobs=false
+
+          echo "office=$office" >> "$GITHUB_OUTPUT"
+          echo "deals=$deals" >> "$GITHUB_OUTPUT"
+          echo "jobs=$jobs" >> "$GITHUB_OUTPUT"
+
+      - name: Sync Office feed
+        if: steps.changed.outputs.office == 'true'
+        env:
+          TOKEN: ${{ secrets.OFFICE_INGEST_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$TOKEN" || { echo 'Missing OFFICE_INGEST_TOKEN repository secret' >&2; exit 1; }
+          jq -c '{listings:.listings}' public/office-scout/data/listings.json |
+            curl --fail-with-body --retry 3 --retry-all-errors \
+              -X POST 'https://office.fluxology.ca/api/upsert' \
+              -H "Authorization: Bearer $TOKEN" \
+              -H 'X-Fluxology-Source: github-feed-sync' \
+              -H 'Content-Type: application/json' \
+              --data-binary @-
+
+      - name: Sync Deals feed
+        if: steps.changed.outputs.deals == 'true'
+        env:
+          TOKEN: ${{ secrets.DEALS_INGEST_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$TOKEN" || { echo 'Missing DEALS_INGEST_TOKEN repository secret' >&2; exit 1; }
+          jq -c '{listings:.listings}' public/deals/data/listings.json |
+            curl --fail-with-body --retry 3 --retry-all-errors \
+              -X POST 'https://deals.fluxology.ca/api/upsert' \
+              -H "Authorization: Bearer $TOKEN" \
+              -H 'X-Fluxology-Source: github-feed-sync' \
+              -H 'Content-Type: application/json' \
+              --data-binary @-
+
+      - name: Sync Jobs feed
+        if: steps.changed.outputs.jobs == 'true'
+        env:
+          TOKEN: ${{ secrets.JOBS_INGEST_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$TOKEN" || { echo 'Missing JOBS_INGEST_TOKEN repository secret' >&2; exit 1; }
+          jq -c '{listings:.listings}' public/jobs/data/listings.json |
+            curl --fail-with-body --retry 3 --retry-all-errors \
+              -X POST 'https://jobs.fluxology.ca/api/upsert' \
+              -H "Authorization: Bearer $TOKEN" \
+              -H 'X-Fluxology-Source: github-feed-sync' \
+              -H 'Content-Type: application/json' \
+              --data-binary @-
