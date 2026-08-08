@@ -66,30 +66,6 @@ import { dbaOverviews } from '../data/dbaPlans';
           </header>
 
           <ContactForm client:visible />
-
-          <form
-            name="contact"
-            method="POST"
-            data-netlify="true"
-            netlify-honeypot="bot-field"
-            hidden
-          >
-            <input type="hidden" name="form-name" value="contact" />
-            <input type="text" name="companyName" />
-            <input type="text" name="fullName" />
-            <input type="email" name="email" />
-            <input type="tel" name="phone" />
-            <select name="serviceInterest">
-              <option value="fabrication">Future Fabrication &amp; Welding Need</option>
-              <option value="3d-lab">Future 3D Lab Need</option>
-              <option value="greenhouse">Greenhouse / Growing-System Interest</option>
-              <option value="orchard">Orchard &amp; Food Forest Interest</option>
-              <option value="multiple">Cross-Division Collaboration</option>
-              <option value="general">Company / General Inquiry</option>
-            </select>
-            <textarea name="message"></textarea>
-            <input name="bot-field" />
-          </form>
         </div>
       </div>
 

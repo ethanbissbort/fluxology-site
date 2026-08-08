@@ -16,6 +16,11 @@ const googleFont = (name, cssVariable, weights) => ({
   fallbacks: ['sans-serif'],
 });
 
+// Routes rendered with BaseLayout's `noindex` prop. Keep in sync with the
+// pages that set it, so the sitemap never advertises a page we tell crawlers
+// to ignore.
+const NOINDEX_ROUTES = ['/404', '/contact-received'];
+
 // https://astro.build/config
 export default defineConfig({
   // Canonical origin — used for the canonical link, Open Graph URLs, and the
@@ -25,10 +30,11 @@ export default defineConfig({
     svelte(),
     // Generated sitemap (replaces the old hand-maintained public/sitemap.xml,
     // which drifted whenever routes changed). Emits /sitemap-index.xml +
-    // /sitemap-0.xml; robots.txt points at the index. The 404 page is not a
-    // real route, so keep it out.
+    // /sitemap-0.xml; robots.txt points at the index. Pages that carry
+    // noindex must stay out of it: the 404, and the contact-form landing
+    // page that only no-JS submitters are redirected to.
     sitemap({
-      filter: (page) => !page.includes('/404'),
+      filter: (page) => !NOINDEX_ROUTES.some((route) => page.includes(route)),
     }),
   ],
   output: 'static',
