@@ -115,7 +115,7 @@ fluxology.ca {
 	import site-defaults
 
 	# --- Contact API ---------------------------------------------------------
-	# Self-hosted replacement for Netlify Forms. Per the API contract:
+	# Self-hosted contact form handler. Per the API contract:
 	#   POST /api/contact  (accepts JSON and form-urlencoded)
 	#   GET  /api/health
 	#   listens on 8081 inside the compose network
@@ -157,6 +157,48 @@ fluxology.ca {
 			header_down Location "^http://" "https://"
 		}
 	}
+}
+
+# =============================================================================
+# Dashboard subdomains
+# =============================================================================
+# office / deals / jobs are standalone static apps that live under public/ in
+# the main build, so Apache already serves them at /office-scout/, /deals/ and
+# /jobs/. Each block below gives one its own hostname while keeping the clean
+# subdomain URL in the address bar: the path is rewritten INTERNALLY, so the
+# browser never sees a redirect. This reproduces the 200-rewrites the site
+# previously relied on at its old host.
+#
+# They ship with the main site, so no extra container or build step is needed.
+# Each hostname does need a DNS record pointing at this VPS before Caddy can
+# obtain a certificate for it.
+#
+# {args[0]} is the app's directory name under the site root.
+(dashboard) {
+	import site-defaults
+
+	rewrite * /{args[0]}{uri}
+
+	reverse_proxy apache:6080 {
+		# Keep the internal prefix out of anything the browser sees. Apache can
+		# emit a self-referential redirect (DirectorySlash: /data -> /data/)
+		# carrying the real /{args[0]}/... path, and it speaks plain HTTP, so
+		# strip the prefix first and then repair the scheme.
+		header_down Location "/{args[0]}/" "/"
+		header_down Location "^http://" "https://"
+	}
+}
+
+office.fluxology.ca {
+	import dashboard office-scout
+}
+
+deals.fluxology.ca {
+	import dashboard deals
+}
+
+jobs.fluxology.ca {
+	import dashboard jobs
 }
 
 # =============================================================================

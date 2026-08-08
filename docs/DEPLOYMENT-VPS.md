@@ -28,7 +28,7 @@ Companion documents:
 6. [Backups](#6-backups)
 7. [Enabling email later](#7-enabling-email-later)
 8. [Updating the site](#8-updating-the-site)
-9. [Adding a sub-site](#9-adding-a-sub-site)
+9. [Sub-sites and the dashboard subdomains](#9-sub-sites-and-the-dashboard-subdomains)
 10. [Operational warnings](#10-operational-warnings)
 11. [Troubleshooting](#11-troubleshooting)
 
@@ -496,7 +496,42 @@ docker compose up -d
 
 ---
 
-## 9. Adding a sub-site
+## 9. Sub-sites and the dashboard subdomains
+
+### The three dashboards that already exist
+
+`office.fluxology.ca`, `deals.fluxology.ca` and `jobs.fluxology.ca` serve the
+static dashboard apps that live at `public/office-scout/`, `public/deals/` and
+`public/jobs/`. Because they sit under `public/`, the main Astro build already
+copies them into `dist/`, and Apache already serves them at
+`/office-scout/`, `/deals/` and `/jobs/`. They need **no extra container and no
+separate build**.
+
+`caddy/Caddyfile` gives each one its own hostname with a `(dashboard)` snippet
+that rewrites the path internally:
+
+```
+office.fluxology.ca  ->  rewrite to /office-scout/...  ->  apache:6080
+```
+
+The rewrite is internal, so the browser keeps the clean subdomain URL — the
+same behaviour the site previously got from 200-rewrites at its old host. The
+snippet also strips the internal prefix out of any redirect Apache emits, so
+`/office-scout/` never leaks into the address bar.
+
+To add a fourth dashboard: drop its directory under `public/`, add a DNS record,
+and add three lines to `caddy/Caddyfile`:
+
+```
+newthing.fluxology.ca {
+	import dashboard newthing
+}
+```
+
+Each hostname still needs its own DNS record pointing at this VPS before Caddy
+can obtain a certificate for it — see [section 3](#3-dns--do-this-before-the-first-start).
+
+### A sub-site with its own container
 
 `caddy/Caddyfile` ends with a ready-to-copy template block covering four cases:
 (a) one container serving the whole sub-site, (b) a sub-site with its own
