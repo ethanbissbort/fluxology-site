@@ -1,36 +1,43 @@
 # Fluxology Deals v3
 
-Static dashboard intended for `https://deals.fluxology.ca/`.
+Static dashboard frontend for:
 
-## Canonical feed
+`https://deals.fluxology.ca/`
 
-`public/deals/data/listings.json`
+The dashboard can contain many shopping searches in one feed. Use stable `id` values plus `category` and `searchName` so bulk LEGO, minifigures, tools, equipment, and future searches can coexist.
 
-Each shopping skill or scheduled search should merge its results into this one feed using a stable `id`. Use `category` and `searchName` so different searches can coexist, for example:
+## Production feed
 
-- Bulk LEGO
-- Bulk LEGO minifigures
-- office equipment
-- tools
-- future shopping searches
+`data/listings.json` in this folder is the checked-in bootstrap/local-development snapshot.
 
-Do not delete historical purchased or expired records merely because they are no longer active. Prefer `active:false` or an appropriate `status`.
+In production, the dashboard's request for `/data/listings.json` is routed to the persistent self-hosted dashboard API. Trusted automation writes immediately to the live feed with:
 
-For weight-priced searches, `landedCadPerLb` means item price plus shipping, converted to CAD, divided by stated lot weight. Tax may be tracked separately with `allInCadPerLb`. When destination shipping is not known, set `shippingResolved:false` and preserve the best available proxy only if clearly labelled in `notes` / `calculation`.
+`POST https://deals.fluxology.ca/api/upsert`
 
-The browser stores personal Watch / Saved / Purchased / Rejected workflow state and personal notes in `localStorage`; scheduled jobs must never invent or overwrite those fields in the GitHub feed.
+using the deals-scoped bearer token.
 
-## Automation contract
+See `services/dashboard-api/README.md` for the API contract and `docs/CADDY-INTEGRATION.md` for routing.
 
-A scheduled skill should:
+## Deal semantics
 
-1. read the existing feed;
-2. research its own search category;
-3. merge by stable listing ID;
-4. preserve listings owned by other search categories;
-5. update `lastSeen` when actually checked;
-6. update `lastChanged` only for material changes;
-7. avoid rewriting the file when nothing materially changed;
-8. write the complete valid JSON document back to GitHub.
+For weight-priced searches, `landedCadPerLb` means item price plus shipping, converted to CAD, divided by stated lot weight. Tax can be tracked separately with `allInCadPerLb`.
 
-Routine automation should modify only `data/listings.json`.
+When destination shipping is not known, set `shippingResolved:false`. Proxy shipping must remain clearly labelled in `notes` / `calculation` and must not be presented as a resolved Toronto quote.
+
+Historical purchased, rejected, ended, and expired records should be preserved when useful by changing `active` / `status` rather than silently deleting them.
+
+The browser stores personal Watch / Saved / Purchased / Rejected workflow state and personal notes in `localStorage`; server-side writers never own those fields.
+
+## Writer contract
+
+A category skill should:
+
+1. use stable listing IDs;
+2. upsert only records it owns;
+3. preserve records from other deal categories;
+4. update `lastSeen` when actually checked;
+5. update material listing fields when they change;
+6. keep unresolved shipping explicitly unresolved;
+7. leave browser-local workflow state untouched.
+
+The checked-in JSON snapshot remains available as a GitHub intermediary/fallback, but routine production writes should use the direct upsert endpoint.
