@@ -1,34 +1,43 @@
 # Fluxology Jobs v3
 
-Static dashboard intended for `https://jobs.fluxology.ca/`.
+Static dashboard frontend for:
 
-## Canonical feed
+`https://jobs.fluxology.ca/`
 
-`public/jobs/data/listings.json`
+## Production feed
 
-The job-search skill should normalize results from Indeed, WhatJobs, Workopia, ZipRecruiter, direct employer pages, and other useful sources into this feed. Stable IDs should be based on the source listing ID when possible; otherwise use a deterministic source/company/title/location key.
+`data/listings.json` is the checked-in bootstrap/local-development snapshot.
 
-The feed is research state. The browser stores personal application workflow separately in `localStorage` using the states Unreviewed, Saved, Applied, Interview, Rejected, and Offer. Scheduled or manual skill runs must never overwrite those browser-local states or personal notes.
+In production, the dashboard's `/data/listings.json` request is routed to the persistent self-hosted dashboard API. Trusted job-search automation writes immediately to:
 
-## T176 ranking model
+`POST https://jobs.fluxology.ca/api/upsert`
 
-The skill should prefer real entry-level roles that build career capital for the user's current T176 phase, especially welding and plumbing first, then industrial maintenance/millwright, electromechanical, metal finishing/deburring, sheet metal/HVAC, and related industrial helper work. Generic labour jobs should rank below jobs with direct trade exposure.
+using the jobs-scoped bearer token.
 
-`fitScore` is 0–100 and should summarize overall career fit. `careerValue` and `trainingValue` should remain explicit so a high-paying generic role does not automatically outrank a lower-paying role with materially better trade exposure.
+See `services/dashboard-api/README.md` and `docs/CADDY-INTEGRATION.md`.
 
-Public-transit practicality should be evaluated independently from career fit. The final walk may be up to roughly 20 minutes because an electric skateboard can cover the final segment.
+## Job schema and ranking
 
-## Automation contract
+Normalize results from Indeed, WhatJobs, Workopia, ZipRecruiter, direct employer pages, and other useful sources. Stable IDs should use the source listing ID when possible; otherwise use a deterministic source/company/title/location key.
 
-A skill run should:
+The T176 ranking model should prefer genuine entry-level jobs that build career capital for the user's current training phase. Direct welding/plumbing exposure ranks highly, followed by industrial maintenance/millwright, electromechanical, metal finishing/deburring, sheet metal/HVAC, and related industrial helper work. Generic labour should rank below roles with direct trade exposure.
 
-1. read the current feed;
-2. search all configured job sources;
-3. normalize and deduplicate by stable listing ID;
-4. preserve unchanged records;
-5. mark confirmed closed roles `active:false` rather than deleting them;
-6. update `lastVerified` only when checked and `lastChanged` only for material changes;
-7. avoid rewriting the feed when nothing materially changed;
-8. write the complete valid JSON document back to GitHub.
+`fitScore` is 0–100. Keep `careerValue` and `trainingValue` explicit so a higher-paying generic job does not automatically outrank a lower-paying role with materially better trade exposure.
 
-Routine runs should modify only `data/listings.json`.
+Public-transit practicality is evaluated independently. The final walking segment may be roughly 20 minutes when it is practical to cover by electric skateboard.
+
+The browser stores personal Unreviewed / Saved / Applied / Interview / Rejected / Offer state and personal notes in `localStorage`; server-side writers do not own those fields.
+
+## Writer contract
+
+A job-search skill should:
+
+1. normalize and deduplicate with stable IDs;
+2. upsert new or changed jobs;
+3. preserve unchanged records;
+4. mark confirmed closed jobs `active:false` instead of silently deleting them;
+5. update `lastVerified` only when checked;
+6. update material listing details when they change;
+7. leave browser-local workflow state untouched.
+
+The checked-in JSON snapshot remains available as a GitHub intermediary/fallback, but routine production writes should use the direct upsert endpoint.
