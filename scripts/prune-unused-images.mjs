@@ -5,8 +5,29 @@
 import { readdirSync, readFileSync, statSync, unlinkSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
-const DIST = new URL('../dist/', import.meta.url).pathname;
+// Default target is dist/; an explicit path lets the same script be verified
+// against a throwaway build without touching dist/.
+const DIST = process.argv[2] ?? new URL('../dist/', import.meta.url).pathname;
 const ASSETS = join(DIST, '_assets');
+
+// This script DELETES build output, so the reference scan must be
+// fail-safe: a file it forgets to read is a reference it cannot see, and an
+// unseen reference means a still-used image is silently removed. An
+// allow-list of extensions to scan gets that backwards — it goes stale the
+// moment the build emits a format nobody listed (an .svg sprite with an
+// <image href>, a .map, a .txt), and the failure is invisible until a live
+// page 404s. So: scan EVERYTHING except the payload formats that cannot
+// contain a URL reference to another asset. Adding an entry below is a
+// deliberate act; forgetting one only costs a few milliseconds of scanning.
+const OPAQUE_EXTENSIONS = new Set([
+  // raster / video payloads
+  '.webp', '.avif', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.bmp', '.tiff',
+  '.mp4', '.webm', '.ogv', '.mp3', '.ogg', '.wav',
+  // fonts
+  '.woff', '.woff2', '.ttf', '.otf', '.eot',
+  // archives / binaries
+  '.zip', '.gz', '.br', '.pdf', '.wasm',
+]);
 
 const walk = (dir) =>
   readdirSync(dir).flatMap((name) => {
@@ -14,8 +35,10 @@ const walk = (dir) =>
     return statSync(p).isDirectory() ? walk(p) : [p];
   });
 
+// No try/catch on the read: if a file cannot be scanned, the script must fail
+// loudly and prune nothing rather than proceed with an incomplete picture.
 const referenced = walk(DIST)
-  .filter((p) => ['.html', '.css', '.js', '.mjs', '.xml', '.webmanifest', '.json'].includes(extname(p)))
+  .filter((p) => !OPAQUE_EXTENSIONS.has(extname(p).toLowerCase()))
   .map((p) => readFileSync(p, 'utf8'))
   .join('\n');
 
