@@ -1,9 +1,18 @@
 <script>
-  // Must match the `name` attribute on this form and the hidden detection
-  // form in index.astro that Netlify's build bot parses at deploy time.
-  const FORM_NAME = 'contact';
+  // POST target for both submit paths: the hydrated fetch below sends JSON
+  // here, and the form's own action/method posts urlencoded here when
+  // JavaScript never runs (the API answers those with a 303 to
+  // /contact-received/).
+  const ENDPOINT = '/api/contact';
 
-  let formData = $state({
+  const GENERIC_ERROR =
+    'Sorry, there was a problem sending your message. Please try again, or email us directly at info@fluxology.ca.';
+
+  // Editable fields in DOM order — drives "focus the first field with an
+  // error", for both client-side validation and the API's 400 `fields` map.
+  const FIELDS = ['companyName', 'fullName', 'email', 'phone', 'serviceInterest', 'message'];
+
+  const emptyForm = () => ({
     companyName: '',
     fullName: '',
     email: '',
@@ -12,9 +21,12 @@
     message: ''
   });
 
-  // Netlify honeypot: real users leave this empty; bots that auto-fill
-  // every field get silently rejected.
-  let botField = $state('');
+  let formData = $state(emptyForm());
+
+  // Honeypot: real users leave this empty. The API silently discards any
+  // submission that fills it (answering 200 so bots learn nothing). The name
+  // is fixed by the contact API contract.
+  let website = $state('');
 
   let errors = $state({});
   let isSubmitting = $state(false);
@@ -23,8 +35,9 @@
 
   // novalidate is hydration-gated: the server-rendered form must NOT carry it,
   // so native required/email validation still guards pre-hydration and no-JS
-  // submits (a bare native POST bypasses validation and 404s off-Netlify).
-  // Once hydrated, novalidate hands validation over to validate() below.
+  // submits (a bare native POST would otherwise send empty required fields
+  // straight to the API). Once hydrated, novalidate hands validation over to
+  // validate() below.
   let hydrated = $state(false);
 
   $effect(() => {
@@ -57,11 +70,44 @@
     return Object.keys(errors).length === 0;
   }
 
-  // Netlify expects application/x-www-form-urlencoded submissions.
-  function encode(data) {
-    return Object.keys(data)
-      .map((key) => encodeURIComponent(key) + '=' + encodeURIComponent(data[key] ?? ''))
-      .join('&');
+  // Move focus to the first invalid field so keyboard and screen-reader users
+  // land on the problem instead of a silent no-op.
+  function focusFirstInvalid() {
+    const firstInvalid = FIELDS.find((field) => errors[field]);
+    if (firstInvalid) {
+      document.getElementById(firstInvalid)?.focus();
+    }
+  }
+
+  // The API always answers JSON, but an edge/proxy error page might not —
+  // response.json() must never reject into the catch below and be reported as
+  // a network failure when the status code already says what happened.
+  async function readJson(response) {
+    try {
+      return await response.json();
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // A 400 carries { fields: { <name>: '<human-readable message>' } }. Known
+  // fields become inline errors on their own input; anything unrecognised is
+  // folded into the status message rather than silently dropped.
+  function applyFieldErrors(fields) {
+    const applied = {};
+    const extras = [];
+
+    for (const [field, message] of Object.entries(fields)) {
+      const text = typeof message === 'string' && message ? message : 'Please check this field';
+      if (FIELDS.includes(field)) {
+        applied[field] = text;
+      } else {
+        extras.push(text);
+      }
+    }
+
+    errors = applied;
+    return extras;
   }
 
   async function handleSubmit(e) {
@@ -71,52 +117,55 @@
     submitMessage = '';
 
     if (!validate()) {
-      // Move focus to the first invalid field so keyboard and screen-reader
-      // users land on the problem instead of a silent no-op.
-      const firstInvalid = ['fullName', 'email', 'serviceInterest', 'message']
-        .find((field) => errors[field]);
-      if (firstInvalid) {
-        document.getElementById(firstInvalid)?.focus();
-      }
+      focusFirstInvalid();
       return;
     }
 
     isSubmitting = true;
 
     try {
-      const payload = {
-        'form-name': FORM_NAME,
-        'bot-field': botField,
-        ...formData
-      };
-
-      const response = await fetch('/', {
+      const response = await fetch(ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, website })
       });
 
-      if (!response.ok) {
-        throw new Error(`Submission failed with status ${response.status}`);
+      const data = await readJson(response);
+
+      if (response.ok && (!data || data.ok !== false)) {
+        // Reset form on success
+        formData = emptyForm();
+        website = '';
+        errors = {};
+
+        submitStatus = 'success';
+        submitMessage = 'Your inquiry has been received. We will respond as the planning schedule permits.';
+        return;
       }
 
-      // Reset form on success
-      formData = {
-        companyName: '',
-        fullName: '',
-        email: '',
-        phone: '',
-        serviceInterest: '',
-        message: ''
-      };
-      errors = {};
+      if (response.status === 400 && data && typeof data.fields === 'object' && data.fields !== null) {
+        const extras = applyFieldErrors(data.fields);
 
-      submitStatus = 'success';
-      submitMessage = 'Your inquiry has been received. We will respond as the planning schedule permits.';
+        submitStatus = 'error';
+        submitMessage = extras.length
+          ? extras.join(' ')
+          : 'Please correct the highlighted fields and try again.';
+        focusFirstInvalid();
+        return;
+      }
+
+      if (response.status === 429) {
+        submitStatus = 'error';
+        submitMessage =
+          'Too many attempts. Please try again shortly, or email us directly at info@fluxology.ca.';
+        return;
+      }
+
+      submitStatus = 'error';
+      submitMessage = GENERIC_ERROR;
     } catch (error) {
       submitStatus = 'error';
-      submitMessage =
-        'Sorry, there was a problem sending your message. Please try again, or email us directly at info@fluxology.ca.';
+      submitMessage = GENERIC_ERROR;
     } finally {
       isSubmitting = false;
     }
@@ -159,31 +208,26 @@
 
   <form
     class="contact-form"
-    name="contact"
+    action={ENDPOINT}
     method="POST"
-    data-netlify="true"
-    netlify-honeypot="bot-field"
     onsubmit={handleSubmit}
     novalidate={hydrated || undefined}
   >
-    <!-- Netlify Forms: required so submissions are attributed to the right form -->
-    <input type="hidden" name="form-name" value="contact" />
-
-    <!-- Netlify honeypot: hidden from humans, catches naive bots -->
+    <!-- Honeypot: hidden from humans, catches naive bots that fill every input -->
     <p class="honeypot-field" aria-hidden="true">
       <label>
         Don't fill this out if you're human:
         <input
-          name="bot-field"
+          name="website"
           tabindex="-1"
           autocomplete="off"
-          bind:value={botField}
+          bind:value={website}
         />
       </label>
     </p>
 
     <div class="form-row">
-      <div class="form-group">
+      <div class="form-group" class:error={errors.companyName}>
         <label for="companyName" class="form-label">
           Company Name <span class="optional">(Optional)</span>
         </label>
@@ -193,8 +237,14 @@
           name="companyName"
           class="form-input"
           bind:value={formData.companyName}
+          oninput={() => clearError('companyName')}
+          aria-invalid={!!errors.companyName}
+          aria-describedby={errors.companyName ? 'companyName-error' : undefined}
           placeholder="Your Company"
         />
+        {#if errors.companyName}
+          <span class="form-error" id="companyName-error" role="alert">{errors.companyName}</span>
+        {/if}
       </div>
     </div>
 
@@ -245,7 +295,7 @@
     </div>
 
     <div class="form-row">
-      <div class="form-group">
+      <div class="form-group" class:error={errors.phone}>
         <label for="phone" class="form-label">
           Phone Number <span class="optional">(Optional)</span>
         </label>
@@ -255,8 +305,14 @@
           name="phone"
           class="form-input"
           bind:value={formData.phone}
+          oninput={() => clearError('phone')}
+          aria-invalid={!!errors.phone}
+          aria-describedby={errors.phone ? 'phone-error' : undefined}
           placeholder="(123) 456-7890"
         />
+        {#if errors.phone}
+          <span class="form-error" id="phone-error" role="alert">{errors.phone}</span>
+        {/if}
       </div>
     </div>
 
@@ -336,7 +392,7 @@
 </div>
 
 <style>
-  /* Netlify honeypot — visually removed but still submitted with the form */
+  /* Honeypot — visually removed but still submitted with the form */
   .honeypot-field {
     position: absolute;
     left: -9999px;

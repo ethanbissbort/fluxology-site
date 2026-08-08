@@ -15,13 +15,13 @@ earlier phases are kept for historical context.
 | Framework    | Astro `^7.1.3`, `output: 'static'` |
 | Islands      | Svelte `^5.56.7` via `@astrojs/svelte` `^9.0.1` |
 | Language     | TypeScript `^5.7.2` |
-| Runtime      | Node `>=22.12.0` (`engines` + Dockerfile + netlify.toml) |
+| Runtime      | Node `>=22.12.0` (`engines` + Dockerfile) |
 | Fonts        | Self-hosted via `astro:fonts` (9 Google families) |
 | Images       | `astro:assets` responsive renditions from `src/assets/images/` (`sharp` devDependency) |
 | SEO          | `@astrojs/sitemap` generated sitemap; built-in prefetch (viewport strategy) |
-| Forms        | Netlify Forms (static detection form + AJAX island) |
+| Forms        | Self-hosted `services/contact-api` (`POST /api/contact`), JSON from the island + urlencoded no-JS fallback |
 | Minify       | Vite + terser (`drop_console`, 2 passes); Rolldown replaces esbuild/rollup; npm `postbuild` terser pass minifies `dist/service-worker.js` and prunes unreferenced image originals |
-| Build output | `dist/` static site (deployed to Netlify) |
+| Build output | `dist/` static site, built inside the Docker image and served by Apache behind Caddy on the company VPS |
 
 Package version is `2.0.0`.
 
@@ -56,7 +56,7 @@ below supersedes it.
 ✅ **Completed**
 
 The most recent major upgrade moved the project to Astro 7 and Svelte 5, adopted
-`astro:fonts`, added Netlify Forms, and hardened/optimized the site.
+`astro:fonts`, added a working contact form, and hardened/optimized the site.
 
 ---
 
@@ -85,7 +85,7 @@ The most recent major upgrade moved the project to Astro 7 and Svelte 5, adopted
 
 | Component               | Mode   | Runes used            | Notes |
 |-------------------------|--------|-----------------------|-------|
-| `ContactForm.svelte`    | Runes  | `$state`              | Netlify Forms AJAX submit, validation, honeypot |
+| `ContactForm.svelte`    | Runes  | `$state`              | JSON submit to `/api/contact`, validation, `website` honeypot, no-JS native POST fallback |
 | `ParticleSystem.svelte` | Runes  | `$props`, `$state`    | Themed particles; respects `prefers-reduced-motion` |
 | `BackToTop.svelte`      | Runes  | `$state`              | Scroll-threshold button |
 | `ScrollProgress.svelte` | Runes  | `$state`              | Scroll progress bar |
@@ -110,11 +110,13 @@ is fully supported. There was no need to convert them to runes.
 - `pages/index.astro` — composes the layout, static components, and islands.
   Client directives in use: `client:load` for `ScrollProgress`,
   `ThemeTransition`, `BackToTop`, and `NavigationMenu`; `client:visible` for
-  `ParticleSystem` and `ContactForm`. Also contains the hidden Netlify
-  detection form (see Netlify Forms below).
+  `ParticleSystem` and `ContactForm`.
 - `pages/[dba].astro` — `getStaticPaths()` over `dbaPlans` generates the four
   detail routes (`/fabrication/`, `/3d-lab/`, `/greenhouse/`, `/orchard/`),
   each rendering `DBADetailPage`.
+- `pages/contact-received.astro` — landing page for no-JS form submissions
+  (`noindex`); renders the confirmation, or the failure variant when the API
+  redirects with `?error=1`.
 - `pages/404.astro` — branded 404 with full navigation, `noindex`.
 
 ---
@@ -158,7 +160,7 @@ Configuration and build changes applied for Astro 7:
   digit. (The `3d-lab` DBA section id itself is unchanged.)
 - Updated `tsconfig.json` `include`/`exclude`.
 - Added `.astro/` to `.gitignore`.
-- Bumped Node 18 → 22 in the `Dockerfile` and `netlify.toml`, matching the
+- Bumped Node 18 → 22 in the `Dockerfile`, matching the
   `engines.node >= 22.12.0` constraint.
 - Deleted dead pre-Astro artifacts: `src/index.html` and `src/scripts/*.js`.
 
@@ -194,22 +196,40 @@ the remaining fonts load on demand with `font-display: swap`.
 
 ---
 
-## Netlify Forms contact integration
+## Contact form: from a hosted form service to a self-hosted API
 
-The contact form is wired to Netlify Forms:
+**Historical note.** During the Astro 7 overhaul the contact form was briefly
+wired to a hosted form service (a `data-netlify` island plus a hidden static
+detection form in `index.astro`, a `form-name` input, and a `bot-field`
+honeypot, POSTing urlencoded data to `/`). That protocol only functions on that
+provider's hosting. The site is self-hosted on the company's own VPS, so
+submissions went nowhere and no inquiry could ever be received.
 
-- **`ContactForm.svelte`** is a hydrated island (`client:visible`) with the real,
-  validated form. It POSTs an `application/x-www-form-urlencoded` payload to `/`
-  via `fetch`, then shows a success/error status.
-- Because Netlify's build bot registers forms by parsing **static** HTML at
-  deploy time — and the visible form is client-rendered — `index.astro` includes
-  a **hidden plain-HTML detection form** with matching field names and
-  `data-netlify="true"`. This is what registers the `contact` form with Netlify.
-- A **`bot-field` honeypot** (`netlify-honeypot="bot-field"`) is present on both
-  forms; it is visually removed via CSS but still submitted, silently rejecting
-  naive bots.
-- The island's `form-name` (`contact`) matches the detection form so submissions
-  are attributed correctly.
+**Current implementation.** All of that markup was removed and replaced with a
+self-hosted service, `services/contact-api`:
+
+- **`ContactForm.svelte`** is still a hydrated island (`client:visible`), but it
+  now carries `action="/api/contact" method="POST"` and submits **JSON** via
+  `fetch` when hydrated, mapping the API's `400 {"fields": {...}}` response back
+  onto inline per-field errors and handling `429` distinctly.
+- **No-JS submissions work.** With scripting disabled the native form posts
+  `application/x-www-form-urlencoded` to the same endpoint, and the API responds
+  with a `303` to `/contact-received/` (or `/contact-received/?error=1`).
+  `src/pages/contact-received.astro` was added for that landing page; both it
+  and the 404 are `noindex` and are filtered out of the sitemap via
+  `NOINDEX_ROUTES` in `astro.config.mjs`.
+- The honeypot was renamed `bot-field` → **`website`** (a neutral name required
+  by the API contract). It remains off-screen, `aria-hidden`, `tabindex="-1"`.
+  A filled honeypot gets a success response and is silently discarded.
+- The hidden detection form, the `form-name` input, `data-netlify`,
+  `netlify-honeypot`, and `name="contact"` on the form element are all gone.
+- `public/service-worker.js` now explicitly passes `/api` and `/api/*` through
+  network-only, so no API response can ever be cached or replayed.
+
+The service validates and rate-limits per IP, appends each inquiry to a JSONL
+log and fsyncs it **before** responding, and treats email as optional and
+best-effort on top (off until `SMTP_HOST` is set). See
+`services/contact-api/README.md` and `docs/DEPLOYMENT-VPS.md`.
 
 ---
 
@@ -273,9 +293,14 @@ npm run sync
 
 ## Deployment
 
-`npm run build` emits the static site to `dist/`, which is deployed to Netlify.
-Node 22 is pinned in both the `Dockerfile` and `netlify.toml`. Pipelines that
-call `astro build` directly skip the `postbuild` hook.
+`npm run build` emits the static site to `dist/`. In production that build runs
+**inside** the Docker image (`node:22-alpine` builder stage in the root
+`Dockerfile`), and the result is copied into an `httpd:2.4-alpine` stage served
+behind Caddy on the company's own VPS. Node 22 is pinned in the `Dockerfile`.
+Pipelines that call `astro build` directly skip the `postbuild` hook.
+
+See `docs/DEPLOYMENT-VPS.md` for the operator guide and `DOCKER-DEPLOYMENT.md`
+for the container reference.
 
 ## Styles
 

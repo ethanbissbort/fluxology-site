@@ -1,0 +1,19 @@
+# Dependencies are installed inside the image from package-lock.json
+node_modules/
+
+# Tests and docs are not needed at runtime
+test/
+README.md
+
+# Local/dev artefacts
+data/
+*.jsonl
+*.log
+npm-debug.log*
+.env
+.env.*
+.DS_Store
+.git/
+.gitignore
+Dockerfile
+.dockerignore

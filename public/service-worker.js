@@ -183,12 +183,21 @@ self.addEventListener('activate', (event) => {
 // Fetch event
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+  const url = new URL(request.url);
 
   // Only handle same-origin GET requests. Cross-origin and non-GET
-  // (e.g. the contact form POST to Netlify) pass straight through.
+  // (e.g. the contact form's POST to /api/contact) pass straight through.
   // Compare parsed origins — a string prefix check would also match foreign
   // hosts like fluxology.ca.evil.example.
-  if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) {
+  if (request.method !== 'GET' || url.origin !== self.location.origin) {
+    return;
+  }
+
+  // The self-hosted API is network-only, always: its responses are
+  // per-request (validation results, rate-limit state) and must never be
+  // cached or replayed from cache. POSTs already fall out above; this also
+  // covers any future GET endpoint such as /api/health.
+  if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
     return;
   }
 
@@ -209,7 +218,6 @@ self.addEventListener('fetch', (event) => {
             // Keep the app-shell copy of '/' fresh too — otherwise the
             // install-time snapshot in CACHE_NAME can shadow newer runtime
             // copies when caches.match(request) runs in the fallback below.
-            const url = new URL(request.url);
             if (url.pathname === '/') {
               const shellCopy = response.clone();
               caches.open(CACHE_NAME).then((cache) => cache.put('/', shellCopy));
@@ -229,7 +237,6 @@ self.addEventListener('fetch', (event) => {
   // Content-hashed assets under /_assets/: cache-first forever. The hash in
   // the filename changes whenever the content does, so a cached copy can
   // never be stale.
-  const url = new URL(request.url);
   if (url.pathname.startsWith('/_assets/')) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {

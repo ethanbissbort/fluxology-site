@@ -1,0 +1,301 @@
+# =============================================================================
+# Fluxology — Caddy edge configuration
+# =============================================================================
+# Caddy is the ONLY process on this VPS that talks to the internet. It:
+#   * terminates TLS and obtains/renews Let's Encrypt certificates automatically
+#   * redirects http:// -> https:// (automatic, no config needed)
+#   * redirects www.fluxology.ca -> fluxology.ca
+#   * proxies /api/*  -> the contact-api container (port 8081)
+#   * proxies anything else -> the apache container (port 6080, static site)
+#
+# Apache and contact-api are NOT published to the host; they are reachable only
+# by container name on the compose network. See docker-compose.yml.
+#
+# Reload after editing (no downtime, keeps certs in memory):
+#   docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+# Check syntax first:
+#   docker compose exec caddy caddy validate --config /etc/caddy/Caddyfile
+# =============================================================================
+{
+	# ACME account contact address. Let's Encrypt uses it for expiry notices.
+	email admin@fluxology.ca
+
+	# --- Local / staging testing ---------------------------------------------
+	# Let's Encrypt's production CA has hard rate limits (5 duplicate certs per
+	# week). While experimenting with DNS or a new sub-site, uncomment the line
+	# below to issue from the STAGING CA instead: certs are untrusted by
+	# browsers (expect a warning) but effectively unlimited, so a mistake can
+	# never lock you out of the real CA. Comment it back out and run
+	# `docker compose restart caddy` to go live.
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+
+	# Caddy is the edge — the first hop from the public internet — so it must
+	# NOT trust any inbound X-Forwarded-For / X-Forwarded-Proto a client sends.
+	# Not configuring `trusted_proxies` is exactly that (the secure default);
+	# Caddy overwrites those headers itself before proxying upstream. Only add
+	# `servers { trusted_proxies ... }` if you ever put Cloudflare or another
+	# proxy IN FRONT of this Caddy.
+
+	servers {
+		timeouts {
+			# Time allowed to read the request headers and body. A static site
+			# plus a small JSON form endpoint needs nothing generous here, and
+			# short timeouts cheaply shut down slowloris-style connections.
+			read_header 10s
+			read_body 10s
+			# Time allowed to write the response.
+			write 30s
+			# How long an idle keep-alive connection is held open.
+			idle 2m
+		}
+		# Request line + headers cap (Caddy's default is far larger than any
+		# legitimate request to this site).
+		max_header_size 32KB
+	}
+}
+
+# -----------------------------------------------------------------------------
+# Shared defaults
+# -----------------------------------------------------------------------------
+# Imported by every site block below (and by any sub-site you add) so behaviour
+# stays consistent across hostnames. Edit once, applies everywhere.
+(site-defaults) {
+	# Response compression. zstd is preferred by clients that support it,
+	# gzip is the universal fallback.
+	#
+	# Note on the two compression layers: Apache also compresses (gzip via
+	# mod_deflate, brotli via mod_brotli). Caddy's `encode` skips any response
+	# that already carries a Content-Encoding, so upstream-compressed responses
+	# pass straight through untouched — no double compression — and browsers
+	# still get brotli for static files, which Caddy alone cannot produce.
+	encode zstd gzip
+
+	header {
+		# ---------------------------------------------------------------
+		# HSTS IS EMITTED HERE AND NOWHERE ELSE.
+		# Caddy is the sole TLS terminator, so it is the correct and only
+		# layer for Strict-Transport-Security. docker/apache/httpd.conf and
+		# vhost.conf deliberately do NOT set this header — do not re-enable
+		# it there or clients will receive it twice.
+		# Add `; preload` only once you are certain EVERY current and future
+		# fluxology.ca subdomain is HTTPS-only; preload is hard to undo.
+		# ---------------------------------------------------------------
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+		# Applied at the edge so it also covers /api/* JSON responses.
+		# `header` replaces rather than appends, so Apache setting the same
+		# value on static responses does not produce a duplicate header.
+		X-Content-Type-Options "nosniff"
+
+		# Don't advertise the server software.
+		-Server
+	}
+
+	# Access logs to the container's stdout — read them with
+	# `docker compose logs -f caddy`.
+	log {
+		output stdout
+		format console
+	}
+}
+
+# -----------------------------------------------------------------------------
+# www.fluxology.ca -> fluxology.ca
+# -----------------------------------------------------------------------------
+# Caddy gets a certificate for www as well, so the redirect happens over HTTPS
+# and browsers never see a certificate warning on the way to the apex.
+www.fluxology.ca {
+	redir https://fluxology.ca{uri} permanent
+}
+
+# -----------------------------------------------------------------------------
+# fluxology.ca — the main site
+# -----------------------------------------------------------------------------
+fluxology.ca {
+	import site-defaults
+
+	# --- Contact API ---------------------------------------------------------
+	# Self-hosted contact form handler. Per the API contract:
+	#   POST /api/contact  (accepts JSON and form-urlencoded)
+	#   GET  /api/health
+	#   listens on 8081 inside the compose network
+	# The /api prefix is forwarded INTACT (`handle`, not `handle_path`) because
+	# the service routes on the full /api/... path.
+	handle /api/* {
+		# Hard cap before anything is buffered. The service enforces its own
+		# 32 KB limit (MAX_BODY_BYTES) and answers with a proper JSON 413; this
+		# is the outer guard so oversized junk never reaches Node at all.
+		request_body {
+			max_size 64KB
+		}
+
+		reverse_proxy contact-api:8081 {
+			# Caddy sets X-Forwarded-For / -Proto / -Host automatically, which
+			# is what the service's TRUST_PROXY=true reads for per-IP rate
+			# limiting and for the `ip` field in the inquiry log.
+
+			# Active health checking: a failed/booting container is taken out
+			# of rotation instead of hanging the request.
+			health_uri /api/health
+			health_interval 30s
+			health_timeout 5s
+
+			# Form submissions must never be cached anywhere.
+			header_down Cache-Control "no-store"
+		}
+	}
+
+	# --- Static site ---------------------------------------------------------
+	# Everything not matched above. Apache owns the cache policy and the
+	# content-security headers for these responses (see docker/apache/).
+	handle {
+		reverse_proxy apache:6080 {
+			# Apache is spoken to over plain HTTP, so a self-referential
+			# redirect it emits (e.g. DirectorySlash: /fabrication ->
+			# /fabrication/) can come back with an http:// Location. Rewrite it
+			# so a client is never bounced down to plaintext.
+			header_down Location "^http://" "https://"
+		}
+	}
+}
+
+# =============================================================================
+# Dashboard subdomains
+# =============================================================================
+# office / deals / jobs are standalone static apps that live under public/ in
+# the main build, so Apache already serves them at /office-scout/, /deals/ and
+# /jobs/. Each block below gives one its own hostname while keeping the clean
+# subdomain URL in the address bar: the path is rewritten INTERNALLY, so the
+# browser never sees a redirect. This reproduces the 200-rewrites the site
+# previously relied on at its old host.
+#
+# They ship with the main site, so no extra container or build step is needed.
+# Each hostname does need a DNS record pointing at this VPS before Caddy can
+# obtain a certificate for it.
+#
+# {args[0]} is the app's directory name under the site root.
+(dashboard) {
+	import site-defaults
+
+	rewrite * /{args[0]}{uri}
+
+	reverse_proxy apache:6080 {
+		# Keep the internal prefix out of anything the browser sees. Apache can
+		# emit a self-referential redirect (DirectorySlash: /data -> /data/)
+		# carrying the real /{args[0]}/... path, and it speaks plain HTTP, so
+		# strip the prefix first and then repair the scheme.
+		header_down Location "/{args[0]}/" "/"
+		header_down Location "^http://" "https://"
+	}
+}
+
+office.fluxology.ca {
+	import dashboard office-scout
+}
+
+deals.fluxology.ca {
+	import dashboard deals
+}
+
+jobs.fluxology.ca {
+	import dashboard jobs
+}
+
+# =============================================================================
+# ADDING A SUB-SITE  (template — copy, uncomment, edit)
+# =============================================================================
+# Everything needed to put another site on this VPS lives in four steps. The
+# blocks below are a working example for `sub.fluxology.ca`; nothing else in
+# this file has to change.
+#
+#   1. DNS: point an A (and AAAA if you have IPv6) record for
+#      sub.fluxology.ca at this VPS's public IP. Wait for it to resolve —
+#      Caddy cannot get a certificate before the name resolves to this host.
+#
+#   2. docker-compose.yml: add the container(s). Give them
+#         networks: [fluxology-network]
+#      and NO `ports:` mapping — Caddy reaches them by service name over the
+#      internal network, and not publishing them keeps them off the host.
+#      (A sub-site living in its OWN compose project instead can join this
+#      network by declaring it as external:
+#         networks:
+#           fluxology-network:
+#             external: true
+#         name: fluxology-network )
+#
+#   3. Uncomment and edit ONE of the blocks below.
+#
+#   4. Apply:  docker compose up -d
+#              docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+#      Caddy fetches the certificate for the new hostname on its own.
+#
+# ---- (a) simplest case: one container serves the whole sub-site -------------
+#
+# sub.fluxology.ca {
+# 	import site-defaults
+# 	reverse_proxy sub-web:8080
+# }
+#
+# ---- (b) sub-site with its own API, same shape as the main site ------------
+#
+# sub.fluxology.ca {
+# 	import site-defaults
+#
+# 	handle /api/* {
+# 		request_body {
+# 			max_size 64KB
+# 		}
+# 		reverse_proxy sub-api:3000
+# 	}
+#
+# 	handle {
+# 		reverse_proxy sub-web:8080 {
+# 			header_down Location "^http://" "https://"
+# 		}
+# 	}
+# }
+#
+# ---- (c) static files served by Caddy itself, no extra container ------------
+#      (mount the directory into the caddy service in docker-compose.yml)
+#
+# sub.fluxology.ca {
+# 	import site-defaults
+# 	root * /srv/sub.fluxology.ca
+# 	file_server
+# }
+#
+# ---- (d) redirect a parked hostname to the main site ------------------------
+#
+# old.fluxology.ca {
+# 	redir https://fluxology.ca{uri} permanent
+# }
+#
+# =============================================================================
+# TESTING LOCALLY (no public DNS, no Let's Encrypt)
+# =============================================================================
+# Every site block above is a public hostname, so Caddy will try to obtain a
+# real certificate for it. On a laptop or a VM that is not fluxology.ca, pick
+# one of:
+#
+#   (a) add `tls internal` inside a site block — Caddy issues the certificate
+#       from its own built-in local CA instead of Let's Encrypt:
+#
+#           fluxology.ca {
+#           	tls internal
+#           	import site-defaults
+#           	...
+#           }
+#
+#       Then add `127.0.0.1 fluxology.ca www.fluxology.ca` to /etc/hosts. The
+#       browser will warn unless you trust Caddy's root CA (it lives in the
+#       caddy_data volume at /data/caddy/pki/authorities/local/root.crt).
+#
+#   (b) temporarily replace the site address `fluxology.ca` with `localhost`
+#       — Caddy auto-issues a local certificate for localhost with no ACME
+#       traffic at all.
+#
+#   (c) leave the hostnames alone and uncomment the `acme_ca` staging line in
+#       the global block at the top.
+#
+# Whichever you choose, revert it before deploying to the VPS.
+# =============================================================================

@@ -10,6 +10,22 @@ This document is the technical reference for AI assistants and developers workin
 
 ---
 
+## READ THIS FIRST — deployment ground truth
+
+Two things are easy to get wrong and expensive to get wrong. Do not assume otherwise, do not "restore" either of them, and do not suggest them:
+
+1. **This site is self-hosted on the owner's own VPS.** It is deployed as three Docker containers — **Caddy** (edge: TLS, Let's Encrypt, reverse proxy) → **Apache** (built static site) + **contact-api** (the form). There is **no hosting provider, no build service, and no `netlify.toml`** (it was deleted; the site was never actually deployed there). Deployment instructions live in **`docs/DEPLOYMENT-VPS.md`** — that is the authoritative operator guide.
+2. **The contact form is handled by our own code**, `services/contact-api/`, at `POST /api/contact` on the same origin. It is **not** a third-party form service, and it must not become one. The owner specifically does not want submissions leaving their server. Configuring `SMTP_HOST` later only adds mail *transport* for a notification copy — the form, the validation and the stored record stay local.
+
+Corollaries a future assistant should not trip over:
+
+- The honeypot field is named **`website`**. There is no `bot-field`, no `form-name` input, no `data-netlify`/`netlify-honeypot` attribute, and no hidden detection form in `index.astro`. If you see advice to add any of those, it is wrong for this repo.
+- HSTS is emitted by **Caddy only** (`caddy/Caddyfile`, the `(site-defaults)` snippet). Never add `Strict-Transport-Security` to `docker/apache/httpd.conf` or `vhost.conf`.
+- **Only the `caddy` service publishes host ports.** Never add a `ports:` mapping to `apache` or `contact-api`.
+- **Never run or recommend `docker compose down -v`** — it deletes the volume holding every contact inquiry and the volume holding the ACME certificates.
+
+---
+
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
@@ -65,10 +81,11 @@ The site is a static Astro app (`output: 'static'`). Astro renders all markup to
 
 ### Routes & Data Flow
 
-The build emits **six routes**: `/`, `/fabrication/`, `/3d-lab/`, `/greenhouse/`, `/orchard/`, and `/404.html`.
+The build emits **seven routes**: `/`, `/fabrication/`, `/3d-lab/`, `/greenhouse/`, `/orchard/`, `/contact-received/`, and `/404.html`.
 
 - **`src/pages/index.astro`** — the long-form homepage. It wraps content in `src/layouts/BaseLayout.astro` and composes Hero, About, OperatingModel, the four DBA sections, Roadmap, and Contact. The DBA sections are data-driven: `index.astro` imports `dbaOverviews` from **`src/data/dbaPlans.ts`** and maps each overview over `<DBASection {...dba}>` (with a slotted `<ParticleSystem>`).
 - **`src/pages/[dba].astro`** — a dynamic route whose `getStaticPaths()` maps `dbaPlans` to the four DBA slugs; each page renders `<DBADetailPage plan={plan} />` (scope/capital tables, controls, milestones, gallery, local page nav).
+- **`src/pages/contact-received.astro`** — the landing page the contact API redirects no-JS submitters to. Renders both outcomes: the confirmation, and the failure variant selected client-side when the URL carries `?error=1` (the site is a static build, so the query string cannot be read at build time; a tiny inline script adds `html.inquiry-failed` before first paint and CSS swaps the panels). `noindex`.
 - **`src/pages/404.astro`** — branded 404 with full site navigation; passes `noindex` to `BaseLayout` so no canonical/`og:url` is emitted.
 - **`src/data/dbaPlans.ts`** — the single typed data layer. Each `DbaPlan` holds a `slug`, `shortName`, an `overview` (consumed by the homepage `DBASection`) and a `detail` (consumed by `DBADetailPage`). Image references are typed `ImageMetadata` ESM imports from `src/assets/images/` (astro:assets), not string paths.
 
@@ -121,11 +138,31 @@ fluxology-site/
 ├── astro.config.mjs            # Astro config: svelte + sitemap integrations, prefetch, fonts, vite/terser
 ├── svelte.config.js            # Svelte preprocess config
 ├── tsconfig.json               # Extends astro/tsconfigs/strict, svelte JSX
-├── netlify.toml                # Primary deploy: build + security/cache headers
-├── Dockerfile                  # Alternative deploy: node builder -> Apache
-├── docker-compose.yml          # Container orchestration for the Docker deploy
+├── Dockerfile                  # Static site image: node builder -> Apache (dist/ COPIED in, not mounted)
+├── docker-compose.yml          # The three-service stack: caddy + apache + contact-api
+├── .env.example                # Every variable docker-compose.yml consumes
 ├── package.json                # v2.0.0, Node >= 22.12
-├── DOCKER-DEPLOYMENT.md         # Docker/Apache deployment guide
+├── DOCKER-DEPLOYMENT.md        # Container reference (images, Apache/Caddy config, caching)
+├── caddy/
+│   └── Caddyfile               # Edge: TLS/Let's Encrypt, www->apex, /api/* -> contact-api,
+│                               #   everything else -> apache, HSTS, sub-site template
+├── docker/
+│   └── apache/
+│       ├── httpd.conf          # Internal origin behind Caddy: mod_remoteip, headers, caching, brotli
+│       └── vhost.conf          # The single internal :6080 vhost (no SSL vhost — Caddy owns TLS)
+├── services/
+│   └── contact-api/            # Self-hosted contact form service (Node 22, ESM, own Dockerfile)
+│       ├── server.mjs          # node:http server: POST /api/contact, GET|HEAD /api/health
+│       ├── config.mjs          # Env parsing + defaults + allowed serviceInterest slugs
+│       ├── validate.mjs        # Sanitise (CR/LF strip) then validate; honeypot detection
+│       ├── store.mjs           # JSONL append, mode 0600, fsync before responding
+│       ├── mailer.mjs          # Optional SMTP (nodemailer, imported lazily)
+│       └── README.md           # Endpoints, fields, env vars, how to read inquiries
+├── docs/
+│   ├── DEPLOYMENT-VPS.md       # PRIMARY operator guide (VPS -> live site)
+│   ├── FONTS.md
+│   ├── IMAGE-ASSET-INVENTORY.md
+│   └── AUDIT-2026-08-02.md     # Dated historical record — do not rewrite
 ├── public/                     # Copied verbatim into dist/
 │   ├── favicon.svg             # SVG favicon (no favicon.ico)
 │   ├── favicon-32.png          # PNG favicon fallback
@@ -148,6 +185,7 @@ fluxology-site/
     ├── pages/
     │   ├── index.astro         # Long-form homepage; maps dbaOverviews over DBASection
     │   ├── [dba].astro         # getStaticPaths over dbaPlans -> four DBA detail routes
+    │   ├── contact-received.astro # Landing page for no-JS form submits (noindex)
     │   └── 404.astro           # Branded 404 (noindex, full navigation)
     ├── data/
     │   └── dbaPlans.ts         # Typed DBA content: overview + detail per plan (source of truth)
@@ -167,7 +205,7 @@ fluxology-site/
     │   ├── BackToTop.svelte         # Island: back-to-top button
     │   ├── NavigationMenu.svelte    # Island: mobile menu toggle, focus trap, smooth scroll
     │   ├── ParticleSystem.svelte    # Island: per-theme decorative particles
-    │   ├── ContactForm.svelte       # Island: validated Netlify Forms contact form
+    │   ├── ContactForm.svelte       # Island: validated contact form -> POST /api/contact
     │   └── CursorEffects.svelte     # Island: themed cursor dot/ring (fine pointers only)
     └── styles/                  # 7 global stylesheets (imported by BaseLayout)
         ├── reset.css
@@ -271,14 +309,26 @@ Fonts are **self-hosted and optimized by Astro's built-in `astro:fonts`** — th
 
 ## Contact Form
 
-`ContactForm.svelte` (runes mode) handles the contact section and submits through **Netlify Forms**.
+`ContactForm.svelte` (runes mode) renders the contact section and posts to the **self-hosted API at `POST /api/contact`** — `services/contact-api`, running as its own container on the same origin (Caddy proxies `/api/*` to `contact-api:8081`). **No third-party form service is involved; do not introduce one.**
 
-- **State**: `formData` (`$state`) holds the fields (`companyName`, `fullName`, `email`, `phone`, `serviceInterest`, `message`); separate `$state` for `botField`, `errors`, `isSubmitting`, `submitStatus`, `submitMessage`.
+### Frontend (`src/components/ContactForm.svelte`)
+
+- **State**: `formData` (`$state`) holds the fields (`companyName`, `fullName`, `email`, `phone`, `serviceInterest`, `message`); separate `$state` for `website` (the honeypot), `errors`, `isSubmitting`, `submitStatus`, `submitMessage`, `hydrated`.
+- **Markup**: the `<form>` carries `action="/api/contact" method="POST"` so a native submit works, plus `onsubmit={handleSubmit}` for the hydrated path. `FIELDS` lists the editable fields in DOM order and drives "focus the first field with an error".
 - **Validation**: `novalidate` is **hydration-gated** (`novalidate={hydrated || undefined}`) — the server-rendered HTML carries no `novalidate`, so native `required`/`email` validation guards pre-hydration and no-JS submits; after hydration, client-side `validate()` takes over. It requires `fullName` (≥2 chars), a valid `email`, a selected `serviceInterest`, and `message` (≥10 chars). Errors render inline with `role="alert"` and `aria-invalid`; typing into a field clears its error. The submit status region is **permanently in the DOM** (`aria-live` with a `role="status"`/`"alert"` swap) so screen readers hear submit results.
-- **Submission**: `handleSubmit` `preventDefault`s, validates, then AJAX-POSTs `application/x-www-form-urlencoded` data (including `form-name` and the honeypot `bot-field`) to `/`. Netlify intercepts the POST to `/`. Success resets the form and shows an in-page success message; failure shows an error with a fallback email address. No page navigation occurs.
-- **Spam protection**: the `bot-field` honeypot (declared via `netlify-honeypot="bot-field"`) is visually hidden but submitted; bots that fill it are silently rejected.
+- **Submission (hydrated)**: `handleSubmit` `preventDefault`s, validates, then `fetch`es `/api/contact` with `Content-Type: application/json` and a body of `{...formData, website}`. Responses are handled per the API contract: `200` → reset the form (honeypot included) and show success; `400` → `applyFieldErrors()` maps the response's `fields` object onto inline per-field errors, focuses the first invalid field, and folds any unrecognised field message into the live region; `429` → a distinct "Too many attempts…" message; anything else (incl. `413`/`500`) → the generic error naming `info@fluxology.ca`. `response.json()` is wrapped in `readJson()` so a non-JSON body from an edge error page can never reject into the catch. No page navigation occurs.
+- **Submission (no JS)**: the native form posts `application/x-www-form-urlencoded` to the same endpoint; the API answers with a `303` to `/contact-received/`, or `/contact-received/?error=1` on a validation failure.
+- **Spam protection**: a honeypot input named **`website`** — off-screen via `.honeypot-field`, inside an `aria-hidden="true"` container, `tabindex="-1"`, `autocomplete="off"`. The name is fixed by the API contract. A filled honeypot gets a normal success response and the submission is silently discarded (bots are never told they were detected).
 
-**Netlify form detection**: Netlify's build bot registers forms by parsing *static* HTML at deploy time, but the real form is a client-hydrated Svelte island invisible to the bot. To bridge this, `index.astro` includes a **hidden static `<form name="contact" data-netlify="true">`** whose field names match the Svelte form. This registers the "contact" form so the island's AJAX submissions are accepted.
+### Backend (`services/contact-api/`)
+
+- `POST /api/contact` accepts **both** `application/json` and `application/x-www-form-urlencoded`. `GET|HEAD /api/health` returns `{"status":"ok","emailEnabled":…,"uptimeSeconds":…}`. Non-POST on the contact path → `405` with `Allow: POST`.
+- Required fields `fullName` (2–120), `email` (≤200, basic shape), `serviceInterest` (one of `fabrication`, `3d-lab`, `greenhouse`, `orchard`, `multiple`, `general`), `message` (10–5000); optional `companyName` (≤160), `phone` (≤40); honeypot `website` must be empty.
+- **Durability rule**: the inquiry is appended to the JSONL log at `INQUIRY_LOG_PATH` (default `/data/inquiries.jsonl`, mode `0600`, on the `inquiry_data` volume) and **fsync'd before** the success response is written. A failed write returns `500` even if email went out. Email is fire-and-forget on top and can never fail or delay a submission.
+- **Email is off** until `SMTP_HOST` is set; the service logs one informational line saying so at startup and never imports nodemailer. Until then **the JSONL log is the only copy of an inquiry** — `docs/DEPLOYMENT-VPS.md` covers reading and backing it up.
+- Per-IP in-memory rate limiting (`RATE_LIMIT_MAX` 5 per `RATE_LIMIT_WINDOW_MS` 900000), streaming body cap (`MAX_BODY_BYTES` 32768 → `413`), CR/LF stripped from single-line fields so nothing can inject a mail header, submitter address in `Reply-To` only, no CORS headers, and error responses never echo submitted values.
+
+The authoritative reference is `services/contact-api/README.md`. Because the API is same-origin, the CSP stays at `connect-src 'self'` / `form-action 'self'` — a third-party endpoint would require widening both.
 
 ---
 
@@ -289,7 +339,8 @@ Fonts are **self-hosted and optimized by Astro's built-in `astro:fonts`** — th
 - **Cache versioning**: a single `CACHE_VERSION` constant (currently `v2.4.0` — check the file, don't trust docs) derives both cache names (`fluxology-<v>`, `fluxology-runtime-<v>`); one bump rotates both, and the `activate` handler deletes any cache not in the current set.
 - **Precache**: `ASSETS_TO_CACHE = ['/', '/offline.html']`, fetched with `cache: 'reload'` so entries come from the network. Install then **primes the runtime cache** by crawling the shell's real subresources — HTML asset attributes (incl. Astro island `component-url`/`renderer-url`), inline-`<style>` `url()` refs (astro:fonts emits `@font-face` inline), fetched CSS `url()` refs, and JS import specifiers — so a single visit makes the site render styled *and* hydrated offline. The crawl is best-effort; a missing asset cannot fail the install.
 - **Fetch strategy** (three branches):
-  - Non-GET and cross-origin requests pass straight through (contact form POST untouched). Origin is compared via `new URL(request.url).origin`, not a string prefix.
+  - Non-GET and cross-origin requests pass straight through (the contact form POST is untouched). Origin is compared via `new URL(request.url).origin`, not a string prefix.
+  - **`/api` and `/api/*` return early, network-only** — no API response is ever cached or replayed, which also covers a future `GET /api/health`.
   - **Navigations / HTML**: network-first, caching successful basic responses; offline fallback is the cached copy of the requested URL, else the precached `/offline.html` **re-served with status 503** (an uncached route is never impersonated as a 200).
   - **`/_assets/*`** (content-hashed): cache-first forever — the hash changes when content does.
   - **All other same-origin assets** (unhashed `public/` files: images, icons, manifest, robots…): **stale-while-revalidate** — serve the cache, refresh in the background with `cache: 'no-cache'` so replaced files reach returning visitors without a version bump.
@@ -299,21 +350,30 @@ Fonts are **self-hosted and optimized by Astro's built-in `astro:fonts`** — th
 
 PWA installability comes from `public/site.webmanifest` (`theme_color`/`background_color` `#1B3A4B`, matching the rendered site background and the `<meta name="theme-color">` in `BaseLayout`) plus the icon set in `public/`.
 
-`netlify.toml` sends `Cache-Control: no-cache, no-store, must-revalidate` for `/service-worker.js` so it is always revalidated.
+`docker/apache/httpd.conf` sends `Cache-Control: no-cache, no-store, must-revalidate` plus `Service-Worker-Allowed: /` for `/service-worker.js`, so it is always revalidated.
 
 ---
 
 ## Security
 
-Hardened HTTP headers are configured in **`netlify.toml`** (Netlify deploys) and mirrored in **`docker/apache/httpd.conf`** (Docker/Apache deploys):
+Response headers are set at two layers, each owning what it is entitled to assert.
 
-- `Content-Security-Policy`: `default-src 'self'`; `script-src`/`style-src 'self' 'unsafe-inline'`; `img-src 'self' data: https:`; `font-src 'self' data:`; `connect-src 'self'`; `frame-ancestors 'self'`; **`base-uri 'self'`**; **`form-action 'self'`**; **`object-src 'none'`**.
+**`docker/apache/httpd.conf`** — on static responses:
+
+- `Content-Security-Policy`: `default-src 'self'`; `script-src`/`style-src 'self' 'unsafe-inline'`; `img-src 'self' data: https:`; `font-src 'self' data:`; `connect-src 'self'`; `frame-ancestors 'self'`; **`base-uri 'self'`**; **`form-action 'self'`**; **`object-src 'none'`**. The contact API is same-origin, so `connect-src 'self'` covers the hydrated `fetch` and `form-action 'self'` covers the no-JS `<form action="/api/contact">` and its 303 redirect — no third-party sources are needed.
 - `X-Frame-Options: SAMEORIGIN`
 - `X-Content-Type-Options: nosniff`
 - `X-XSS-Protection: 0` (the CSP supersedes the legacy auditor)
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy: geolocation=(), microphone=(), camera=()`
-- `Strict-Transport-Security: max-age=31536000; includeSubDomains` (Netlify serves over HTTPS)
+- `Header always unset X-Powered-By`; `ServerTokens Prod` / `ServerSignature Off` at global scope.
+
+**`caddy/Caddyfile`** — in the `(site-defaults)` snippet, so it also covers `/api/*` and every future sub-site:
+
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains` — **emitted here and nowhere else.** Caddy is the TLS terminator, so it is the only layer entitled to assert it; both Apache files carry an explicit do-not-add note. `preload` is deliberately not set.
+- `X-Content-Type-Options: nosniff` (replaces rather than appends, so Apache's copy is not duplicated) and `-Server`.
+
+The contact API adds `Cache-Control: no-store`, `X-Content-Type-Options: nosniff` and `Referrer-Policy: no-referrer` to its own responses, and emits no CORS headers.
 
 Content-hashed assets under `/_assets/*` are served `Cache-Control: public, max-age=31536000, immutable`.
 
@@ -359,15 +419,33 @@ Contributing techniques:
 
 > Pipelines that invoke `astro build` directly (instead of `npm run build`) skip the `postbuild` step.
 
-`astro.config.mjs` sets `site: 'https://fluxology.ca'`, `output: 'static'`, `build.assets: '_assets'` (custom asset directory instead of the default `_astro`), the `@astrojs/sitemap` integration (emits `/sitemap-index.xml` + `/sitemap-0.xml`, filtering out the 404 page), and viewport-strategy prefetch.
+`astro.config.mjs` sets `site: 'https://fluxology.ca'`, `output: 'static'`, `build.assets: '_assets'` (custom asset directory instead of the default `_astro`), the `@astrojs/sitemap` integration (emits `/sitemap-index.xml` + `/sitemap-0.xml`, filtering out the `NOINDEX_ROUTES` list — `/404` and `/contact-received`), and viewport-strategy prefetch.
 
-### Netlify (primary)
+### Deployment: the owner's own VPS (the only target)
 
-`netlify.toml`: `command = "npm run build"`, `publish = "dist"`, `NODE_VERSION = "22"`, plus the security/cache headers above. The build requires outbound access to Google Fonts (astro:fonts downloads at build time).
+Three containers defined in `docker-compose.yml` (Compose project name `fluxology`):
 
-### Docker + Apache (alternative)
+| Service | Container | Image | Listens | Published to host |
+|---------|-----------|-------|---------|-------------------|
+| `caddy` | `fluxology-caddy` | `caddy:2-alpine` | 80, 443 | **yes** — 80/tcp, 443/tcp, 443/udp |
+| `apache` | `fluxology-apache` | `fluxology-site:latest` (built from the root `Dockerfile`) | 6080 | no |
+| `contact-api` | `fluxology-contact-api` | `fluxology-contact-api:latest` (built from `services/contact-api/Dockerfile`) | 8081 | no |
 
-Multi-stage `Dockerfile`: `node:22-alpine` builder runs `npm ci --ignore-scripts && npm run build`, then `httpd:2.4-alpine` serves `dist/` with `docker/apache/httpd.conf` + `docker/apache/vhost.conf` (including a health check). See **`DOCKER-DEPLOYMENT.md`** for full Docker instructions rather than duplicating them here.
+- Caddy terminates TLS with automatic Let's Encrypt certificates, redirects `http://` → `https://` and `www` → apex, proxies `/api/*` → `contact-api:8081` (prefix intact) and everything else → `apache:6080`.
+- Apache and contact-api are reachable **only** on the internal `fluxology-network`. `curl localhost:6080` on the VPS does not work — that is intentional. Debug via `docker compose exec`.
+- Named volumes: `caddy_data` (ACME account + certificates), `caddy_config`, `inquiry_data` (the JSONL inquiry log). Prefixed with the project name, e.g. `fluxology_inquiry_data`.
+- The root `Dockerfile` is multi-stage: `node:22-alpine` runs `npm ci --ignore-scripts && npm run build`, then `httpd:2.4-alpine` **copies** `/app/dist` into `/usr/local/apache2/htdocs/`. **`dist/` is baked into the image, not bind-mounted** (`.dockerignore` excludes it), so content changes need `docker compose up -d --build`, not a restart.
+- The build needs outbound access to the npm registry and Google Fonts (`astro:fonts` downloads at build time).
+
+```bash
+docker compose up -d --build     # deploy / redeploy
+docker compose logs -f caddy     # per-service logs
+docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile   # Caddyfile-only edits, no rebuild
+docker compose down              # stop; volumes survive
+# NEVER: docker compose down -v  # destroys inquiries and certificates
+```
+
+**`docs/DEPLOYMENT-VPS.md` is the authoritative operator guide** (DNS prerequisites, certificate issuance, reading inquiries, backups, enabling email later, adding a sub-site, troubleshooting). **`DOCKER-DEPLOYMENT.md`** is the container reference. Do not write competing deployment instructions elsewhere.
 
 ---
 
@@ -376,8 +454,8 @@ Multi-stage `Dockerfile`: `node:22-alpine` builder runs `npm ci --ignore-scripts
 1. `npm install` (Node ≥ 22.12).
 2. `npm run dev` — edit components/styles with HMR.
 3. TypeScript is strict (`astro/tsconfigs/strict`); run `npm run sync` after adding content collections or when types drift.
-4. `npm run build && npm run preview` to validate the production output (minification, hashed assets, service worker) before deploying.
-5. Commit; Netlify builds on push. For Docker, `docker build` per `DOCKER-DEPLOYMENT.md`.
+4. `npm run build && npm run preview` to validate the production output (minification, hashed assets, service worker) before deploying. Note that the dev server has no `/api/contact` behind it — to exercise the form locally, run the service standalone as described in `services/contact-api/README.md`.
+5. Commit and push, then on the VPS: `git pull && docker compose up -d --build` (see `docs/DEPLOYMENT-VPS.md`). There is no automatic deploy on push.
 
 Notes:
 - `drop_console: true` strips `console.*` from the production client bundle, so debug logging only appears in dev.
@@ -407,6 +485,6 @@ Reveal is driven by `.observe-fade` / `.observe-slide-up` / `.observe-scale` cla
 
 ---
 
-**Document Version**: 2.1.0
-**Last Updated**: August 2026
+**Document Version**: 2.2.0
+**Last Updated**: August 2026 — rewritten for the self-hosted VPS stack (Caddy + Apache + contact-api) after the contact form was moved off a third-party form service.
 **Next Review**: When the component set, theme system, or deploy targets change.

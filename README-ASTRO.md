@@ -82,6 +82,7 @@ fluxology-site/
 │   ├── pages/
 │   │   ├── index.astro           # Long-form company homepage
 │   │   ├── [dba].astro           # Four generated DBA detail pages
+│   │   ├── contact-received.astro# Landing page for no-JS form submits (noindex)
 │   │   └── 404.astro             # Branded 404 (noindex)
 │   ├── data/
 │   │   └── dbaPlans.ts           # Shared plan-based content and image map
@@ -95,10 +96,17 @@ fluxology-site/
 │       └── responsive.css        # Media queries
 ├── scripts/
 │   └── prune-unused-images.mjs   # Postbuild pruning of unreferenced dist/_assets images
+├── services/
+│   └── contact-api/              # Self-hosted contact form service (Node 22, own Dockerfile)
+├── caddy/
+│   └── Caddyfile                 # Edge proxy: TLS, redirects, /api/* routing
+├── docker/
+│   └── apache/                   # httpd.conf + vhost.conf for the static-site origin
+├── docker-compose.yml            # caddy + apache + contact-api
+├── Dockerfile                    # Static site image (node:22-alpine → httpd:2.4-alpine)
 ├── astro.config.mjs              # Astro configuration (integrations, prefetch, fonts, Vite)
 ├── svelte.config.js              # Svelte preprocessing (required by @astrojs/svelte 9)
 ├── tsconfig.json                 # TypeScript config (strict)
-├── netlify.toml                  # Netlify build + headers config
 └── package.json
 ```
 
@@ -137,7 +145,7 @@ The directives below are used across the homepage and DBA routes:
 | `BackToTop` | `client:load` | Runes (`$state`) | Back-to-top button |
 | `NavigationMenu` | `client:load` | Legacy | Mobile menu open/close behaviour |
 | `ParticleSystem` | `client:visible` | Runes (`$state`, `$props`) | Themed particle animation per section |
-| `ContactForm` | `client:visible` | Runes (`$state`) | Contact form with client-side validation + AJAX submit |
+| `ContactForm` | `client:visible` | Runes (`$state`) | Contact form: client-side validation + JSON `POST` to `/api/contact` |
 | `CursorEffects` | `client:idle` | Runes (`$state`) | Themed cursor dot/ring, site-wide from `BaseLayout.astro` |
 
 - **`client:load`** — hydrates as soon as the page loads. Used for chrome that
@@ -201,23 +209,38 @@ automatically**, which is a key contributor to the site's **CLS of 0**.
     work in dev and breaks in `dist/`.
 - **Component-scoped CSS** lives inside each `.svelte` component's `<style>` block.
 
-## Contact Form (Netlify Forms)
+## Contact Form (self-hosted API)
 
-The contact form uses **Netlify Forms** with a two-part setup, because the real
-form is a client-hydrated Svelte island and Netlify's build bot only parses
-static HTML:
+`ContactForm.svelte` posts to **`/api/contact`**, a small Node service in
+`services/contact-api/` that runs as its own container on the same origin (Caddy
+proxies `/api/*` to it). There is no third-party form service.
 
-1. A **hidden static detection form** in `index.astro` (`name="contact"`,
-   `data-netlify="true"`, `hidden`) with matching field names. Netlify's deploy
-   bot parses this to register the `contact` form.
-2. The visible **`ContactForm.svelte`** island, which validates input and
-   submits via **AJAX** (URL-encoded `POST` to `/`), showing in-page
-   success/error states. `novalidate` is hydration-gated, so the
-   server-rendered form keeps native browser validation until the island's JS
-   validation takes over.
+The form works with and without JavaScript:
 
-Spam protection uses a **`bot-field` honeypot** (`netlify-honeypot="bot-field"`);
-a hidden `form-name` input identifies the form to Netlify.
+1. **Hydrated path.** The island validates client-side, then `fetch`es
+   `/api/contact` with a JSON body and renders the result in place — success,
+   inline per-field errors from a `400 {"fields": {...}}` response, or a
+   distinct message for `429` (rate limited). No page navigation.
+2. **No-JS path.** The form element itself carries
+   `action="/api/contact" method="POST"`, so a native submit sends
+   `application/x-www-form-urlencoded` to the same endpoint. The API answers
+   with a `303` redirect to `/contact-received/`, or
+   `/contact-received/?error=1` on a validation failure —
+   `src/pages/contact-received.astro` renders both outcomes (it is `noindex` and
+   filtered out of the sitemap).
+
+`novalidate` is **hydration-gated** (`novalidate={hydrated || undefined}`), so
+the server-rendered HTML keeps native `required`/`email` validation for
+pre-hydration and no-JS submits and only hands over to `validate()` once the
+island is live.
+
+Spam protection is a honeypot input named **`website`** — off-screen via CSS,
+inside an `aria-hidden` container, `tabindex="-1"`, `autocomplete="off"`. A
+filled honeypot receives a normal success response and is silently discarded.
+
+The service validates and rate-limits server-side, appends each inquiry to a
+JSONL log **before** reporting success, and only then attempts an optional
+email. See [`services/contact-api/README.md`](./services/contact-api/README.md).
 
 ## Development Workflow
 
@@ -242,10 +265,24 @@ not be quoted as current without a fresh audit.
 
 ## Deployment
 
-- **Netlify (primary).** Configured via `netlify.toml`. Netlify builds the static
-  site and serves `dist/`; Netlify Forms handles contact submissions (see above).
-- **Docker + Apache (alternative).** A container-based deployment is documented
-  in [`DOCKER-DEPLOYMENT.md`](./DOCKER-DEPLOYMENT.md).
+The site is **self-hosted on the company's own VPS** — three Docker containers:
+Caddy at the edge (TLS, Let's Encrypt, reverse proxy), Apache serving the built
+static site, and the `contact-api` service behind `/api/*`. Only Caddy publishes
+ports.
+
+```bash
+docker compose up -d --build
+```
+
+The static build happens **inside** the image (`node:22-alpine` builder stage),
+and `dist/` is copied into the Apache stage — it is not bind-mounted, so content
+changes need a rebuild rather than a restart.
+
+- [`docs/DEPLOYMENT-VPS.md`](./docs/DEPLOYMENT-VPS.md) — the primary operator
+  guide (DNS, certificates, first deploy, inquiries, backups, email, sub-sites,
+  troubleshooting).
+- [`DOCKER-DEPLOYMENT.md`](./DOCKER-DEPLOYMENT.md) — container reference (image
+  internals, Apache/Caddy configuration, cache and compression policy).
 
 ## What Changed in the Astro 7 / Svelte 5 Upgrade
 
