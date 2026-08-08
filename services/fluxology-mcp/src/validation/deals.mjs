@@ -7,7 +7,16 @@
  * price: `shippingResolved:false` stays authoritative.
  */
 import { SERVER_OWNED_FIELDS } from '../schemas.mjs';
-import { checkNonNegative, checkRecordBounds, checkUrls, requireText, withoutUndefined } from './common.mjs';
+import {
+  NULL_AS_ABSENT_FIELDS,
+  checkNonNegative,
+  checkRecordBounds,
+  checkTimestamps,
+  checkUrls,
+  normalizeTimestamps,
+  requireText,
+  withoutUndefined,
+} from './common.mjs';
 
 const MONEY_FIELDS = [
   'priceCad',
@@ -23,8 +32,16 @@ const MONEY_FIELDS = [
 const URL_FIELDS = ['url', 'imageUrl'];
 const PER_POUND_FIELDS = ['landedCadPerLb', 'allInCadPerLb'];
 
+/** Workflow states public/deals/README.md documents and the dashboard understands. */
+const KNOWN_STATUSES = new Set(['active', 'watching', 'purchased', 'rejected', 'ended', 'expired']);
+
 export const deals = {
   scope: 'deals',
+
+  /** An explicit null here becomes `$0.00/lb` and the "≤ $8/LB" badge. */
+  nullAsAbsentFields: NULL_AS_ABSENT_FIELDS.deals,
+  /** The auction countdown is the most time-critical signal on this dashboard. */
+  temporalFields: Object.freeze(['endTime']),
 
   /**
    * A stable id, or the documented eBay derivation key. Mirrors the Dashboard
@@ -61,11 +78,18 @@ export const deals = {
    * to an explicit `false` rather than being left absent.
    */
   normalize(merged) {
-    const hasPerPound = PER_POUND_FIELDS.some(field => merged[field] != null);
-    if (hasPerPound && merged.shippingResolved !== true) {
-      return { ...merged, shippingResolved: false };
+    let out = normalizeTimestamps(merged, deals.temporalFields);
+    // The canonical schema types itemId ["string","null"], but the natural eBay
+    // form is a JSON number and the id derivation already coerces it. Coerce it
+    // here too, so a numeric itemId derives a valid id AND survives Ajv.
+    if (typeof out.itemId === 'number' && Number.isFinite(out.itemId)) {
+      out = { ...out, itemId: String(out.itemId) };
     }
-    return merged;
+    const hasPerPound = PER_POUND_FIELDS.some(field => out[field] != null);
+    if (hasPerPound && out.shippingResolved !== true) {
+      return { ...out, shippingResolved: false };
+    }
+    return out;
   },
 
   check(merged, { isNew, limits }) {
@@ -73,6 +97,7 @@ export const deals = {
       ...checkRecordBounds(merged, limits),
       ...checkNonNegative(merged, MONEY_FIELDS),
       ...checkUrls(merged, URL_FIELDS, limits),
+      ...checkTimestamps(merged, deals.temporalFields),
     ];
     const warnings = [];
 
@@ -99,6 +124,22 @@ export const deals = {
 
     if (merged.shippingResolved !== true && PER_POUND_FIELDS.some(field => merged[field] != null)) {
       warnings.push('shipping is unresolved: landedCadPerLb/allInCadPerLb are provisional and are stored with shippingResolved:false');
+    }
+
+    /*
+     * `status` is an unconstrained string at every layer, but public/deals/app.js
+     * special-cases only the exact lowercase token 'expired' and counts every
+     * other value as active. Warn rather than reject: the vocabulary is
+     * documentation (deals/README.md), and `active:false` is the mechanism that
+     * actually retires a record.
+     */
+    if (typeof merged.status === 'string' && merged.status.trim() && !KNOWN_STATUSES.has(merged.status)) {
+      const shown = merged.status.slice(0, 40);
+      warnings.push(
+        KNOWN_STATUSES.has(merged.status.toLowerCase())
+          ? `status: the dashboard matches these values exactly, so "${shown}" is treated as an ordinary active record; use the lowercase form`
+          : `status: "${shown}" is outside the documented vocabulary (${[...KNOWN_STATUSES].join(', ')}); retire a record with active:false`,
+      );
     }
 
     return { errors, warnings };

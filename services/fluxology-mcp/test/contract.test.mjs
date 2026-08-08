@@ -379,10 +379,10 @@ describe('outcome classification (SDD §14)', () => {
     });
     assert.equal(result.structuredContent.source, 't176-trades-job-scout');
     assert.equal(result.structuredContent.requestId, 'req-fixed-1');
-    assert.deepEqual(client.upserts[0].meta, { source: 't176-trades-job-scout', requestId: 'req-fixed-1' });
+    assert.deepEqual(client.upserts[0].meta, { source: 't176-trades-job-scout', requestId: 'req-fixed-1', principal: null });
   });
 
-  it('attaches partial results to a downstream failure', async () => {
+  it('reports a downstream failure as unknown rather than as the pre-write outcome', async () => {
     const { ToolError } = await import('../src/errors.mjs');
     const { pipeline } = buildPipeline({
       feeds: feedsWith('jobs', []),
@@ -392,7 +392,15 @@ describe('outcome classification (SDD §14)', () => {
       () => pipeline.runUpsert({ scope: 'jobs', envelope: envelope([{ ...JOB_RECORD }]) }),
       err => {
         assert.equal(err.code, 'DOWNSTREAM_UNAVAILABLE');
-        assert.equal(err.details.partial.created, 1);
+        const partial = err.details.partial;
+        // The per-record diff was computed BEFORE the call. Shipping it verbatim
+        // told the model "created: 1" for a record that may never have landed.
+        assert.equal(partial.created, 0, 'a failed write must not still be reported as created');
+        assert.equal(partial.unknown, 1);
+        assert.equal(partial.persistence, 'unknown');
+        assert.equal(partial.results[0].outcome, 'unknown');
+        assert.match(partial.results[0].reason, /may or may not have been persisted/);
+        assert.equal(partial.received, 1, 'the caller still learns what it sent');
         return true;
       },
     );

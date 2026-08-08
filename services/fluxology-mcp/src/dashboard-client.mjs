@@ -108,7 +108,17 @@ function httpRequest(baseUrl, { method, path, headers = {}, body = null, connect
   });
 }
 
-/** Downstream `{error: "..."}` codes are short machine strings and safe to relay. */
+/**
+ * Downstream `{error: "..."}` codes are short machine strings and safe to relay.
+ *
+ * The upstream chooses 400-vs-500 by substring-matching its own error text, so
+ * "it is always a machine token" is an implicit contract rather than a
+ * guaranteed one. Enforce the shape here instead of trusting it: anything that
+ * is not a short snake_case token is logged and withheld from the model.
+ */
+const MACHINE_TOKEN = /^[a-z][a-z0-9_.:-]{0,79}$/;
+
+/** Bounded upstream reason, for the log only. */
 function downstreamReason(text) {
   try {
     const parsed = JSON.parse(text);
@@ -119,11 +129,18 @@ function downstreamReason(text) {
   return null;
 }
 
+/** The subset of that reason it is safe to put in front of the model. */
+function relayableReason(reason) {
+  return typeof reason === 'string' && MACHINE_TOKEN.test(reason) ? reason : null;
+}
+
 export function createDashboardClient(config, log) {
   const base = config.dashboardApiUrl;
   const { connectTimeoutMs, requestTimeoutMs, maxResponseBytes, feedCacheTtlMs } = config.downstream;
   /** scope -> { etag, feed, fetchedAt } */
   const feedCache = new Map();
+  /** The Dashboard API's own body cap, minus headroom for its framing. */
+  const maxOutboundBodyBytes = 1_000_000;
 
   function call(path, options) {
     return httpRequest(base, {
@@ -133,6 +150,26 @@ export function createDashboardClient(config, log) {
       maxResponseBytes,
       ...options,
     });
+  }
+
+  /**
+   * One extra attempt, for GET only.
+   *
+   * `isRetryable` documented a retry policy the code never implemented, and a
+   * single dropped TCP connection on the idempotent feed read failed a whole
+   * write pipeline before anything had been touched. The upsert is deliberately
+   * NOT retried: repeating a write whose outcome is unknown is exactly the
+   * ambiguity the connector is trying to stop reporting.
+   */
+  async function retryIdempotent(attempt, { scope, operation }) {
+    try {
+      return await attempt();
+    } catch (err) {
+      if (!(err instanceof DownstreamTransportError) || err.kind === 'too_large') throw err;
+      log.warn('downstream_retry', { scope, operation, kind: err.kind });
+      await new Promise(resolve => setTimeout(resolve, 150));
+      return attempt();
+    }
   }
 
   function transportToToolError(err, scope, operation) {
@@ -158,13 +195,17 @@ export function createDashboardClient(config, log) {
 
     let res;
     try {
-      res = await call(ENDPOINTS[scope].feed, {
-        method: 'GET',
-        headers: {
-          accept: 'application/json',
-          ...(cached?.etag ? { 'if-none-match': cached.etag } : {}),
-        },
-      });
+      res = await retryIdempotent(
+        () =>
+          call(ENDPOINTS[scope].feed, {
+            method: 'GET',
+            headers: {
+              accept: 'application/json',
+              ...(cached?.etag ? { 'if-none-match': cached.etag } : {}),
+            },
+          }),
+        { scope, operation: 'feed' },
+      );
     } catch (err) {
       throw transportToToolError(err, scope, 'feed');
     }
@@ -199,11 +240,28 @@ export function createDashboardClient(config, log) {
    * Persist changed records. The bearer secret is chosen here, from the scope
    * the tool dispatcher passed in — never from anything the caller supplied.
    */
-  async function upsert(scope, listings, { source, requestId }) {
+  async function upsert(scope, listings, { source, requestId, principal }) {
     const token = config.secrets[scope];
     if (!token) {
       // Writes stay disabled for a category until its token is provisioned.
       throw new ToolError('DOWNSTREAM_UNAVAILABLE', `${scope} writes are not enabled on this connector`, { scope });
+    }
+
+    /*
+     * The outbound body carries fully MERGED records, so a small inbound request
+     * can produce a large upstream one (a 1,486-byte request measured at
+     * 567,644 bytes outbound). Check the real size before sending, so the model
+     * gets an actionable message instead of an upstream 413 that blames the
+     * listing count.
+     */
+    const body = JSON.stringify({ listings });
+    const bodyBytes = Buffer.byteLength(body, 'utf8');
+    if (bodyBytes > maxOutboundBodyBytes) {
+      throw new ToolError(
+        'BATCH_TOO_LARGE',
+        `the merged records total ${bodyBytes} bytes, past the ${maxOutboundBodyBytes}-byte upstream limit; send fewer records per call (the stored records are large, not the update)`,
+        { scope, bytes: bodyBytes, maximum: maxOutboundBodyBytes },
+      );
     }
 
     let res;
@@ -217,8 +275,11 @@ export function createDashboardClient(config, log) {
           // SDD §19.2: makes the Dashboard API audit entry traceable to this connector.
           'x-fluxology-source': `mcp:${source}`,
           'x-request-id': requestId,
+          // The authenticated OAuth principal, so the durable audit record can
+          // name who drove the write and not only which skill label it claimed.
+          ...(principal ? { 'x-fluxology-principal': principal } : {}),
         },
-        body: JSON.stringify({ listings }),
+        body,
       });
     } catch (err) {
       throw transportToToolError(err, scope, 'upsert');
@@ -247,14 +308,18 @@ export function createDashboardClient(config, log) {
       throw new ToolError('DOWNSTREAM_UNAVAILABLE', `the dashboard API returned ${res.status}`, { scope, retryable: true });
     }
     if (res.status === 413) {
-      throw new ToolError('BATCH_TOO_LARGE', 'the dashboard API rejected the batch as too large', { scope, reason });
+      throw new ToolError('BATCH_TOO_LARGE', 'the dashboard API rejected the batch as too large', { scope, reason: relayableReason(reason) });
     }
+    const relayable = relayableReason(reason);
     if (res.status === 409) {
-      throw new ToolError('CONFLICT', `the dashboard API reported a conflict${reason ? `: ${reason}` : ''}`, { scope });
+      throw new ToolError('CONFLICT', `the dashboard API reported a conflict${relayable ? `: ${relayable}` : ''}`, { scope });
     }
 
     log.warn('downstream_rejected', { scope, status: res.status, reason });
-    throw new ToolError('DOWNSTREAM_REJECTED', `the dashboard API rejected the write${reason ? `: ${reason}` : ''}`, { scope, status: res.status });
+    throw new ToolError('DOWNSTREAM_REJECTED', `the dashboard API rejected the write${relayable ? `: ${relayable}` : ''}`, {
+      scope,
+      status: res.status,
+    });
   }
 
   async function health() {

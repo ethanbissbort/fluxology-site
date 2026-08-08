@@ -7,13 +7,18 @@
  * stay unknown.
  */
 import { SERVER_OWNED_FIELDS } from '../schemas.mjs';
-import { checkNonNegative, checkRecordBounds, checkUrls, withoutUndefined } from './common.mjs';
+import { NULL_AS_ABSENT_FIELDS, checkNonNegative, checkRecordBounds, checkUrls, withoutUndefined } from './common.mjs';
 
 const MONEY_FIELDS = ['askingRent', 'estimatedAllInMonthly'];
 const URL_FIELDS = ['sourceUrl'];
 
 export const office = {
   scope: 'office',
+
+  /** Explicit nulls the dashboard would coerce to 0 (SDD §13.1). */
+  nullAsAbsentFields: NULL_AS_ABSENT_FIELDS.office,
+  /** Caller-owned temporal fields. Office's own stamps are all server-owned. */
+  temporalFields: Object.freeze([]),
 
   /** Office records always carry a caller-chosen stable id. */
   resolveId(raw, limits) {
@@ -46,13 +51,34 @@ export const office = {
     ];
     const warnings = [];
 
+    const allIn = merged.estimatedAllInMonthly;
+    const allInIsReal = typeof allIn === 'number' && Number.isFinite(allIn) && allIn > 0;
+
+    /*
+     * The cost-honesty invariant has to be attached to the facts the dashboard
+     * actually reads, not to `costStatus`. public/office-scout/app.js recomputes
+     * the badge as `mandatoryFeesKnown === true && Number.isFinite(Number(
+     * estimatedAllInMonthly))` and ignores the stored costStatus entirely — so
+     * `{mandatoryFeesKnown:true, estimatedAllInMonthly:null}` (or 0) rendered
+     * "VERIFIED ≤ $850" beside "Unknown", earned the +35 verified Fit bonus and
+     * dropped out of the "Needs cost verification" queue. Claiming the fees are
+     * known therefore requires a real figure, whatever costStatus says.
+     */
+    if (merged.mandatoryFeesKnown === true && !allInIsReal) {
+      errors.push(
+        'estimatedAllInMonthly: mandatoryFeesKnown:true asserts every mandatory recurring cost is known, so a finite all-in monthly cost above zero is required (set mandatoryFeesKnown:false while the figure is unknown)',
+      );
+    }
+
     if (merged.costStatus === 'verified') {
       if (merged.mandatoryFeesKnown !== true) {
         errors.push('costStatus: "verified" requires mandatoryFeesKnown:true');
       }
-      const allIn = merged.estimatedAllInMonthly;
-      if (typeof allIn !== 'number' || !Number.isFinite(allIn)) {
-        errors.push('estimatedAllInMonthly: a verified record requires a finite all-in monthly cost');
+      if (!allInIsReal) {
+        // Do not repeat the message the mandatoryFeesKnown branch already gave.
+        if (merged.mandatoryFeesKnown !== true) {
+          errors.push('estimatedAllInMonthly: a verified record requires a finite all-in monthly cost above zero');
+        }
       } else {
         const ceiling = feedRoot?.hardAllInCeilingCad;
         if (typeof ceiling !== 'number' || !Number.isFinite(ceiling)) {

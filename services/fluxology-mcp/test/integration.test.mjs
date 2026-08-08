@@ -9,7 +9,7 @@
 import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { TOKENS, startHarness } from './helpers/harness.mjs';
+import { DEV_TOKEN, TOKENS, startHarness } from './helpers/harness.mjs';
 
 const OFFICE_ID = 'integration-office-1';
 
@@ -289,8 +289,23 @@ describe('downstream failure handling', () => {
     assert.equal(result.structuredContent.code, 'DOWNSTREAM_REJECTED');
     assert.equal(result.structuredContent.message.includes('a-different-office-token'), false);
     assert.equal(JSON.stringify(result).includes('a-different-office-token'), false);
-    // Per-record work still gets reported back.
-    assert.equal(result.structuredContent.created, 1);
+    // Per-record work still gets reported back — but honestly. The diff was
+    // computed before the downstream call, so it cannot be reported as `created`.
+    assert.equal(result.structuredContent.received, 1);
+    assert.equal(result.structuredContent.created, 0);
+    assert.equal(result.structuredContent.unknown, 1);
+    assert.equal(result.structuredContent.persistence, 'unknown');
+    assert.match(result.content[0].text, /may or may not have been persisted/);
+  });
+
+  it('logs the ids a failed write may have touched', async () => {
+    const failures = harness.logs.events('tool_invocation').filter(event => event.outcome === 'error');
+    assert.ok(failures.length > 0);
+    const write = failures.find(event => event.tool === 'upsert_office_listings');
+    assert.ok(write, 'the failed office write should be logged');
+    assert.deepEqual(write.unknownIds, ['auth-failure-office'], 'a failed write must be traceable to its records');
+    assert.equal(write.persistence, 'unknown');
+    assert.ok('httpRequestId' in write, 'the HTTP and tool correlation ids must appear on the same line');
   });
 
   it('still serves categories whose credential is correct', async () => {
@@ -327,9 +342,13 @@ describe('unreachable dashboard API', () => {
   });
 
   it('fails readiness while the dependency is down', async () => {
-    const res = await harness.http('/readyz');
+    const res = await harness.http('/readyz', { headers: { authorization: `Bearer ${DEV_TOKEN}` } });
     assert.equal(res.status, 503);
     assert.equal(res.json.checks.dashboardApi.ok, false);
+    // An anonymous caller still gets the verdict, just not the detail.
+    const anonymous = await harness.http('/readyz');
+    assert.equal(anonymous.status, 503);
+    assert.equal(anonymous.json.status, 'not_ready');
   });
 
   it('keeps liveness green so the container is not needlessly restarted', async () => {

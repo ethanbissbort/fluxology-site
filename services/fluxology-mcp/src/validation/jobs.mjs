@@ -6,13 +6,26 @@
  * schema consistency.
  */
 import { SERVER_OWNED_FIELDS } from '../schemas.mjs';
-import { checkNonNegative, checkRecordBounds, checkUrls, requireText, withoutUndefined } from './common.mjs';
+import {
+  NULL_AS_ABSENT_FIELDS,
+  checkNonNegative,
+  checkRecordBounds,
+  checkTimestamps,
+  checkUrls,
+  normalizeTimestamps,
+  requireText,
+  withoutUndefined,
+} from './common.mjs';
 
 const MONEY_FIELDS = ['hourlyCadMin', 'hourlyCadMax', 'annualCadMin', 'annualCadMax'];
 const URL_FIELDS = ['url'];
 
 export const jobs = {
   scope: 'jobs',
+
+  /** `Number(null) === 0` sorts a null fit score and a null walk as best-possible. */
+  nullAsAbsentFields: NULL_AS_ABSENT_FIELDS.jobs,
+  temporalFields: Object.freeze(['postedAt']),
 
   /** A stable id, or the documented `<source>-<sourceId>` derivation key. */
   resolveId(raw, limits) {
@@ -38,7 +51,7 @@ export const jobs = {
   },
 
   normalize(merged) {
-    return merged;
+    return normalizeTimestamps(merged, jobs.temporalFields);
   },
 
   check(merged, { isNew, limits }) {
@@ -46,6 +59,7 @@ export const jobs = {
       ...checkRecordBounds(merged, limits),
       ...checkNonNegative(merged, [...MONEY_FIELDS, 'finalWalkMinutes']),
       ...checkUrls(merged, URL_FIELDS, limits),
+      ...checkTimestamps(merged, jobs.temporalFields),
     ];
     const warnings = [];
 
