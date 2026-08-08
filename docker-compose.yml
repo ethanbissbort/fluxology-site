@@ -1,24 +1,19 @@
 # =============================================================================
-# Fluxology — self-hosted stack
+# Fluxology — application stack
 # =============================================================================
-#   internet ──► caddy (80/443, TLS + Let's Encrypt)
-#                  ├── /api/*  ──► contact-api:8081   (form handler, Node)
-#                  └── *       ──► apache:6080        (built static site)
+# The VPS edge proxy is intentionally NOT part of this Compose project.
+# It runs independently and joins the external `fluxology-edge` Docker network.
 #
-# SECURITY NOTE: caddy is the ONLY service that publishes ports to the host.
-# apache and contact-api used to be reachable directly on the VPS's interfaces;
-# they are now reachable only over the internal compose network, by service
-# name. That removes the plaintext-HTTP bypass around TLS/HSTS and shrinks the
-# externally reachable surface to a single hardened process. Do not add a
-# `ports:` mapping to apache or contact-api — use `docker compose exec` or a
-# temporary `--publish 127.0.0.1:...` container for debugging instead.
+#   existing VPS edge proxy
+#        ├── fluxology-apache:6080
+#        ├── fluxology-contact-api:8081
+#        └── fluxology-dashboard-api:8082
 #
-# Explicit project name: volume names are derived from it, so naming it here
-# means the inquiry log and the Let's Encrypt certificates stay attached to the
-# stack even if the checkout directory is renamed or moved.
+# None of the services below publishes a host port. The edge proxy is the only
+# public entrypoint. See docs/CADDY-INTEGRATION.md for the reverse-proxy rules.
+# =============================================================================
 name: fluxology
 
-# Keep container logs from filling the VPS disk.
 x-logging: &default-logging
   driver: json-file
   options:
@@ -27,54 +22,7 @@ x-logging: &default-logging
 
 services:
   # ---------------------------------------------------------------------------
-  # Caddy — TLS terminator and reverse proxy (the only public entrypoint)
-  # ---------------------------------------------------------------------------
-  caddy:
-    image: caddy:2-alpine
-    container_name: fluxology-caddy
-    restart: unless-stopped
-    ports:
-      # 80 is required even though the site is HTTPS-only: it serves the
-      # HTTP->HTTPS redirect and the ACME HTTP-01 challenge Let's Encrypt uses
-      # to issue certificates. 443/udp carries HTTP/3 (QUIC).
-      - "${HTTP_PORT:-80}:80"
-      - "${HTTPS_PORT:-443}:443"
-      - "${HTTPS_PORT:-443}:443/udp"
-    environment:
-      - TZ=${TIMEZONE:-America/Toronto}
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      # caddy_data holds the ACME account key and every issued certificate.
-      # Losing it forces re-issuance of all certificates, which runs straight
-      # into Let's Encrypt's rate limits (5 duplicate certs per week). This
-      # volume is the single most important thing to keep and to back up.
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - fluxology-network
-    depends_on:
-      # Deliberately `service_started`, not `service_healthy`: the edge must
-      # come up even when a backend is broken. With `service_healthy`, a
-      # failing contact-api healthcheck would keep Caddy from starting at all
-      # and take the whole site (and every future sub-site) offline. Started
-      # instead means the static site keeps serving while /api returns 502.
-      - apache
-      - contact-api
-    healthcheck:
-      # Caddy's admin API listens on 127.0.0.1:2019 inside the container only
-      # (never published). A 200 here proves the process is up and serving its
-      # loaded config.
-      test: ["CMD", "wget", "-q", "-T", "5", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-    logging: *default-logging
-    labels:
-      - "com.fluxology.description=Caddy edge proxy (TLS termination)"
-
-  # ---------------------------------------------------------------------------
-  # Apache — serves the built static Astro site
+  # Apache — built static Astro site + isolated dashboard frontends
   # ---------------------------------------------------------------------------
   apache:
     container_name: fluxology-apache
@@ -83,19 +31,12 @@ services:
       dockerfile: Dockerfile
     image: fluxology-site:latest
     restart: unless-stopped
-    # No `ports:` — internal only. Apache listens on 6080 inside the container
-    # (see docker/apache/httpd.conf); Caddy reaches it as `apache:6080`.
     expose:
       - "6080"
     environment:
-      # Only TZ is consumed. ServerName/ServerAdmin live in
-      # docker/apache/httpd.conf.
       - TZ=${TIMEZONE:-America/Toronto}
-    # Apache logs to the container's stdout/stderr (ErrorLog /proc/self/fd/2,
-    # CustomLog /proc/self/fd/1) — read them with `docker compose logs apache`.
-    # No TLS material is mounted any more: Caddy terminates TLS.
     networks:
-      - fluxology-network
+      - edge
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6080/"]
       interval: 30s
@@ -106,11 +47,11 @@ services:
       - no-new-privileges:true
     logging: *default-logging
     labels:
-      - "com.fluxology.description=Fluxology Inc. Corporate Website (static)"
-      - "com.fluxology.version=2.0.0"
+      - "com.fluxology.description=Fluxology Inc. corporate website and static dashboard shells"
+      - "com.fluxology.version=3.0.0"
 
   # ---------------------------------------------------------------------------
-  # contact-api — self-hosted contact form handler
+  # Contact form API
   # ---------------------------------------------------------------------------
   contact-api:
     container_name: fluxology-contact-api
@@ -119,54 +60,29 @@ services:
       dockerfile: Dockerfile
     image: fluxology-contact-api:latest
     restart: unless-stopped
-    # No `ports:` — internal only. Caddy proxies /api/* to `contact-api:8081`.
     expose:
       - "8081"
     environment:
       - TZ=${TIMEZONE:-America/Toronto}
       - NODE_ENV=production
       - PORT=8081
-      # Inquiry log lives on the persistent volume mounted at /data below.
       - INQUIRY_LOG_PATH=/data/inquiries.jsonl
-      # Caddy is the only thing that can reach this service, and it always
-      # rewrites X-Forwarded-For, so the header can be trusted here.
       - TRUST_PROXY=true
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-5}
       - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
       - MAX_BODY_BYTES=${MAX_BODY_BYTES:-32768}
-      # --- SMTP (all optional) -----------------------------------------------
-      # These four are bare pass-throughs: Compose copies them in only when
-      # they are actually set on the host or in .env. When SMTP_HOST is absent
-      # the service runs in LOG-ONLY mode — inquiries are still written to
-      # /data/inquiries.jsonl, email is simply skipped. That is the intended
-      # default until mail hosting exists; nothing here needs to be filled in
-      # for the stack to come up clean.
       - SMTP_HOST
       - SMTP_USER
       - SMTP_PASS
       - MAIL_FROM
-      # These have harmless defaults and are only consulted once SMTP_HOST is
-      # set, so defining them unconditionally does not enable email.
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_SECURE=${SMTP_SECURE:-false}
       - MAIL_TO=${MAIL_TO:-info@fluxology.ca}
     volumes:
-      # Named volume so the JSONL inquiry log survives `docker compose down`,
-      # image rebuilds, and container recreation. Inquiries are the only
-      # non-reproducible data in this stack.
-      # To back up:    docker compose cp contact-api:/data/inquiries.jsonl ./inquiries-backup.jsonl
-      # Bind-mount alternative (easier to back up, but you must create the
-      # directory with the right owner yourself):
-      #   - ./data/inquiries:/data
       - inquiry_data:/data
     networks:
-      - fluxology-network
+      - edge
     healthcheck:
-      # Uses node itself rather than curl/wget: the service image ships neither
-      # (it is node:22-alpine with only nodemailer added), and Node 22 has a
-      # global fetch, so the probe needs no extra packages. Mirrors the
-      # HEALTHCHECK baked into services/contact-api/Dockerfile — stated here
-      # too so the stack's health contract is readable in one file.
       test:
         - CMD
         - node
@@ -182,21 +98,58 @@ services:
     labels:
       - "com.fluxology.description=Contact form API (JSONL log + optional SMTP)"
 
+  # ---------------------------------------------------------------------------
+  # Dashboard API — authoritative live feeds + authenticated direct ingestion
+  # ---------------------------------------------------------------------------
+  dashboard-api:
+    container_name: fluxology-dashboard-api
+    build:
+      context: .
+      dockerfile: services/dashboard-api/Dockerfile
+    image: fluxology-dashboard-api:latest
+    restart: unless-stopped
+    expose:
+      - "8082"
+    environment:
+      - TZ=${TIMEZONE:-America/Toronto}
+      - NODE_ENV=production
+      - PORT=8082
+      - DATA_DIR=/data
+      - SEED_DIR=/seed
+      - TRUST_PROXY=true
+      - MAX_BODY_BYTES=${DASHBOARD_MAX_BODY_BYTES:-1048576}
+      - MAX_LISTINGS_PER_WRITE=${DASHBOARD_MAX_LISTINGS_PER_WRITE:-500}
+      - OFFICE_INGEST_TOKEN
+      - DEALS_INGEST_TOKEN
+      - JOBS_INGEST_TOKEN
+    volumes:
+      - dashboard_data:/data
+    networks:
+      - edge
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:'+(process.env.PORT||8082)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    logging: *default-logging
+    labels:
+      - "com.fluxology.description=Office/deals/jobs live feed and direct-ingest API"
+
 volumes:
-  # Certificates, ACME account key, OCSP staples. Back this up.
-  caddy_data:
-  # Caddy's autosaved JSON config.
-  caddy_config:
-  # Contact form inquiries (JSONL). Back this up.
   inquiry_data:
+  dashboard_data:
 
 networks:
-  fluxology-network:
-    driver: bridge
-    # Explicit name so a sub-site living in its own compose project can attach
-    # to this same network with:
-    #   networks:
-    #     fluxology-network:
-    #       external: true
-    #       name: fluxology-network
-    name: fluxology-network
+  edge:
+    external: true
+    name: fluxology-edge
