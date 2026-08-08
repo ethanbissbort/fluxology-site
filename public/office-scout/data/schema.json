@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fluxology Office Scout feed v2.5",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "hardAllInCeilingCad", "listings"],
+  "properties": {
+    "schemaVersion": {"type": ["string", "number"]},
+    "appVersion": {"type": "string"},
+    "generatedAt": {"type": "string"},
+    "searchName": {"type": "string"},
+    "hardAllInCeilingCad": {"type": "number"},
+    "listings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "operator", "address", "municipality", "mandatoryFeesKnown", "active"],
+        "properties": {
+          "id": {"type": "string"},
+          "operator": {"type": ["string", "null"]},
+          "address": {"type": ["string", "null"]},
+          "municipality": {"type": ["string", "null"]},
+          "askingRent": {"type": ["number", "null"]},
+          "estimatedAllInMonthly": {"type": ["number", "null"]},
+          "costStatus": {"enum": ["verified", "plausible", "over", null]},
+          "mandatoryFeesKnown": {"type": "boolean"},
+          "hstStatus": {"type": ["string", "null"]},
+          "tmiStatus": {"type": ["string", "null"]},
+          "utilitiesStatus": {"type": ["string", "null"]},
+          "internetStatus": {"type": ["string", "null"]},
+          "cleaningStatus": {"type": ["string", "null"]},
+          "mandatoryFeeNotes": {"type": ["string", "null"]},
+          "size": {"type": ["string", "null"]},
+          "leaseType": {"type": ["string", "null"]},
+          "lockableDoor": {"type": ["boolean", "null"]},
+          "access24h": {"type": ["boolean", "null"]},
+          "furnished": {"type": ["boolean", "null"]},
+          "mailRights": {"type": ["boolean", "null"]},
+          "directoryRights": {"type": ["boolean", "null"]},
+          "signageRights": {"type": ["string", "null"]},
+          "shortCommitment": {"type": ["boolean", "null"]},
+          "term": {"type": ["string", "null"]},
+          "amenities": {"type": "array", "items": {"type": "string"}},
+          "parking": {"type": ["string", "null"]},
+          "transitConnection": {"type": ["string", "null"]},
+          "finalWalkMinutes": {"type": ["number", "null"]},
+          "skateboardPractical": {"type": ["boolean", "null"]},
+          "skateboardNote": {"type": ["string", "null"]},
+          "summary": {"type": ["string", "null"]},
+          "notes": {"type": ["string", "null"]},
+          "sourceUrl": {"type": ["string", "null"]},
+          "lastVerified": {"type": ["string", "null"]},
+          "lastChanged": {"type": ["string", "null"]},
+          "active": {"type": "boolean"},
+          "priceHistory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["date"],
+              "properties": {
+                "date": {"type": "string"},
+                "askingRent": {"type": ["number", "null"]},
+                "estimatedAllInMonthly": {"type": ["number", "null"]}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
