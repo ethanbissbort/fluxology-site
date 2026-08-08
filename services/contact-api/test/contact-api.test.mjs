@@ -608,3 +608,278 @@ describe('SMTP configured', () => {
     assert.match(server.stderr, /email notification failed/);
   });
 });
+
+/* ================================================================== *
+ * Security controls that had no coverage
+ * ------------------------------------------------------------------
+ * The suite above exercises the happy paths and the size limits
+ * thoroughly, but the parts of the code explicitly marked as security
+ * controls — the TRUST_PROXY=false branch, the null-prototype form
+ * parse, the parameterised Content-Type, and header sanitisation in
+ * mailer.mjs — had no assertion behind any of them. A regression to
+ * one of those would have shipped silently.
+ * ================================================================== */
+
+describe('TRUST_PROXY=false ignores X-Forwarded-For', () => {
+  let server;
+  let logPath;
+
+  before(async () => {
+    logPath = path.join(TMP_ROOT, 'notrust', 'inquiries.jsonl');
+    server = await startServer({
+      INQUIRY_LOG_PATH: logPath,
+      TRUST_PROXY: 'false',
+      RATE_LIMIT_MAX: '2',
+      RATE_LIMIT_WINDOW_MS: '60000',
+    });
+  });
+
+  after(async () => {
+    if (server) await server.stop();
+  });
+
+  it('records the connection peer, not the header the client sent', async () => {
+    const res = await postJson(VALID, { 'x-forwarded-for': '203.0.113.99' });
+    assert.equal(res.status, 200);
+    await res.text();
+    const rows = await readLog(logPath);
+    assert.equal(rows.length, 1);
+    assert.notEqual(rows[0].ip, '203.0.113.99', 'a spoofed XFF must be ignored');
+    assert.equal(rows[0].ip, '127.0.0.1', 'the loopback peer address is the client IP');
+  });
+
+  it('rate-limits on the peer address, so a rotating X-Forwarded-For cannot evade it', async () => {
+    // RATE_LIMIT_MAX is 2 and one submission is already spent above.
+    const second = await postJson(VALID, { 'x-forwarded-for': '198.51.100.1' });
+    assert.equal(second.status, 200);
+    await second.text();
+    const third = await postJson(VALID, { 'x-forwarded-for': '198.51.100.2' });
+    assert.equal(third.status, 429, 'a different XFF must not buy a fresh quota');
+    await third.text();
+  });
+});
+
+describe('input shapes that must not surprise the parser', () => {
+  let server;
+  let logPath;
+
+  before(async () => {
+    logPath = path.join(TMP_ROOT, 'shapes', 'inquiries.jsonl');
+    server = await startServer({ INQUIRY_LOG_PATH: logPath, TRUST_PROXY: 'true' });
+  });
+
+  after(async () => {
+    if (server) await server.stop();
+  });
+
+  it('accepts a Content-Type with parameters, as a real browser sends', async () => {
+    // A form POST from a browser carries `; charset=UTF-8`. contentTypeOf must
+    // split on ';' — an exact-match comparison here would 415 every no-JS
+    // submission from a real user while every test still passed.
+    for (const ct of [
+      'application/json; charset=utf-8',
+      'application/json;charset=UTF-8',
+      'application/x-www-form-urlencoded; charset=UTF-8',
+    ]) {
+      const isForm = ct.startsWith('application/x-www-form-urlencoded');
+      const res = await fetch(`${BASE}/api/contact`, {
+        method: 'POST',
+        headers: { 'content-type': ct },
+        body: isForm ? new URLSearchParams(VALID).toString() : JSON.stringify(VALID),
+        redirect: 'manual',
+      });
+      assert.ok(res.status === 200 || res.status === 303, `${ct} should be accepted, got ${res.status}`);
+      await res.text();
+    }
+  });
+
+  it('keeps a form field named __proto__ inert', async () => {
+    const res = await postForm({ ...VALID, __proto__: 'polluted' });
+    assert.ok(res.status === 200 || res.status === 303, `unexpected status ${res.status}`);
+    await res.text();
+    // Nothing may have been grafted onto Object.prototype in the server, and
+    // the field must not appear in the stored record.
+    const rows = await readLog(logPath);
+    const stored = rows[rows.length - 1];
+    assert.equal(stored.fullName, VALID.fullName);
+    assert.equal(Object.prototype.hasOwnProperty.call(stored, '__proto__'), false);
+    // If prototype pollution had happened server-side, a subsequent request
+    // would inherit the polluted value; prove the server is still healthy and
+    // answering normally.
+    const health = await fetch(`${BASE}/api/health`);
+    assert.equal(health.status, 200);
+    const body = await health.json();
+    assert.equal(body.status, 'ok');
+    assert.equal(body.polluted, undefined);
+  });
+
+  it('rejects a non-GET/HEAD method on /api/health with an Allow header', async () => {
+    for (const method of ['POST', 'PUT', 'DELETE']) {
+      const res = await fetch(`${BASE}/api/health`, { method });
+      assert.equal(res.status, 405, `${method} on /api/health should be rejected`);
+      assert.equal(res.headers.get('allow'), 'GET, HEAD');
+      await res.text();
+    }
+  });
+
+  it('reports inquiry arrival on /api/health so it is detectable without exec', async () => {
+    const before = await (await fetch(`${BASE}/api/health`)).json();
+    assert.ok(before.inquiryLog, '/api/health must carry an inquiryLog summary');
+    const seen = before.inquiryLog.appendedSinceStart;
+
+    const res = await postJson(VALID);
+    assert.equal(res.status, 200);
+    await res.text();
+
+    const after = await (await fetch(`${BASE}/api/health`)).json();
+    assert.equal(after.inquiryLog.appendedSinceStart, seen + 1);
+    assert.ok(after.inquiryLog.bytes > before.inquiryLog.bytes, 'log should have grown');
+    assert.match(
+      after.inquiryLog.lastInquiryAt,
+      /^\d{4}-\d{2}-\d{2}T/,
+      'lastInquiryAt should be an ISO timestamp',
+    );
+  });
+});
+
+/* ================================================================== *
+ * Mail header sanitisation
+ * ------------------------------------------------------------------
+ * mailer.mjs is the only place user-supplied text reaches an email
+ * header (the Reply-To display name and address, and the Subject).
+ * headerSafe() strips control characters for exactly that reason and
+ * nothing exercised it. These tests capture the real SMTP conversation
+ * from a minimal in-process sink and assert on the bytes that would go
+ * out over the wire.
+ * ================================================================== */
+
+/** Minimal SMTP sink: accepts one message and records the raw DATA payload. */
+async function startSmtpSink() {
+  const net = await import('node:net');
+  const messages = [];
+
+  const server = net.createServer((socket) => {
+    let buffer = '';
+    let inData = false;
+    let data = '';
+    socket.setEncoding('utf8');
+    socket.write('220 sink.test ESMTP\r\n');
+
+    socket.on('data', (chunk) => {
+      buffer += chunk;
+      let idx;
+      while ((idx = buffer.indexOf('\r\n')) !== -1) {
+        const line = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+
+        if (inData) {
+          if (line === '.') {
+            inData = false;
+            messages.push(data);
+            data = '';
+            socket.write('250 2.0.0 Ok: queued\r\n');
+          } else {
+            // Undo SMTP dot-stuffing so the captured payload is the message.
+            data += (line.startsWith('..') ? line.slice(1) : line) + '\n';
+          }
+          continue;
+        }
+
+        const verb = line.slice(0, 4).toUpperCase();
+        if (verb === 'EHLO') socket.write('250-sink.test\r\n250 8BITMIME\r\n');
+        else if (verb === 'HELO') socket.write('250 sink.test\r\n');
+        else if (verb === 'MAIL' || verb === 'RCPT' || verb === 'RSET') socket.write('250 2.1.0 Ok\r\n');
+        else if (verb === 'DATA') {
+          inData = true;
+          socket.write('354 End data with <CR><LF>.<CR><LF>\r\n');
+        } else if (verb === 'QUIT') {
+          socket.write('221 2.0.0 Bye\r\n');
+          socket.end();
+        } else socket.write('502 5.5.2 Not implemented\r\n');
+      }
+    });
+    socket.on('error', () => {});
+  });
+
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  return {
+    port: server.address().port,
+    messages,
+    async waitForMessage(timeoutMs = 10_000) {
+      const deadline = Date.now() + timeoutMs;
+      while (messages.length === 0 && Date.now() < deadline) await delay(50);
+      return messages[0];
+    },
+    close() {
+      return new Promise((resolve) => server.close(resolve));
+    },
+  };
+}
+
+describe('mail header sanitisation (real SMTP capture)', () => {
+  let server;
+  let sink;
+
+  before(async () => {
+    sink = await startSmtpSink();
+    server = await startServer({
+      INQUIRY_LOG_PATH: path.join(TMP_ROOT, 'headers', 'inquiries.jsonl'),
+      TRUST_PROXY: 'true',
+      SMTP_HOST: '127.0.0.1',
+      SMTP_PORT: String(sink.port),
+      SMTP_SECURE: 'false',
+      MAIL_TO: 'inbox@fluxology.test',
+      MAIL_FROM: 'notifications@fluxology.test',
+    });
+  });
+
+  after(async () => {
+    if (server) await server.stop();
+    if (sink) await sink.close();
+  });
+
+  it('strips CR/LF out of the name, address and subject before they reach a header', async () => {
+    const res = await postJson({
+      ...VALID,
+      // A classic header-injection attempt in both header-bearing fields.
+      fullName: 'Ada\r\nBcc: attacker@evil.test\r\nX-Injected: yes',
+      email: 'ada@example.com',
+      serviceInterest: 'fabrication',
+      message: 'Body text may legitimately contain\r\nnewlines and must not be mangled.',
+    });
+    assert.equal(res.status, 200);
+    await res.text();
+
+    const raw = await sink.waitForMessage();
+    assert.ok(raw, 'the sink should have received a message');
+
+    const headerBlock = raw.split(/\n\s*\n/)[0];
+
+    // The point of headerSafe() is that the CR/LF is gone, so the injected
+    // text cannot start a header of its own — it stays a value inside the
+    // header it was submitted into. Assert the structure, not the absence of
+    // the string: "Bcc: attacker@evil.test" appearing inside the quoted
+    // Reply-To display name is the DEFENCE working, not a leak.
+    assert.doesNotMatch(headerBlock, /^Bcc:/im, 'an injected Bcc header must not appear');
+    assert.doesNotMatch(headerBlock, /^X-Injected:/im, 'an injected header must not appear');
+    assert.doesNotMatch(headerBlock, /^To:.*attacker@evil\.test/im, 'no injected recipient');
+
+    // Every header line either starts a known header or is a folded
+    // continuation (leading whitespace). A CR/LF that survived would show up
+    // here as an unfolded line that is not a header we emit.
+    const known = /^(From|To|Reply-To|Subject|Message-ID|Content-Transfer-Encoding|Date|MIME-Version|Content-Type|X-Mailer):/i;
+    for (const line of headerBlock.split('\n')) {
+      if (line === '' || /^\s/.test(line)) continue;
+      assert.match(line, known, `unexpected header line injected: ${line}`);
+    }
+
+    // The legitimate parts still made it through.
+    assert.match(headerBlock, /^Reply-To:.*<ada@example\.com>/im);
+    assert.match(headerBlock, /^Subject:/im);
+    assert.match(raw, /Fluxology_website_inquiry|Fluxology website inquiry/);
+
+    // The envelope sender is operator-controlled, never the visitor.
+    assert.match(headerBlock, /^From:.*notifications@fluxology\.test/im);
+    assert.doesNotMatch(headerBlock, /^From:.*ada@example\.com/im);
+  });
+});

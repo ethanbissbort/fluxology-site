@@ -67,8 +67,15 @@ services:
       - TZ=${TIMEZONE:-America/Toronto}
       - NODE_ENV=production
       - PORT=8081
-      - INQUIRY_LOG_PATH=/data/inquiries.jsonl
-      - TRUST_PROXY=true
+      # Both of these were pinned literals while their neighbours below used
+      # ${VAR:-default}. services/contact-api/README.md tells the operator to
+      # "set TRUST_PROXY=false if the service is ever exposed without a reverse
+      # proxy in front of it", and a literal made that a silent no-op: the
+      # operator would believe they had disabled X-Forwarded-For trust — which
+      # decides the rate-limit key and the `ip` field in every stored inquiry —
+      # when nothing had changed. Keep the defaults; make the knobs reachable.
+      - INQUIRY_LOG_PATH=${INQUIRY_LOG_PATH:-/data/inquiries.jsonl}
+      - TRUST_PROXY=${TRUST_PROXY:-true}
       - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-5}
       - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
       - MAX_BODY_BYTES=${MAX_BODY_BYTES:-32768}
@@ -93,6 +100,16 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    # This is the container that holds every name, email address, phone number,
+    # message body, client IP and User-Agent the site collects — the only
+    # non-reproducible personal data in the stack — so it gets at least the
+    # same filesystem hardening as dashboard-api, which holds public listings.
+    # The inquiry log lives on the `inquiry_data` volume and stays writable;
+    # read_only applies to the image layers, so nothing can modify the service's
+    # own code at runtime.
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
     security_opt:
       - no-new-privileges:true
     logging: *default-logging
@@ -117,7 +134,7 @@ services:
       - PORT=8082
       - DATA_DIR=/data
       - SEED_DIR=/seed
-      - TRUST_PROXY=true
+      - TRUST_PROXY=${TRUST_PROXY:-true}
       - MAX_BODY_BYTES=${DASHBOARD_MAX_BODY_BYTES:-1048576}
       - MAX_LISTINGS_PER_WRITE=${DASHBOARD_MAX_LISTINGS_PER_WRITE:-500}
       - OFFICE_INGEST_TOKEN

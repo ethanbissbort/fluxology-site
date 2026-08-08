@@ -87,10 +87,20 @@ The API is the authoritative production feed store after first initialization. I
 
 Internal endpoints:
 
-- `GET /health`
+- `GET /health` — container-level; reports `writeEnabled` for all three scopes
+- `GET /v1/{office|deals|jobs}/health` — per-scope; the edge maps each
+  dashboard's public `/api/health` onto this, and it is also what Caddy's
+  active health check probes. Do not "fix" the edge to point at `/health`
+  instead: `https://office.fluxology.ca/api/health` is documented in
+  docs/CADDY-INTEGRATION.md and docs/DEPLOYMENT-VPS.md as the way to confirm a
+  dashboard is live, and `handle_path /api/*` rewrites it to `/v1/office/health`.
 - `GET /v1/{office|deals|jobs}/feed`
 - `POST /v1/{office|deals|jobs}/upsert`
-- `PUT /v1/{office|deals|jobs}/feed`
+- `PUT /v1/{office|deals|jobs}/feed` — **full-feed replacement.** The stored
+  envelope becomes exactly the body you send, so any field you omit is dropped
+  (`hardAllInCeilingCad`, `appVersion`, `searchName` included). Use `upsert`
+  for routine writes; see the restore procedure in docs/DEPLOYMENT-VPS.md
+  before using this one to recover data.
 
 Writes require a category-scoped bearer token:
 

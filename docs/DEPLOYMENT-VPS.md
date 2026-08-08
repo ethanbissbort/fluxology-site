@@ -134,7 +134,27 @@ curl -fsS https://deals.fluxology.ca/data/listings.json | jq '.listings | length
 curl -fsS https://jobs.fluxology.ca/data/listings.json | jq '.listings | length'
 ```
 
-Each dashboard health endpoint should report `writeEnabled: true`.
+Each dashboard health endpoint should report `writeEnabled: true`. Those public
+paths map to `/v1/{scope}/health` on the dashboard API — that route is also what
+the edge's active health check probes, so do not repoint either at `/health`.
+
+Check the edge headers too. Both of these are emitted only by the Caddy blocks
+in `docs/CADDY-INTEGRATION.md`; if either is missing, that config was merged
+incompletely:
+
+```bash
+# Must print the header. Apache is forbidden from setting it, so if the edge
+# does not, nobody does.
+for h in fluxology.ca office.fluxology.ca deals.fluxology.ca jobs.fluxology.ca; do
+  printf '%-24s ' "$h"
+  curl -fsSI "https://$h/" | grep -i strict-transport-security || echo 'MISSING'
+done
+
+# Must print request lines. This is the only per-request record in the stack
+# for /api/* and /data/listings.json.
+curl -fsS https://fluxology.ca/api/health > /dev/null
+docker logs --since 1m <caddy-container> | tail -5
+```
 
 ## 7. Direct dashboard ingestion
 
@@ -223,7 +243,115 @@ docker run --rm \
 
 Do not use `docker compose down -v` unless you explicitly intend to destroy persistent inquiry and dashboard data.
 
-## 11. Updating the website or APIs
+Both archives are written by `tar czf -C /data .`, so they contain the volume's contents at the top level (`./inquiries.jsonl`, or `./office.json ./deals.json ./jobs.json ./audit.jsonl`) — not a wrapping directory. That matters for the restore below.
+
+## 11. Restoring from a backup
+
+A backup you have never restored is a guess. This section is the matching half of section 10; rehearse it before you need it.
+
+### What each restore path can and cannot do
+
+| Artifact | Restore path |
+| --- | --- |
+| `office.json` / `deals.json` / `jobs.json` | `tar xzf` into the volume (below), or `PUT /v1/{scope}/feed` for a single feed |
+| `audit.jsonl` | `tar xzf` **only** — no API route writes it |
+| `inquiries.jsonl` | `tar xzf` **only** — contact-api serves just `/api/contact` and `/api/health`; there is no read or write route for the log |
+
+`PUT /v1/{scope}/feed` is a **full replacement**, not a merge: the stored envelope becomes exactly the body you send. Sending `{"schemaVersion":"2.5","listings":[…]}` silently drops `hardAllInCeilingCad`, `appVersion` and `searchName` — the server answers `200 {"ok":true}` and nothing tells you the metadata is gone. If you use it to restore, send the whole envelope from the backup, not just the listings:
+
+```bash
+# Correct: replay the complete stored envelope out of a backup archive.
+tar xzOf dashboard-data-2026-08-01.tar.gz ./office.json |
+  curl -fsS -X PUT https://office.fluxology.ca/api/feed \
+    -H "Authorization: Bearer $OFFICE_INGEST_TOKEN" \
+    -H 'Content-Type: application/json' --data-binary @-
+```
+
+### Full volume restore
+
+Files inside these volumes are mode `0600` and owned by uid/gid `1000` (the `node` user in both service images). `tar` run as root recreates that ownership from the archive, but only if the container is not holding the files open — so stop the service first.
+
+```bash
+# 1. Stop the service that owns the volume (leave the rest of the stack up).
+docker compose stop dashboard-api          # or: contact-api
+
+# 2. Extract into the volume. --same-owner is the default for root and is what
+#    puts the files back as uid 1000; without it they land as root and the
+#    service (which runs as `node`) cannot write them.
+docker run --rm \
+  -v fluxology_dashboard_data:/data \
+  -v "$PWD":/backup alpine \
+  tar xzf /backup/dashboard-data-2026-08-01.tar.gz -C /data
+
+# 3. Confirm ownership and mode BEFORE restarting.
+docker run --rm -v fluxology_dashboard_data:/data alpine ls -ln /data
+#    Expect: -rw------- 1 1000 1000 ... office.json (etc.)
+#    If they came back as 0:0, fix them:
+#      docker run --rm -v fluxology_dashboard_data:/data alpine \
+#        sh -c 'chown -R 1000:1000 /data && chmod 600 /data/*'
+
+# 4. Restart and verify.
+docker compose start dashboard-api
+```
+
+The same three steps restore `fluxology_inquiry_data` for `contact-api`; the file there is `inquiries.jsonl`.
+
+### Verify the restore
+
+Do not treat a restore as finished until these agree with the backup you restored:
+
+```bash
+# Listing counts per feed, live through the edge.
+for h in office deals jobs; do
+  printf '%s: ' "$h"
+  curl -fsS "https://$h.fluxology.ca/data/listings.json" | jq '.listings | length'
+done
+
+# The same counts straight out of the archive, for comparison.
+for s in office deals jobs; do
+  printf '%s: ' "$s"
+  tar xzOf dashboard-data-2026-08-01.tar.gz "./$s.json" | jq '.listings | length'
+done
+
+# Envelope metadata survived (this is what a careless PUT restore loses).
+curl -fsS https://office.fluxology.ca/data/listings.json |
+  jq '{schemaVersion, appVersion, searchName, generatedAt, hardAllInCeilingCad}'
+
+# Inquiry count.
+docker compose exec -T contact-api wc -l /data/inquiries.jsonl
+```
+
+### Restore drill
+
+Run the whole procedure against a scratch volume roughly twice a year, and after any change to a service's data layout:
+
+```bash
+docker volume create restore-drill
+docker run --rm -v restore-drill:/data -v "$PWD":/backup alpine \
+  tar xzf /backup/dashboard-data-2026-08-01.tar.gz -C /data
+docker run --rm -v restore-drill:/data alpine sh -c 'ls -ln /data && wc -l /data/audit.jsonl'
+docker volume rm restore-drill
+```
+
+If that fails, the archive is not a backup. Find out on a drill, not during an outage.
+
+### Deleting a single inquiry
+
+There is no API for this; the log is append-only by design. To honour a deletion request, or to remove a test submission, filter the file in place with the service stopped:
+
+```bash
+docker compose stop contact-api
+docker run --rm -v fluxology_inquiry_data:/data alpine sh -c '
+  cp /data/inquiries.jsonl /data/inquiries.jsonl.bak &&
+  grep -v "someone@example.com" /data/inquiries.jsonl.bak > /data/inquiries.jsonl &&
+  chown 1000:1000 /data/inquiries.jsonl && chmod 600 /data/inquiries.jsonl &&
+  wc -l /data/inquiries.jsonl.bak /data/inquiries.jsonl'
+docker compose start contact-api
+```
+
+Check the two line counts differ by exactly the number of records you intended to remove, then delete `inquiries.jsonl.bak` — it still contains the data you were asked to erase.
+
+## 12. Updating the website or APIs
 
 ```bash
 git pull --ff-only
@@ -234,7 +362,7 @@ The Apache image contains the compiled Astro output, so code/content updates req
 
 Routine dashboard listing updates do **not** require `git pull`, a rebuild, or a restart when they arrive through the direct ingestion API.
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 
 ### Caddy cannot reach an application container
 
@@ -259,6 +387,25 @@ Do not print production tokens into shared logs or chat transcripts.
 ### Dashboard returns the checked-in snapshot instead of live data
 
 The edge configuration is not intercepting `/data/listings.json`. Re-check the dashboard blocks in `docs/CADDY-INTEGRATION.md` and reload the VPS-wide Caddy container.
+
+Apache serves that fallback with `Cache-Control: no-cache`, so once the edge rule is restored the next load gets live data — the stale snapshot is revalidated, not reused. (It used to inherit a one-month `Expires`, which pinned the stale copy in every browser and intermediary for 30 days *after* the routing was fixed.) Confirm with:
+
+```bash
+curl -fsSI https://office.fluxology.ca/data/listings.json | grep -i cache-control
+# live path  -> no-store   (answered by dashboard-api)
+# fallback   -> no-cache   (answered by Apache; routing is still broken)
+```
+
+### A dashboard fix does not appear for a returning visitor
+
+The three dashboards ship `app.js` and `styles.css` at unhashed paths, so their cache policy is set by filename, not by content hash. Apache serves them `Cache-Control: no-cache` — stored, but revalidated on every load — which is what makes an updated file take effect on the next page view. If a stale copy persists, check that policy first:
+
+```bash
+curl -fsSI https://office.fluxology.ca/app.js | grep -i cache-control   # expect: no-cache
+curl -fsSI https://fluxology.ca/_assets/<hashed>.js | grep -i cache-control  # expect: immutable
+```
+
+If the first one reports `immutable`, the server-scope `<FilesMatch "\.(css|js)$">` rule in `docker/apache/httpd.conf` has been widened back to a year — that pins every dashboard asset for a year, on a manual reload too, and the symptom is invisible from a fresh browser profile.
 
 ### Inspect live data directly inside the API container
 

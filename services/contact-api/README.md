@@ -43,10 +43,32 @@ submission is silently dropped. Bots are never told they were detected.
 ### `GET /api/health`
 
 ```json
-{ "status": "ok", "emailEnabled": false, "uptimeSeconds": 1234 }
+{
+  "status": "ok",
+  "emailEnabled": false,
+  "uptimeSeconds": 1234,
+  "inquiryLog": {
+    "bytes": 2048,
+    "lastInquiryAt": "2026-08-08T14:03:11.482Z",
+    "appendedSinceStart": 3
+  }
+}
 ```
 
-Used by the container `HEALTHCHECK` and by Caddy/monitoring.
+Used by the container `HEALTHCHECK` and by the edge's active health check
+(`health_uri /api/health` in `docs/CADDY-INTEGRATION.md`), which takes a wedged
+or still-booting container out of rotation.
+
+`inquiryLog` exists because in log-only mode — the shipping default, with
+`SMTP_HOST` unset — the JSONL file is the *only* record that a submission
+arrived, and nothing else surfaces it. `lastInquiryAt` makes "did anything come
+in?" answerable with one HTTP request, and assertable by any uptime check that
+can read a JSON field, instead of requiring an SSH session and a
+`docker compose exec … cat`. It is derived from `stat(2)`, so it costs the same
+whether the log holds one record or a million. `lastInquiryAt` is `null` while
+the file is empty; `appendedSinceStart` resets when the container restarts, so
+compare `lastInquiryAt` across polls rather than treating the counter as a
+running total.
 
 ## Durability
 
@@ -75,7 +97,11 @@ stderr and never fails the request, because the inquiry is already on disk.
 | `MAIL_FROM` | *(falls back to `MAIL_TO`)* | envelope sender |
 
 Set `TRUST_PROXY=false` if the service is ever exposed without a reverse proxy
-in front of it — otherwise a client can spoof its own rate-limit identity.
+in front of it — otherwise a client can spoof its own rate-limit identity. Set
+it in `.env`, not in the compose file: `docker-compose.yml` passes it through as
+`${TRUST_PROXY:-true}`. (It used to be a hard-coded literal there, which made a
+`.env` setting a silent no-op — the operator would believe header trust was off
+when nothing had changed. The same applied to `INQUIRY_LOG_PATH`.)
 
 ## Reading stored inquiries
 
@@ -104,23 +130,40 @@ docker compose exec contact-api cat /data/inquiries.jsonl \
 The file is `0600` and owned by the container's `node` user (uid 1000). Back it
 up with the rest of `/data` — it is the only copy of an inquiry in log-only mode.
 
+It is also the one artifact in this stack with **no API restore path**: the
+service exposes only `/api/contact` and `/api/health`, so nothing can write the
+log except a real submission. `docs/DEPLOYMENT-VPS.md` section 11 has the
+`tar xzf` restore, the ownership/mode check that must follow it, and the
+procedure for removing a single record (a deletion request, or a test
+submission) — there is deliberately no endpoint for that.
+
+Never let this file into git. The root `.gitignore` covers `services/*/data/`
+and `*.jsonl` precisely because the local-dev invocation below writes it inside
+the repository.
+
 ## Enabling email later
 
-Email is off until `SMTP_HOST` is set. When you have mail hosting:
+Email is off until `SMTP_HOST` is set. `docker-compose.yml` already passes all
+seven SMTP variables through from `.env`, so there is nothing to edit in the
+compose file — uncomment and fill in the block that is already in
+`.env.example`:
 
-```yaml
-# docker-compose.yml (the infra side owns this file)
-environment:
-  SMTP_HOST: smtp.example.net
-  SMTP_PORT: "587"
-  SMTP_SECURE: "false"      # "true" only for implicit TLS on port 465
-  SMTP_USER: notifications@fluxology.ca
-  SMTP_PASS: ${SMTP_PASS}   # from .env, never committed
-  MAIL_TO: info@fluxology.ca
-  MAIL_FROM: notifications@fluxology.ca
+```sh
+# .env on the VPS (chmod 600; git-ignored, unlike docker-compose.yml)
+SMTP_HOST=smtp.example.net
+SMTP_PORT=587
+SMTP_SECURE=false          # true only for implicit TLS on port 465
+SMTP_USER=notifications@fluxology.ca
+SMTP_PASS=…
+MAIL_TO=info@fluxology.ca
+MAIL_FROM=notifications@fluxology.ca
 ```
 
-Restart the container and confirm the startup line reads
+```sh
+docker compose up -d contact-api
+```
+
+Confirm the startup line reads
 `Email delivery enabled: relaying via …`, and that `/api/health` reports
 `"emailEnabled": true`.
 
@@ -164,6 +207,21 @@ types, every validation failure, the honeypot, the 303 redirects, the body cap
 failure → 500 path, CRLF-injection stripping, file mode, and graceful SIGTERM
 shutdown. Temp files land in `$CONTACT_API_TEST_TMP` (default: a `mkdtemp`
 under the system temp dir).
+
+The suite also covers the controls that are marked in the source as security
+measures and previously had no assertion behind them:
+
+- `TRUST_PROXY=false` — a spoofed `X-Forwarded-For` is ignored for both the
+  stored `ip` and the rate-limit key.
+- A form field literally named `__proto__` stays inert.
+- `Content-Type: application/json; charset=utf-8` (what a real browser sends)
+  is accepted — an exact-match comparison would 415 every no-JS submission.
+- Mail header sanitisation, against a **real SMTP sink** started inside the
+  test: a `fullName` carrying `\r\nBcc: …` must not produce a header of its
+  own, and the visitor's address must not become the envelope sender.
+- `/api/health` rejects non-GET/HEAD, and reports inquiry arrival.
+
+`npm test` runs on every push via `.github/workflows/ci.yml`.
 
 ## Building the image
 

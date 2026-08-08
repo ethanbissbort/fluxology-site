@@ -2,7 +2,13 @@
 # This significantly speeds up builds and reduces image size
 
 # Node modules (will be installed in container)
-node_modules
+#
+# `**/` is required. Unlike .gitignore, Docker matches these patterns against
+# the full path from the CONTEXT ROOT, so a bare `node_modules` excludes only
+# the top-level one — services/contact-api/node_modules and
+# services/fluxology-mcp/node_modules were both still being sent to the daemon
+# and ingested by the builder stage's `COPY . .`.
+**/node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -19,10 +25,18 @@ dist
 
 # Environment files (use docker-compose env instead)
 # Exclude ALL env files so real secrets never land in the image via `COPY . .`
-.env
-.env.*
+# — at every depth, not just the top level. services/dashboard-api builds with
+# `context: .` and has no .dockerignore of its own, so it inherits this file;
+# a services/*/.env would otherwise be in its build context.
+**/.env
+**/.env.*
 !.env.example
-*.env
+**/*.env
+
+# Runtime data written by the services when run locally. Every record in
+# services/contact-api/data/inquiries.jsonl is real personal information.
+**/data/*.jsonl
+services/*/data
 
 # IDE
 .vscode

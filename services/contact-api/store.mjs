@@ -19,6 +19,35 @@ export class InquiryStore {
     this._handle = null;
     /** @type {Promise<unknown>} */
     this._queue = Promise.resolve();
+    /** Records durably appended since this process started. */
+    this.appendedSinceStart = 0;
+  }
+
+  /**
+   * Cheap, unbounded-safe summary of the log for /api/health.
+   *
+   * In log-only mode (SMTP unset) this file is the ONLY record that an inquiry
+   * arrived, and nothing else in the deployment surfaces it — the operator had
+   * to remember to exec into the container and read it. `lastInquiryAt` makes
+   * "did anything come in?" answerable from the health endpoint, and from any
+   * uptime check that can assert on a JSON field.
+   *
+   * Deliberately derived from stat(), not from reading the file: the log is
+   * append-only with no size cap, so nothing here may scale with its length.
+   * A zero-byte file means the store created it at startup and nothing has
+   * been written, so lastInquiryAt is null rather than the boot time.
+   */
+  async stats() {
+    try {
+      const info = await stat(this.filePath);
+      return {
+        bytes: info.size,
+        lastInquiryAt: info.size > 0 ? new Date(info.mtimeMs).toISOString() : null,
+        appendedSinceStart: this.appendedSinceStart,
+      };
+    } catch {
+      return { bytes: 0, lastInquiryAt: null, appendedSinceStart: this.appendedSinceStart };
+    }
   }
 
   /**
@@ -75,6 +104,7 @@ export class InquiryStore {
     try {
       await handle.write(line, null, 'utf8');
       await handle.datasync();
+      this.appendedSinceStart += 1;
     } catch (err) {
       // Drop the handle so the next attempt reopens from scratch.
       const stale = this._handle;

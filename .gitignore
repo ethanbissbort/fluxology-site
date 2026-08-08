@@ -27,6 +27,18 @@ build/
 logs/
 *.log
 
+# Runtime data written by the services when run locally.
+# services/contact-api/README.md documents
+#   INQUIRY_LOG_PATH=./data/inquiries.jsonl PORT=8081 npm start
+# as the local-dev invocation, which writes services/contact-api/data/ —
+# inside the repository. Every record in that file holds a real name, email,
+# phone number, message, client IP and User-Agent, and the store deliberately
+# chmods it 0600. One `git add -A` after a local test would put that in public
+# git history permanently. These two rules mirror
+# services/contact-api/.dockerignore, which already excluded both.
+services/*/data/
+*.jsonl
+
 # Temporary files
 *.tmp
 *.temp

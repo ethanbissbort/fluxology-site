@@ -275,10 +275,22 @@ export function createHandler({ config, store, mailer, limiter, logError = conso
         sendJson(res, 405, { ok: false, error: 'Method not allowed.' }, { Allow: 'GET, HEAD' });
         return;
       }
+      // `inquiryLog` exists so that "has anything come in?" is answerable
+      // without exec-ing into the container. With SMTP unset — the shipping
+      // default — the JSONL log is the authoritative and only copy of a
+      // submission, and nothing else in the deployment surfaces its arrival.
+      // stats() is derived from stat(2), so this stays O(1) as the log grows.
+      let inquiryLog;
+      try {
+        inquiryLog = await store.stats();
+      } catch {
+        inquiryLog = null; // never fail a health check over a status field
+      }
       sendJson(res, 200, {
         status: 'ok',
         emailEnabled: mailer.enabled,
         uptimeSeconds: Math.round((Date.now() - startedAt) / 1000),
+        inquiryLog,
       });
       return;
     }
