@@ -1,0 +1,140 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navigation from '../components/Navigation.astro';
+import NavigationMenu from '../components/NavigationMenu.svelte';
+
+// Landing page for a no-JavaScript contact submit: the form posts natively to
+// /api/contact, which answers with a 303 to /contact-received/ (success) or
+// /contact-received/?error=1 (validation/server failure). The hydrated Svelte
+// form never navigates here — it reports status inline instead.
+//
+// This is a static build, so the query string cannot be read at build time.
+// Both outcomes are rendered and the inline script below (placed before the
+// panels, so the class lands ahead of first paint) selects the failure view.
+---
+
+<BaseLayout
+  title="Inquiry Received - Fluxology Inc."
+  description="Confirmation page for planning and future project inquiries sent to Fluxology, Inc."
+  noindex
+>
+  <script is:inline>
+    if (new URLSearchParams(window.location.search).get('error')) {
+      document.documentElement.classList.add('inquiry-failed');
+    }
+  </script>
+
+  <Navigation />
+  <NavigationMenu client:load />
+
+  <main id="main-content" tabindex="-1" class="received">
+    <div class="received-panel received-success">
+      <p class="received-eyebrow">Planning inquiry</p>
+      <h1 class="received-title">Inquiry received</h1>
+      <p class="received-text">
+        Thank you — your message has been recorded. We will respond as the planning schedule
+        permits. Fluxology is in its 2026-2028 foundation period, so replies are considered, not
+        immediate.
+      </p>
+      <p class="received-text received-note">
+        Prefer email? Write to <a href="mailto:info@fluxology.ca">info@fluxology.ca</a> at any time.
+      </p>
+      <noscript>
+        <p class="received-text received-note">
+          If the address bar of this page ends in <code>?error=1</code>, the inquiry was <strong>not</strong>
+          saved — please email <a href="mailto:info@fluxology.ca">info@fluxology.ca</a> directly.
+        </p>
+      </noscript>
+      <a href="/" class="cta-button cta-primary received-link">Back to the homepage</a>
+    </div>
+
+    <div class="received-panel received-error">
+      <p class="received-eyebrow">Planning inquiry</p>
+      <h1 class="received-title">Your inquiry was not sent</h1>
+      <p class="received-text">
+        Something went wrong and the message was not recorded. Nothing has been saved, so please
+        do not assume it reached us.
+      </p>
+      <p class="received-text received-note">
+        Email <a href="mailto:info@fluxology.ca">info@fluxology.ca</a> directly with your inquiry,
+        or return to the form and try again.
+      </p>
+      <a href="/#contact" class="cta-button cta-primary received-link">Back to the form</a>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .received {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background: linear-gradient(
+      135deg,
+      var(--corporate-primary-navy) 0%,
+      var(--corporate-primary-slate) 100%
+    );
+    color: var(--corporate-neutral-white);
+  }
+
+  .received-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    max-width: 40rem;
+  }
+
+  /* Success is the default view; the failure view replaces it only when the
+     API redirected with ?error=1 (see the inline script above). */
+  .received-error {
+    display: none;
+  }
+
+  :global(html.inquiry-failed) .received-success {
+    display: none;
+  }
+
+  :global(html.inquiry-failed) .received-error {
+    display: flex;
+  }
+
+  .received-eyebrow {
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+
+  .received-title {
+    font-family: var(--font-corporate-heading);
+    font-size: var(--font-size-2xl);
+  }
+
+  .received-text {
+    color: var(--corporate-neutral-gray);
+    max-width: 34rem;
+    line-height: var(--line-height-loose);
+  }
+
+  .received-note {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Accessible link tint on the navy gradient (matches the AA-checked pairing
+     used for links on dark corporate surfaces elsewhere). */
+  .received-text a {
+    color: var(--corporate-accent-blue-text);
+  }
+
+  .received-link {
+    display: inline-block;
+    margin-top: 1rem;
+    text-decoration: none;
+  }
+</style>
