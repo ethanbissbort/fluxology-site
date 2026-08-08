@@ -51,11 +51,14 @@ const valueImages = [
         <p class="section-subtitle">A trade-led, one-owner micro-enterprise designed to integrate with a future homestead.</p>
       </header>
 
+      {/* Keep a closing inline tag and the word after it on ONE line: Astro's
+          compressHTML collapses a newline+indent between a closing inline tag
+          and the next text node to nothing ("...Ontario.The four..."). */}
       <div class="legal-status observe-fade">
         <span class="status-dot" aria-hidden="true"></span>
         <p>
-          <strong>Fluxology, Inc. is federally incorporated and registered to operate in Ontario.</strong>
-          The four operating names presented on this site are proposed and have not yet been registered.
+          <strong>Fluxology, Inc. is federally incorporated and registered to operate in Ontario.</strong> The
+          four operating names presented on this site are proposed and have not yet been registered.
         </p>
       </div>
 

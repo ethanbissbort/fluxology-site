@@ -541,6 +541,19 @@
   box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.1);
 }
 
+/* ...but `outline: none` above out-specifies the global :focus-visible ring in
+   utilities.css, and the border that replaced it is #3A86FF — measured 2.78:1
+   against the page background and 2.23:1 against the field interior, under
+   WCAG 1.4.11's 3:1 non-text minimum. Put a real indicator back for keyboard
+   focus, in the text-safe tint (>=4.19:1 against every surface it lands on).
+   Mouse clicks still get only the border+glow, as before. */
+.form-input:focus-visible,
+.form-select:focus-visible,
+.form-textarea:focus-visible {
+  outline: 2px solid var(--corporate-accent-blue-text);
+  outline-offset: 2px;
+}
+
 .form-input::placeholder,
 .form-textarea::placeholder {
   /* 0.4 alpha composites to ~2.4:1 against the input surface at the slate

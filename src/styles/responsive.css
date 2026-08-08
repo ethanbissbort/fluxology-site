@@ -422,6 +422,24 @@
     min-width: 44px;
   }
 
+  /* min-height/min-width do nothing on an inline box, so the two link groups
+     that render inline (footer division links, the mailto links in the contact
+     panel) measured 15px tall despite the rule above. inline-flex gives them a
+     box the constraint can act on without turning them into full-width blocks
+     the way `display:block` would. */
+  .footer-list a,
+  .info-text a {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Form controls were not in the selector at all — the contact fields
+     measured 33.9px. (.form-textarea already carries a 120px floor.) */
+  .form-input,
+  .form-select {
+    min-height: 44px;
+  }
+
   /* Disable hover effects on touch devices */
   @media (hover: none) {
     .service-card:hover {
@@ -535,6 +553,19 @@
    PRINT STYLES
    ======================================== */
 @media print {
+  /* Reveal every scroll-animated wrapper. These sit at opacity:0 until an
+     IntersectionObserver marks them .observed, so printing a page the reader
+     has not scrolled end to end produced blank sheets (measured: 21 of 24 A4
+     page-heights at 0.00% ink). Print has no scrolling and no observer, so the
+     reveal state is never reached — force it, exactly as the fail-open reset
+     in utilities.css does when JavaScript is unavailable. */
+  .observe-fade,
+  .observe-slide-up,
+  .observe-scale {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
   /* Hide non-essential elements */
   .main-nav,
   .scroll-progress,
@@ -596,6 +627,14 @@
 @media (max-width: 1150px) {
   .nav-toggle {
     display: flex;
+    /* From here down the hamburger is the ONLY way to open navigation, so it
+       needs the 44px tap target across the whole range — the generic
+       touch-target rule above only reaches max-width:767px, which left every
+       portrait tablet with a 40x31px control. */
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .nav-links {

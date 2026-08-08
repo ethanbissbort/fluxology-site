@@ -6,6 +6,21 @@
   // broke themed typography entirely: astro:fonts registers HASHED family
   // names (e.g. "Outfit-1af0…"), so a raw 'Outfit' set at runtime resolved to
   // the generic sans-serif fallback on every theme change.
+  //
+  // KNOWN AND DELIBERATE: accentPrimary here does NOT match the value the
+  // matching [data-theme] block in themes.css gives --current-accent-primary
+  // (industrial: orange here / amber there; natural: terracotta here /
+  // terracotta-text there). The two are consumed by different things and both
+  // are correct where they land:
+  //   * this map sets the token on <html>, whose only consumers are non-text
+  //     (nav focus ring, scroll-progress bar, back-to-top surface, cursor) and
+  //     want the saturated brand tone — measured 4.2:1 on the nav background,
+  //     over the 3:1 non-text bar;
+  //   * themes.css sets it inside each section, where it tints small TEXT
+  //     labels that need the lightened tone to hold AA.
+  // Do NOT "unify" these by copying one into the other: it is a silent
+  // contrast change in whichever context loses. If they are ever merged, split
+  // the token into text/non-text variants first.
   const themes = {
     corporate: {
       bgPrimary: 'var(--corporate-primary-navy)',
@@ -92,6 +107,11 @@
   }
 
   onMount(() => {
+    // This island is the ONLY thing that adds `.observed`, so the fail-open
+    // watchdog in BaseLayout's <head> waits for this marker before it decides
+    // that the scroll reveal is never coming and unhides everything.
+    document.documentElement.classList.add('reveal-ready');
+
     // Only page sections drive theming. A bare [data-theme] selector also
     // matched ParticleSystem containers, which have no id — every time one
     // intersected, updateActiveNavLink('') wiped the nav's active state.

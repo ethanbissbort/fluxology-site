@@ -185,7 +185,10 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
           <h3 id={`${id}-process-title`}>{processTitle}</h3>
           {processIntro && <p>{processIntro}</p>}
         </header>
-        <ol class:list={['process-steps', `process-count-${processSteps.length}`]}>
+        {/* No process-count-N class: nothing has ever styled one, so it read as
+            a working layout hook while doing nothing. The showcase grid below
+            genuinely uses its count class. */}
+        <ol class="process-steps">
           {processSteps.map((step, index) => (
             <li>
               <span class="process-number">{String(index + 1).padStart(2, '0')}</span>
@@ -502,6 +505,18 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
     grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.85fr);
   }
 
+  /* No division ships three showcase images today; without this rule a third
+     one would silently fall through to the untemplated single-column default,
+     the same way process-count-N did. */
+  .showcase-count-3 {
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
+    grid-template-rows: repeat(2, minmax(130px, 1fr));
+  }
+
+  .showcase-count-3 .showcase-item--primary {
+    grid-row: 1 / 3;
+  }
+
   .showcase-count-4 {
     grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
     grid-template-rows: repeat(3, minmax(130px, 1fr));
@@ -618,12 +633,14 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
 
     .showcase-grid,
     .showcase-count-2,
+    .showcase-count-3,
     .showcase-count-4 {
       grid-template-columns: 1fr;
       grid-template-rows: none;
       min-height: 0;
     }
 
+    .showcase-count-3 .showcase-item--primary,
     .showcase-count-4 .showcase-item--primary {
       grid-row: auto;
     }

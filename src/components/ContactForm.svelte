@@ -90,6 +90,15 @@
     }
   }
 
+  // Success is only ever claimed on a POSITIVELY parsed `{ ok: true }` body.
+  // A 200 whose body cannot be parsed (a captive portal, a corporate proxy
+  // interstitial, a hand-rolled maintenance `respond 200`) is NOT proof that
+  // the inquiry was stored, and reporting it as success both lies to the
+  // sender and wipes the message they typed.
+  function isAccepted(response, data) {
+    return response.ok && !!data && typeof data === 'object' && data.ok === true;
+  }
+
   // A 400 carries { fields: { <name>: '<human-readable message>' } }. Known
   // fields become inline errors on their own input; anything unrecognised is
   // folded into the status message rather than silently dropped.
@@ -132,7 +141,7 @@
 
       const data = await readJson(response);
 
-      if (response.ok && (!data || data.ok !== false)) {
+      if (isAccepted(response, data)) {
         // Reset form on success
         formData = emptyForm();
         website = '';
@@ -261,6 +270,7 @@
           bind:value={formData.fullName}
           oninput={() => clearError('fullName')}
           required
+          minlength="2"
           aria-invalid={!!errors.fullName}
           aria-describedby={errors.fullName ? 'fullName-error' : undefined}
           placeholder="John Doe"
@@ -350,6 +360,11 @@
         <label for="message" class="form-label">
           Message <span class="required">*</span>
         </label>
+        <!-- minlength mirrors the API's own limit (validate.mjs: message >= 10,
+             fullName >= 2). Without it the NATIVE (no-JS) submit sends a
+             too-short message, the API answers 303 -> /contact-received/?error=1,
+             and the reader is left to work out from the address bar that nothing
+             was saved. Native validation now stops it in the field it belongs to. -->
         <textarea
           id="message"
           name="message"
@@ -358,6 +373,7 @@
           bind:value={formData.message}
           oninput={() => clearError('message')}
           required
+          minlength="10"
           aria-invalid={!!errors.message}
           aria-describedby={errors.message ? 'message-error' : undefined}
           placeholder="Describe the future need, collaboration or question, including location and timing where relevant..."

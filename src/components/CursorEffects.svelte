@@ -31,6 +31,7 @@
     let ringX = x;
     let ringY = y;
     let raf = null;
+    let nativeCursorHidden = false;
 
     function startLoop() {
       if (raf === null) raf = requestAnimationFrame(loop);
@@ -43,10 +44,23 @@
       }
     }
 
+    function hideNativeCursor() {
+      // Deferred to the first pointer movement on purpose: the replacement
+      // layers only reach opacity 1 via `shown`, which is also set here, so
+      // adding the class at start() left desktop visitors with NO cursor at
+      // all — native hidden, replacement still transparent — until they
+      // happened to move the mouse.
+      if (!nativeCursorHidden) {
+        nativeCursorHidden = true;
+        document.documentElement.classList.add('cursor-fx');
+      }
+    }
+
     function onMove(e) {
       x = e.clientX;
       y = e.clientY;
       shown = true;
+      hideNativeCursor();
       startLoop();
       // Grow the ring over anything interactive.
       hovering = !!e.target?.closest?.(
@@ -72,20 +86,33 @@
     function loop() {
       ringX += (x - ringX) * 0.16;
       ringY += (y - ringY) * 0.16;
+
+      // Settle and stop once the ring has caught the pointer. Without this the
+      // loop re-queued itself at 60fps for as long as the tab stayed focused,
+      // writing two identical transforms per frame after the pointer had been
+      // stationary for minutes. onMove's startLoop() restarts it.
+      if (Math.abs(x - ringX) < 0.1 && Math.abs(y - ringY) < 0.1) {
+        ringX = x;
+        ringY = y;
+        raf = null;
+      }
+
       if (dotEl) dotEl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
       if (ringEl) ringEl.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%)`;
-      raf = requestAnimationFrame(loop);
+
+      if (raf !== null) raf = requestAnimationFrame(loop);
     }
 
     function start() {
       if (enabled) return;
       enabled = true;
-      document.documentElement.classList.add('cursor-fx');
       document.addEventListener('pointermove', onMove, { passive: true });
       document.addEventListener('pointerdown', onDown, { passive: true });
       document.documentElement.addEventListener('pointerleave', onLeave);
       // The rAF loop starts on the first pointermove (see startLoop), so an
-      // idle page never lerps invisible layers.
+      // idle page never lerps invisible layers; loop() stops it again once the
+      // ring converges. The native cursor is only hidden once the replacement
+      // is actually painted (see hideNativeCursor).
     }
 
     function stop() {
@@ -98,6 +125,7 @@
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerdown', onDown);
       document.documentElement.removeEventListener('pointerleave', onLeave);
+      nativeCursorHidden = false;
       document.documentElement.classList.remove('cursor-fx');
     }
 

@@ -30,38 +30,42 @@
 }
 
 
-/* Intersection Observer triggered classes */
+/* Intersection Observer triggered classes.
+
+   FAIL-OPEN. The hidden state is scoped to `html.js-reveal`, a class added by
+   a tiny inline script in BaseLayout's <head> (before any island loads) and
+   dropped again by that script's watchdog if the island which adds `.observed`
+   never hydrates. Nothing is hidden by CSS that only JavaScript can undo:
+
+     - JS disabled          -> the class is never added        -> visible
+     - island chunk 404s    -> the watchdog removes the class  -> visible
+     - normal page          -> hidden until .observed          -> reveal plays
+
+   These wrappers carry ~90% of every page body plus the server-rendered
+   fallback contact form, so the previous unconditional `opacity: 0` turned one
+   failed request for the shared Svelte runtime chunk into a blank page. */
 .observe-fade {
-  opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-.observe-fade.observed {
-  opacity: 1;
+.observe-slide-up,
+.observe-scale {
+  transition: opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1),
+              transform 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-.observe-slide-up {
+html.js-reveal .observe-fade:not(.observed) {
+  opacity: 0;
+}
+
+html.js-reveal .observe-slide-up:not(.observed) {
   opacity: 0;
   transform: translateY(50px);
-  transition: opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1),
-              transform 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-.observe-slide-up.observed {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.observe-scale {
+html.js-reveal .observe-scale:not(.observed) {
   opacity: 0;
   transform: scale(0.9);
-  transition: opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1),
-              transform 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
-}
-
-.observe-scale.observed {
-  opacity: 1;
-  transform: scale(1);
 }
 
 
