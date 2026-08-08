@@ -1,53 +1,102 @@
 # Fluxology Dashboard Architecture v3
 
-Three independent static dashboards live in one repository and are exposed through dedicated subdomains.
+Three independent dashboard frontends live in the main Fluxology repository and are exposed through dedicated subdomains.
 
-| Category | Public URL | Static app path | Canonical feed |
+| Category | Public URL | Static frontend | Live API scope |
 |---|---|---|---|
-| Office search | `https://office.fluxology.ca/` | `public/office-scout/` | `public/office-scout/data/listings.json` |
-| Deals / shopping | `https://deals.fluxology.ca/` | `public/deals/` | `public/deals/data/listings.json` |
-| Jobs | `https://jobs.fluxology.ca/` | `public/jobs/` | `public/jobs/data/listings.json` |
+| Office search | `https://office.fluxology.ca/` | `public/office-scout/` | `office` |
+| Deals / shopping | `https://deals.fluxology.ca/` | `public/deals/` | `deals` |
+| Jobs | `https://jobs.fluxology.ca/` | `public/jobs/` | `jobs` |
 
-Netlify host-based 200 rewrites map each subdomain to its isolated static directory while leaving the subdomain visible in the browser.
+The frontends are static files served by the main Apache origin. The live listing feeds are served by the self-hosted `dashboard-api` service from persistent storage.
 
-## Data flow
+## Production data flow
 
-### Current preferred transport: GitHub intermediary
+Preferred path:
 
-`ChatGPT skill / scheduled task -> GitHub JSON feed -> Netlify deploy -> open dashboard tab -> hourly refresh`
+`ChatGPT category skill / trusted automation -> authenticated dashboard API -> persistent feed -> dashboard`
 
-This is the default because the connected GitHub tool is a supported write surface for ChatGPT tasks, gives version history and rollback, and keeps the dashboards static.
+Each dashboard exposes a same-origin write endpoint through the VPS edge proxy:
 
-Each task or skill reads the current feed before writing, merges by stable ID, preserves records belonging to other searches in the same category, and avoids rewriting the feed when nothing materially changed.
+- `POST https://office.fluxology.ca/api/upsert`
+- `POST https://deals.fluxology.ca/api/upsert`
+- `POST https://jobs.fluxology.ca/api/upsert`
 
-### Future direct-push transport
+Each category has its own bearer token. Write credentials live only in trusted automation/connector configuration and the VPS `.env`; they never appear in public frontend code.
 
-If the installed skill runtime gains an authenticated arbitrary HTTP write tool, or a purpose-built Fluxology connector is installed, transport can change to:
+The dashboards continue requesting `./data/listings.json`. In production, the edge proxy intercepts that exact path and serves the live persistent API feed. Therefore the browser code stays static and same-origin.
 
-`ChatGPT skill / scheduled task -> authenticated ingest API -> feed store -> dashboard`
+## Static JSON files
 
-The dashboard schemas are intentionally independent of transport, so moving from GitHub to a VPS/API later does not require redesigning the UI.
+The checked-in files remain at:
 
-A direct API should use a separate token per category and should expose category-specific endpoints such as `/ingest/office`, `/ingest/deals`, and `/ingest/jobs`. The public dashboards should have read-only access; write credentials must never be embedded in browser JavaScript.
+- `public/office-scout/data/listings.json`
+- `public/deals/data/listings.json`
+- `public/jobs/data/listings.json`
 
-## Separation of concerns
+They are **bootstrap snapshots**, not the authoritative production datastore after the dashboard API has initialized its persistent volume. They serve three purposes:
 
-The GitHub JSON files contain curated research state. Personal workflow state is browser-local and is not owned by scheduled tasks.
+1. first-start seeding;
+2. local frontend development without the API;
+3. optional GitHub-intermediary/fallback workflows.
+
+The authoritative live files are stored on the `dashboard_data` Docker volume as `office.json`, `deals.json`, and `jobs.json`.
+
+## GitHub fallback
+
+GitHub remains a valid intermediary when a scheduled skill runtime cannot call the authenticated direct-write tool.
+
+Fallback path:
+
+`skill -> GitHub bootstrap/snapshot JSON -> controlled import/restore -> dashboard API`
+
+Routine production automation should prefer `POST /api/upsert` because it updates the live dashboard immediately and does not require a site rebuild.
+
+## API merge behavior
+
+Upserts merge by stable `id` and preserve unspecified fields.
+
+- New records are added.
+- Existing records are shallow-merged.
+- Routine freshness timestamps do not automatically count as material listing changes.
+- Office price history is preserved and receives a new observation when asking rent or estimated all-in monthly cost changes.
+- Writes are serialized independently for office, deals, and jobs and committed with atomic file replacement.
+- Successful writes append an audit entry to `/data/audit.jsonl`.
+
+A full feed can be restored with authenticated `PUT /api/feed`, but routine skills should use upsert.
+
+## Separation of research and personal workflow
+
+The API feed contains curated research state. Personal workflow state remains browser-local and is not owned by scheduled tasks.
 
 - Office: Saved / Contacted / Tour Booked / Rejected / Leased plus personal notes.
 - Deals: Watch / Saved / Purchased / Rejected plus personal notes.
 - Jobs: Saved / Applied / Interview / Rejected / Offer plus personal notes.
 
-Scheduled tasks must never invent or overwrite browser-local state.
+Writers must never invent or overwrite browser-local state.
 
 ## Skill ownership
 
-Each major category has one primary ChatGPT skill that owns normalization rules for its feed. Sub-searches can share a category feed by using stable IDs and category/search labels.
+Each major category has one primary ChatGPT skill that owns normalization rules for its feed. Sub-searches may share a category feed through stable IDs and explicit category/search labels.
 
-- Office skill -> Office Scout schema.
-- Deals skill -> shopping schema, with sub-searches such as bulk LEGO and bulk minifigures.
-- Jobs skill -> T176/trades job schema and ranking model.
+- Office skill -> Office Scout schema and `/api/upsert` on `office.fluxology.ca`.
+- Deals skill -> shopping schema and `/api/upsert` on `deals.fluxology.ca`.
+- Jobs skill -> T176/trades job schema and `/api/upsert` on `jobs.fluxology.ca`.
 
-## Deployment requirement
+For Deals, independent searches such as bulk LEGO and bulk minifigures must update only their own stable records and preserve other shopping categories.
 
-The Netlify site must have `office.fluxology.ca`, `deals.fluxology.ca`, and `jobs.fluxology.ca` assigned as production domain aliases. With external DNS, each subdomain should be a CNAME to the site's Netlify hostname. The repository already contains the host-based rewrite rules; domain assignment/DNS remains an infrastructure configuration step outside the repository.
+## Runtime components
+
+The Fluxology Compose project contains:
+
+- `fluxology-apache` — static Astro site and dashboard shells, internal port 6080;
+- `fluxology-contact-api` — contact form API, internal port 8081;
+- `fluxology-dashboard-api` — dashboard feed/read/write service, internal port 8082.
+
+All three join the external `fluxology-edge` Docker network and publish no host ports. The VPS-wide Caddy container is managed separately from this repository and joins the same network.
+
+See:
+
+- `services/dashboard-api/README.md` for API behavior and write examples;
+- `docs/CADDY-INTEGRATION.md` for the exact external Caddy routing configuration;
+- `docs/DEPLOYMENT-VPS.md` for deployment and backup procedures.
