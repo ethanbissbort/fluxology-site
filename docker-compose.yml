@@ -110,7 +110,7 @@ services:
       - "com.fluxology.version=2.0.0"
 
   # ---------------------------------------------------------------------------
-  # contact-api — self-hosted contact form handler (replaces Netlify Forms)
+  # contact-api — self-hosted contact form handler
   # ---------------------------------------------------------------------------
   contact-api:
     container_name: fluxology-contact-api
