@@ -12,7 +12,9 @@
 <body>
   <div class="shell">
     <header class="top">
-      <a class="brand" href="/office-scout/" aria-label="Fluxology Office Scout home">
+      <!-- Relative: this app is served at the root of office.fluxology.ca and
+           also as a shadow copy under fluxology.ca/office-scout/. -->
+      <a class="brand" href="./" aria-label="Fluxology Office Scout home">
         <img src="/favicon.svg" alt="">
         <div>
           <div class="eyebrow">FLUXOLOGY, INC.</div>
@@ -20,7 +22,7 @@
         </div>
       </a>
       <div class="actions">
-        <span class="live"><span class="dot"></span><span id="live">Loading feed…</span></span>
+        <span class="live"><span class="dot"></span><span id="live" role="status" aria-live="polite">Loading feed…</span></span>
         <button class="btn ghost" id="exportWorkspace" type="button">Export workspace</button>
         <label class="btn ghost import-label" for="importWorkspace">Import</label>
         <input id="importWorkspace" type="file" accept="application/json" hidden>
@@ -29,6 +31,8 @@
     </header>
 
     <main>
+      <p class="storage-warning" id="storageWarning" role="alert" hidden></p>
+
       <section class="hero">
         <div>
           <p class="eyebrow accent">PRIVATE OFFICE SEARCH · GTA</p>
