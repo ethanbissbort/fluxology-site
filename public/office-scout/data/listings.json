@@ -1,6 +1,7 @@
 {
-  "schemaVersion": 1,
-  "generatedAt": "2026-08-08T08:46:00-04:00",
+  "schemaVersion": "2.5",
+  "appVersion": "2.5.0",
+  "generatedAt": "2026-08-08T09:32:00-04:00",
   "searchName": "Fluxology GTA private office scout",
   "hardAllInCeilingCad": 850,
   "listings": [
@@ -40,7 +41,10 @@
       "sourceUrl": "https://venturexcanada.ca/locations/mississauga/sherwoodtowne/",
       "lastVerified": "2026-08-08",
       "lastChanged": "2026-08-08",
-      "active": true
+      "active": true,
+      "priceHistory": [
+        {"date":"2026-08-08","askingRent":650,"estimatedAllInMonthly":734.5}
+      ]
     },
     {
       "id": "village-hive-duncan-mill",
@@ -78,7 +82,10 @@
       "sourceUrl": "https://thevillagehive.ca/",
       "lastVerified": "2026-08-07",
       "lastChanged": "2026-08-07",
-      "active": true
+      "active": true,
+      "priceHistory": [
+        {"date":"2026-08-07","askingRent":650,"estimatedAllInMonthly":734.5}
+      ]
     },
     {
       "id": "humbold-1120-finch",
@@ -116,7 +123,10 @@
       "sourceUrl": "https://www.humbold.ca/",
       "lastVerified": "2026-08-07",
       "lastChanged": "2026-08-07",
-      "active": true
+      "active": true,
+      "priceHistory": [
+        {"date":"2026-08-07","askingRent":652,"estimatedAllInMonthly":736.76}
+      ]
     },
     {
       "id": "gtec-2985-drew",
@@ -154,7 +164,10 @@
       "sourceUrl": "https://gtexecutivecentre.com/locations/",
       "lastVerified": "2026-08-08",
       "lastChanged": "2026-08-08",
-      "active": true
+      "active": true,
+      "priceHistory": [
+        {"date":"2026-08-08","askingRent":797,"estimatedAllInMonthly":900.61}
+      ]
     }
   ]
 }
