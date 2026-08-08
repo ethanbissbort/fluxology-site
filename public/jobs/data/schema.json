@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fluxology Jobs Feed v3",
+  "type": "object",
+  "required": ["schemaVersion", "appVersion", "generatedAt", "listings"],
+  "properties": {
+    "schemaVersion": {"const": 3},
+    "appVersion": {"type": "string"},
+    "generatedAt": {"type": "string"},
+    "searchName": {"type": "string"},
+    "currency": {"const": "CAD"},
+    "listings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "company"],
+        "properties": {
+          "id": {"type": "string"},
+          "source": {"type": ["string", "null"]},
+          "sourceId": {"type": ["string", "null"]},
+          "url": {"type": ["string", "null"]},
+          "title": {"type": "string"},
+          "company": {"type": "string"},
+          "location": {"type": ["string", "null"]},
+          "tracks": {"type": "array", "items": {"type": "string"}},
+          "primaryTrack": {"type": ["string", "null"]},
+          "employmentType": {"type": ["string", "null"]},
+          "entryLevelFit": {"type": ["boolean", "null"]},
+          "fitScore": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+          "careerValue": {"type": ["string", "null"]},
+          "trainingValue": {"type": ["string", "null"]},
+          "salaryText": {"type": ["string", "null"]},
+          "hourlyCadMin": {"type": ["number", "null"]},
+          "hourlyCadMax": {"type": ["number", "null"]},
+          "annualCadMin": {"type": ["number", "null"]},
+          "annualCadMax": {"type": ["number", "null"]},
+          "schedule": {"type": ["string", "null"]},
+          "benefits": {"type": ["array", "string", "null"]},
+          "requirements": {"type": ["array", "string", "null"]},
+          "transitConnection": {"type": ["string", "null"]},
+          "finalWalkMinutes": {"type": ["number", "null"]},
+          "transitPractical": {"type": ["boolean", "null"]},
+          "skateboardPractical": {"type": ["boolean", "null"]},
+          "postedAt": {"type": ["string", "null"]},
+          "firstSeen": {"type": ["string", "null"]},
+          "lastVerified": {"type": ["string", "null"]},
+          "lastChanged": {"type": ["string", "null"]},
+          "active": {"type": ["boolean", "null"]},
+          "summary": {"type": ["string", "null"]},
+          "notes": {"type": ["string", "null"]}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
