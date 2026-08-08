@@ -44,13 +44,27 @@ The authoritative live files are stored on the `dashboard_data` Docker volume as
 
 ## GitHub fallback
 
-GitHub remains a valid intermediary when a scheduled skill runtime cannot call the authenticated direct-write tool.
+GitHub remains the automatic fallback when a scheduled skill runtime cannot call the authenticated direct-write tool.
 
 Fallback path:
 
-`skill -> GitHub bootstrap/snapshot JSON -> controlled import/restore -> dashboard API`
+`skill -> GitHub snapshot JSON -> GitHub Actions feed bridge -> dashboard API -> dashboard`
 
-Routine production automation should prefer `POST /api/upsert` because it updates the live dashboard immediately and does not require a site rebuild.
+The workflow is:
+
+`.github/workflows/sync-dashboard-feeds.yml`
+
+It watches only the three listing snapshot files. When one changes on `main`, the workflow extracts its `listings` array and calls that dashboard's `POST /api/upsert`. It does **not** replace the entire live feed, so API-only records are not deleted merely because they are absent from a repository snapshot.
+
+Configure these GitHub repository secrets with the same values used by the VPS dashboard API:
+
+- `OFFICE_INGEST_TOKEN`
+- `DEALS_INGEST_TOKEN`
+- `JOBS_INGEST_TOKEN`
+
+The workflow can also be run manually with `workflow_dispatch`.
+
+Routine production automation should prefer the direct write tool when available because it removes the intermediary hop. The GitHub bridge exists so currently supported scheduled skills can still update the live dashboard automatically.
 
 ## API merge behavior
 
@@ -98,5 +112,5 @@ All three join the external `fluxology-edge` Docker network and publish no host 
 See:
 
 - `services/dashboard-api/README.md` for API behavior and write examples;
-- `docs/CADDY-INTEGRATION.md` for the exact external Caddy routing configuration;
+- `docs/CADDY-INTEGRATION.md` for the external Caddy routing configuration;
 - `docs/DEPLOYMENT-VPS.md` for deployment and backup procedures.
