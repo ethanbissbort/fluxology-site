@@ -83,9 +83,16 @@ function offlineFallback() {
 // are still cached by the fetch handler (/_assets/ cache-first, everything
 // else stale-while-revalidate), so a visited page keeps its imagery offline;
 // what is given up is priming images the visitor never saw.
+//
+// The url(...) pattern is font-only for the same reason, and one more: a
+// background texture is now declared once per format (AVIF and WebP), and a
+// crawler cannot tell which one the browser will choose. Priming both meant
+// every first visit paid for a texture it would never decode — 605 kB -> 792 kB
+// on the homepage. Fonts have no such fallback chain, and an unstyled offline
+// render is exactly what this priming exists to prevent, so they stay.
 const HTML_ASSET_PATTERN =
   /(?:href|src|component-url|renderer-url)="(\/[^"]+\.(?:css|js|mjs|woff2?))"/g;
-const CSS_URL_PATTERN = /url\(\s*['"]?(\/[^'")]+)['"]?\s*\)/g;
+const CSS_URL_PATTERN = /url\(\s*['"]?(\/[^'")]+\.woff2?)['"]?\s*\)/g;
 const JS_IMPORT_PATTERN = /(?:import|from)\s*\(?\s*["']([^"']+\.(?:js|mjs))["']/g;
 
 // Cache key for every runtime read and write: origin + pathname, query
