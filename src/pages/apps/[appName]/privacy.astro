@@ -1,0 +1,21 @@
+---
+import AppPrivacyPage from '../../../components/app/AppPrivacyPage.astro';
+import { appPages, type AppPageConfig } from '../../../data/appPages';
+
+export function getStaticPaths() {
+  return appPages
+    .filter((app) => app.published)
+    .map((app) => ({
+      params: { appName: app.slug },
+      props: { app },
+    }));
+}
+
+interface Props {
+  app: AppPageConfig;
+}
+
+const { app } = Astro.props;
+---
+
+<AppPrivacyPage app={app} />
