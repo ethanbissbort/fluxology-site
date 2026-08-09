@@ -1,0 +1,82 @@
+---
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import type { AppPageConfig } from '../../data/appPages';
+
+interface Props {
+  app: AppPageConfig;
+}
+
+const { app } = Astro.props;
+const privacyHref = `/apps/${app.slug}/privacy/`;
+---
+
+<ContentLayout
+  title={`${app.name} Support | Fluxology, Inc.`}
+  description={`Support information for ${app.name}, developed and published by Fluxology, Inc.`}
+  eyebrow={`${app.name} · Support`}
+  heading={`${app.name} Support`}
+  intro={app.support.intro}
+>
+  <section>
+    <h2>Contact support</h2>
+    <p>
+      For technical problems, bug reports, feature feedback or questions about {app.name}, contact Fluxology at
+      <a href={`mailto:${app.supportEmail}`}>{app.supportEmail}</a>.
+    </p>
+    <div class="content-callout">
+      <strong>Fluxology, Inc.</strong><br />
+      Support for {app.name}<br />
+      Ontario, Canada<br />
+      <a href={`mailto:${app.supportEmail}`}>{app.supportEmail}</a>
+    </div>
+    {app.support.responseNote && <p class="content-meta">{app.support.responseNote}</p>}
+  </section>
+
+  <section>
+    <h2>Include this information with a support request</h2>
+    <ul>
+      {app.support.issueChecklist.map((item) => <li>{item}</li>)}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Basic troubleshooting</h2>
+    <ol>
+      {app.support.troubleshooting.map((item) => <li>{item}</li>)}
+    </ol>
+  </section>
+
+  {app.support.accountAndDataRequests && (
+    <section>
+      <h2>Account and data requests</h2>
+      <p>{app.support.accountAndDataRequests}</p>
+    </section>
+  )}
+
+  {app.support.purchasesAndBilling && (
+    <section>
+      <h2>Purchases and billing</h2>
+      <p>{app.support.purchasesAndBilling}</p>
+    </section>
+  )}
+
+  <section>
+    <h2>Privacy</h2>
+    <p>
+      The app-specific privacy policy is available at
+      <a href={privacyHref}>{privacyHref}</a>. The general Fluxology corporate privacy policy is available at
+      <a href="/privacy/">fluxology.ca/privacy/</a>.
+    </p>
+  </section>
+
+  <section>
+    <h2>App information</h2>
+    <div class="content-card">
+      <p><strong>App:</strong> {app.name}</p>
+      <p><strong>Version:</strong> {app.version}</p>
+      <p><strong>Platform:</strong> {app.platform}</p>
+      <p><strong>Publisher:</strong> Fluxology, Inc.</p>
+      <p><strong>Description:</strong> {app.description}</p>
+    </div>
+  </section>
+</ContentLayout>
