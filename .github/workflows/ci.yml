@@ -101,7 +101,7 @@ jobs:
           grep -q 'Strict-Transport-Security' caddy-from-doc.Caddyfile || {
             echo 'The documented edge config no longer sets HSTS. Apache is forbidden' >&2
             echo 'from setting it (see docker/apache/httpd.conf), so nothing would.' >&2; exit 1; }
-          grep -q '^\tlog {' caddy-from-doc.Caddyfile || {
+          grep -Eq '^[[:space:]]*log[[:space:]]*\{' caddy-from-doc.Caddyfile || {
             echo 'The documented edge config no longer has an access log — /api/*' >&2
             echo 'and /data/listings.json would be unlogged everywhere.' >&2; exit 1; }
           wc -l caddy-from-doc.Caddyfile
