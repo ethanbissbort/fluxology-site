@@ -214,7 +214,10 @@ services:
         - CMD
         - node
         - -e
-        - "fetch('http://127.0.0.1:'+(process.env.PORT||8083)+'/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        # Liveness, not readiness: /readyz 503s while the authorization server
+        # is unreachable, which would mark the container unhealthy for an
+        # outage outside it. /healthz answers 200 while the process is alive.
+        - "fetch('http://127.0.0.1:'+(process.env.PORT||8083)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
       interval: 30s
       timeout: 10s
       retries: 3

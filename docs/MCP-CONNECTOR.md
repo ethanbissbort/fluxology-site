@@ -103,26 +103,15 @@ no downstream credentials of its own.
 
 ### 3. Caddy site block
 
-Merge into the VPS-wide Caddyfile alongside the blocks in
-`docs/CADDY-INTEGRATION.md`:
+The `mcp.fluxology.ca` block lives in
+[`docs/CADDY-INTEGRATION.md`](./CADDY-INTEGRATION.md) with every other site
+block. Merge that file's configuration; there is nothing extra to add here.
 
-```caddyfile
-# -----------------------------------------------------------------------------
-# MCP connector
-# -----------------------------------------------------------------------------
-mcp.fluxology.ca {
-    encode zstd gzip
-
-    request_body {
-        max_size 512KB
-    }
-
-    # Streamable HTTP may hold a response stream open; do not buffer it.
-    reverse_proxy fluxology-mcp:8083 {
-        flush_interval -1
-    }
-}
-```
+> Do **not** paste a second `mcp.fluxology.ca { … }` block alongside it. Caddy
+> rejects a duplicate hostname outright — `ambiguous site definition:
+> mcp.fluxology.ca` — and because the VPS Caddyfile serves every site on the
+> machine, the next reload or restart would take all of them down, not just
+> this one.
 
 The connector emits no CORS headers and refuses any request carrying an
 `Origin` header unless `MCP_ALLOWED_ORIGINS` explicitly lists it, so no browser

@@ -80,6 +80,16 @@ JOBS_INGEST_TOKEN=...
 
 These are server-side credentials. Never put them in public JavaScript, dashboard JSON, Git history, or browser storage.
 
+**`MCP_OAUTH_ISSUER` is required — the `mcp` service refuses to start without it.** It is the only variable in the stack with no usable default: the connector is write-capable, so it fails closed rather than guessing an identity provider. Set it to the HTTPS issuer URL of the authorization server that will mint tokens for your model client:
+
+```dotenv
+MCP_OAUTH_ISSUER=https://auth.example.com
+```
+
+The issuer must serve RFC 8414 metadata at `/.well-known/oauth-authorization-server` and a JWKS the connector can reach from inside the container. See [`MCP-CONNECTOR.md`](./MCP-CONNECTOR.md) for the full variable set (audience, allowed origins, rate limits).
+
+If you are not deploying the connector yet, leave it out and stop the service explicitly — `docker compose up -d --scale mcp=0` — rather than letting it crash-loop unnoticed behind three healthy containers.
+
 Contact-form SMTP variables remain optional. With `SMTP_HOST` unset, valid inquiries are still written to the persistent inquiry log.
 
 ## 4. Build and start the application stack
@@ -96,9 +106,12 @@ docker compose ps
 docker compose logs --tail=100 apache
 docker compose logs --tail=100 contact-api
 docker compose logs --tail=100 dashboard-api
+docker compose logs --tail=100 mcp
 ```
 
 The dashboard API should log that office, deals, and jobs writes are enabled once all three tokens are set.
+
+Check all four containers, not three. `docker compose ps` must show every service healthy: a crash-looping `mcp` is easy to miss beside three green containers, and its most likely cause is a missing or unreachable `MCP_OAUTH_ISSUER` (the log line says so explicitly).
 
 ## 5. Configure the existing Caddy container
 
@@ -132,6 +145,12 @@ curl -fsS https://jobs.fluxology.ca/api/health | jq .
 curl -fsS https://office.fluxology.ca/data/listings.json | jq '.listings | length'
 curl -fsS https://deals.fluxology.ca/data/listings.json | jq '.listings | length'
 curl -fsS https://jobs.fluxology.ca/data/listings.json | jq '.listings | length'
+
+# MCP connector. /healthz is liveness and needs no credentials; /readyz also
+# reports whether the authorization server is reachable.
+curl -fsS https://mcp.fluxology.ca/healthz | jq .
+curl -fsS https://mcp.fluxology.ca/readyz | jq .
+curl -fsS https://mcp.fluxology.ca/.well-known/oauth-protected-resource | jq .
 ```
 
 Each dashboard health endpoint should report `writeEnabled: true`. Those public

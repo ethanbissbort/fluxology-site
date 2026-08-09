@@ -330,7 +330,13 @@ mcp.fluxology.ca {
 
 	# Streamable HTTP may hold a response stream open; do not buffer it.
 	reverse_proxy fluxology-mcp:8083 {
-		health_uri /readyz
+		# Liveness, NOT readiness. /readyz reports 503 whenever the upstream
+		# authorization server is unreachable, and health-checking on it takes
+		# the whole host out of rotation — including /healthz and
+		# /.well-known/oauth-protected-resource, the document a client needs in
+		# order to authenticate. The connector could then never bootstrap out
+		# of the outage. /healthz answers 200 while the process is alive.
+		health_uri /healthz
 		health_interval 30s
 		health_timeout 5s
 
