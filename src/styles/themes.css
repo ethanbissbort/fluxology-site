@@ -9,19 +9,41 @@
   --current-text-secondary: var(--corporate-neutral-gray);
   --current-accent-primary: var(--corporate-accent-blue);
   --current-font-heading: var(--font-corporate-heading);
+  /* NOT --current-accent-primary: #3A86FF measures 1.96-2.87:1 as a ring over
+     these surfaces. See variables.css. */
+  --current-focus-ring: var(--corporate-accent-blue-text);
 }
 
 [data-theme="corporate"] .parallax-bg {
   background: linear-gradient(135deg, var(--corporate-primary-navy) 0%, var(--corporate-primary-steel) 100%);
 }
 
-/* Corporate texture: generated flux field, darkened for legible foreground copy. */
+/* Corporate texture: generated flux field, darkened for legible foreground copy.
+ *
+ * Referenced from src/assets, NOT /images/ in public/. A public/ path is copied
+ * verbatim, so it shipped unhashed and could only be given the 7-day cache the
+ * server hands every unhashed image; resolving it from src/ puts it through the
+ * bundler's asset pipeline, which content-hashes the filename into /_assets/
+ * and so earns the same `max-age=31536000, immutable` policy as every other
+ * texture on the site. Same bytes on a cold load, free on every warm one, and a
+ * changed texture can no longer be served stale for a week.
+ *
+ * NO AVIF SIBLING, deliberately. It is the one image on the site that bypasses
+ * <Picture>, so it was the obvious candidate — but measured with the same sharp
+ * settings astro.config.mjs pins for every other asset (quality 60, 4:4:4,
+ * effort 4) AVIF comes out at 75,325 B against this file's 72,440 B: 2,885 B
+ * LARGER, +4.0%. The variants that do win are ones the config already rejects
+ * on quality grounds (4:2:0 saves 1,246 B / 1.7% and visibly desaturates fine
+ * chroma; q55 saves 8,948 B / 12.4% at a quality step measured as mushy). A
+ * second rendition plus an image-set() fallback chain is not worth -1.7% at
+ * best and +4.0% at the setting we actually ship.
+ */
 [data-theme="corporate"] .corporate-flux {
   position: absolute;
   inset: 0;
   background-image:
     linear-gradient(135deg, rgba(11, 26, 44, 0.5), rgba(27, 58, 75, 0.78)),
-    url('/images/corporate/flux-background.webp');
+    url('../assets/images/corporate/flux-background.webp');
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -51,6 +73,10 @@
      the canonical orange reference --industrial-accent-orange directly. */
   --current-accent-primary: var(--industrial-accent-amber);
   --current-font-heading: var(--font-industrial-heading);
+  /* Amber is already a light tone; measured 4.27:1 as a focus ring over the
+     charcoal/gunmetal surfaces, so this theme is its own ring (see the
+     --current-focus-ring note in variables.css). */
+  --current-focus-ring: var(--current-accent-primary);
 }
 
 #fabrication {
@@ -159,6 +185,8 @@
   --current-text-secondary: var(--tech-neutral-gray);
   --current-accent-primary: var(--tech-accent-cyan);
   --current-font-heading: var(--font-tech-heading);
+  /* Cyan on near-black: measured >14:1 as a ring, so it is its own ring. */
+  --current-focus-ring: var(--current-accent-primary);
 }
 
 #\33 d-lab {
@@ -294,6 +322,9 @@
      --natural-accent-terracotta directly. */
   --current-accent-primary: var(--natural-accent-terracotta-text);
   --current-font-heading: var(--font-natural-heading);
+  /* The text-safe terracotta measures 3.67:1 as a ring over the deep-sage
+     surfaces, so it is its own ring. */
+  --current-focus-ring: var(--current-accent-primary);
 }
 
 /* Deep-sage endpoints (were sage/moss): these sections are tall, so most
@@ -472,7 +503,11 @@
   background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   text-decoration: none;
-  transition: all var(--transition-base) var(--ease-out-cubic);
+  /* Named properties, not `all` — `all` includes the outline longhands and
+     would fade the keyboard ring in over 300ms (see base.css .nav-link). */
+  transition-property: background-color, transform, box-shadow;
+  transition-duration: var(--transition-base);
+  transition-timing-function: var(--ease-out-cubic);
 }
 
 .social-link:hover,
@@ -529,7 +564,11 @@
   border-radius: var(--radius-md);
   color: white;
   font-size: var(--font-size-sm);
-  transition: all var(--transition-base) var(--ease-out-cubic);
+  /* Named properties, not `all` — `all` includes the outline longhands and
+     would fade the keyboard ring in over 300ms (see base.css .nav-link). */
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: var(--transition-base);
+  transition-timing-function: var(--ease-out-cubic);
 }
 
 .form-input:focus,

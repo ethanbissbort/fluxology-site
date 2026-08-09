@@ -691,7 +691,7 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
   }
 
   .detail-table-wrap:focus-visible {
-    outline: 3px solid var(--current-accent-primary);
+    outline: 3px solid var(--current-focus-ring, var(--current-accent-primary));
     outline-offset: 4px;
   }
 

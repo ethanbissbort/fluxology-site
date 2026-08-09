@@ -144,6 +144,20 @@ export default defineConfig({
           passes: 2,
         },
       },
+      // `build.inlineStylesheets: 'auto'` (Astro's default) inlines a style
+      // chunk only while it stays under this limit, so the default 4096 is a
+      // cliff: the largest chunk here measured 4,059 B, and ~37 B of new CSS
+      // in those components would silently convert an inlined block into a
+      // third render-blocking <link>. Neither side of that cliff is wrong —
+      // inline costs bytes on every HTML fetch, external buys a year of
+      // caching — but flipping between them as a side effect of an unrelated
+      // style edit is. Raising the limit keeps the choice deliberate.
+      //
+      // This changes nothing today: every emitted CSS chunk is either far
+      // below it (11 inline blocks, largest 4,059 B) or far above it (17-41 kB
+      // route bundles, already external), and no font or image asset is under
+      // 8 KB, so nothing new gets base64-inlined either.
+      assetsInlineLimit: 8192,
     },
   },
 });

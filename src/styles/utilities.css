@@ -69,9 +69,12 @@ html.js-reveal .observe-scale:not(.observed) {
 }
 
 
-/* Focus visible for keyboard navigation */
+/* Focus visible for keyboard navigation.
+   --current-focus-ring, not --current-accent-primary: the ring is a WCAG
+   1.4.11 non-text control and needs >=3:1 against the surface it lands on,
+   which the saturated corporate blue does not hold (see variables.css). */
 :focus-visible {
-  outline: 2px solid var(--current-accent-primary, #3A86FF);
+  outline: 2px solid var(--current-focus-ring, var(--current-accent-primary, #3A86FF));
   outline-offset: 2px;
 }
 
