@@ -1,0 +1,228 @@
+---
+interface Props {
+  productName: string;
+  labels: string[];
+  mirrored?: boolean;
+}
+
+const { productName, labels, mirrored = false } = Astro.props;
+---
+
+<div class:list={['product-interface-preview', { mirrored }]} aria-hidden="true">
+  <div class="preview-window">
+    <div class="preview-window-bar">
+      <span></span><span></span><span></span>
+      <div class="preview-title">{productName}</div>
+    </div>
+    <div class="preview-toolbar">
+      <div class="preview-search"></div>
+      <div class="preview-filter"></div>
+      <div class="preview-filter short"></div>
+    </div>
+    <div class="preview-metrics">
+      {labels.map((label, index) => (
+        <div class="preview-metric">
+          <span class="preview-metric-label">{label}</span>
+          <span class:list={['preview-metric-value', { accent: index === 0 }]}></span>
+        </div>
+      ))}
+    </div>
+    <div class="preview-results">
+      <div class="preview-result featured">
+        <span class="preview-result-kicker"></span>
+        <span class="preview-result-line wide"></span>
+        <span class="preview-result-line"></span>
+        <div class="preview-pills"><span></span><span></span><span></span></div>
+      </div>
+      <div class="preview-result">
+        <span class="preview-result-kicker"></span>
+        <span class="preview-result-line wide"></span>
+        <span class="preview-result-line"></span>
+        <div class="preview-pills"><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .product-interface-preview {
+    min-width: 0;
+    perspective: 1200px;
+  }
+
+  .preview-window {
+    overflow: hidden;
+    border: 1px solid rgba(168, 218, 220, 0.22);
+    border-radius: 18px;
+    background: #0a1f2d;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.34);
+    transform: rotateY(-2deg) rotateX(1deg);
+  }
+
+  .product-interface-preview.mirrored .preview-window {
+    transform: rotateY(2deg) rotateX(1deg);
+  }
+
+  .preview-window-bar {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .preview-window-bar > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .preview-title {
+    margin-left: auto;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .preview-toolbar {
+    display: grid;
+    grid-template-columns: minmax(100px, 1fr) 92px 70px;
+    gap: 0.6rem;
+    padding: 1rem;
+  }
+
+  .preview-search,
+  .preview-filter {
+    height: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .preview-search::after {
+    content: '';
+    display: block;
+    width: 44%;
+    height: 5px;
+    margin: 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .preview-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+    padding: 0 1rem 1rem;
+  }
+
+  .preview-metric {
+    padding: 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.065);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .preview-metric-label {
+    display: block;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 0.58rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .preview-metric-value {
+    display: block;
+    width: 56%;
+    height: 8px;
+    margin-top: 0.48rem;
+    border-radius: 999px;
+    background: rgba(168, 218, 220, 0.18);
+  }
+
+  .preview-metric-value.accent {
+    width: 72%;
+    background: rgba(58, 134, 255, 0.55);
+  }
+
+  .preview-results {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+    padding: 0 1rem 1rem;
+  }
+
+  .preview-result {
+    min-height: 126px;
+    padding: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .preview-result.featured {
+    border-color: rgba(58, 134, 255, 0.28);
+    background: rgba(58, 134, 255, 0.055);
+  }
+
+  .preview-result-kicker,
+  .preview-result-line {
+    display: block;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .preview-result-kicker {
+    width: 25%;
+    height: 5px;
+    margin-bottom: 0.75rem;
+    background: rgba(168, 218, 220, 0.28);
+  }
+
+  .preview-result-line {
+    width: 64%;
+    height: 7px;
+    margin-bottom: 0.55rem;
+  }
+
+  .preview-result-line.wide {
+    width: 88%;
+    height: 9px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .preview-pills {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 1rem;
+  }
+
+  .preview-pills span {
+    width: 30%;
+    height: 18px;
+    border-radius: 999px;
+    background: rgba(58, 134, 255, 0.12);
+  }
+
+  @media (max-width: 920px) {
+    .preview-window,
+    .product-interface-preview.mirrored .preview-window {
+      transform: none;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .preview-metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .preview-results {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
