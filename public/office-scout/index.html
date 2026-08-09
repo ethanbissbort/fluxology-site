@@ -68,7 +68,7 @@
       </section>
 
       <section class="controls panel" aria-label="Listing filters">
-        <label class="search">⌕ <input id="q" type="search" placeholder="Search address, operator, notes, transit…"></label>
+        <label class="search" for="q"><span aria-hidden="true">⌕</span> <input id="q" type="search" aria-label="Search listings" placeholder="Search address, operator, notes, transit…"></label>
         <select id="city" aria-label="Municipality"><option value="">All municipalities</option></select>
         <select id="status" aria-label="Cost status">
           <option value="">All cost statuses</option>
@@ -93,7 +93,7 @@
           <option value="walk">Shortest final walk</option>
           <option value="delta">Largest price drop</option>
         </select>
-        <label class="check"><input id="activeOnly" type="checkbox" checked> Active only</label>
+        <label class="check" for="activeOnly"><input id="activeOnly" type="checkbox" checked> Active only</label>
         <button class="btn ghost" id="clearFilters" type="button">Clear filters</button>
       </section>
 

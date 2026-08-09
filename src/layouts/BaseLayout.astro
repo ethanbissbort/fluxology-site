@@ -2,6 +2,7 @@
 import { Font } from 'astro:assets';
 import CursorEffects from '../components/CursorEffects.svelte';
 import { dbaPlans } from '../data/dbaPlans';
+import socialImage from '../assets/images/corporate/logo-medallion-og.png';
 
 import '../styles/reset.css';
 import '../styles/variables.css';
@@ -34,6 +35,24 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const socialImageURL = new URL('/images/corporate/logo-medallion.webp', Astro.site);
 const socialImageWidth = 640;
 const socialImageHeight = 640;
+// og:image is PNG, not the WebP the rest of the site ships. WebP share cards
+// are silently dropped by several major scrapers — LinkedIn and some
+// Slack/iMessage unfurl paths among them — so the one image whose whole job is
+// to be fetched by a third party has to be a universally decodable raster.
+// It is a paletted PNG rather than a JPEG on purpose: the medallion is
+// hairline cream strokes and 8px lettering on a flat navy field, exactly the
+// content JPEG rings on (measured, q90 mozjpeg 4:4:4 = 27,398 B with visible
+// mosquito noise around "fluxology, inc."; PNG-8/256 = 42,920 B at 51.06 dB
+// PSNR with none). Source is logo-medallion.webp at its native 640x640 — big
+// enough for every platform's minimum (X summary 144, Facebook 200, LinkedIn
+// 200) and not upscaled to invent detail that is not in the source.
+//
+// The dimensions come from the imported asset, so og:image:width/height can
+// never drift from the file actually shipped the way the previous hardcoded
+// pair could.
+const socialImageURL = new URL(socialImage.src, Astro.site);
+const socialImageWidth = socialImage.width;
+const socialImageHeight = socialImage.height;
 const socialImageAlt = 'Fluxology, Inc. logo medallion';
 
 type PreloadFilter = import('astro:assets').FontPreloadFilter;

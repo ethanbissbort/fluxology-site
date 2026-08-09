@@ -67,7 +67,19 @@
     cursor: pointer;
     opacity: 0;
     visibility: hidden;
-    transition: all var(--transition-base) var(--ease-out-cubic);
+    /* Named properties, not `all` — `all` includes the outline longhands and
+       would fade the keyboard ring in over 300ms (see base.css .nav-link).
+       visibility stays in the list: it is what keeps the hidden button out of
+       the tab order until the fade-in has actually started.
+       Written as longhands rather than five copies of the shorthand for a
+       concrete reason: this component's scoped CSS shares the chunk that
+       Astro auto-INLINES into every page, and that chunk was 3,943 B against
+       a 4,096 B threshold. The shorthand form measured 4,233 B and turned an
+       inline <style> into a third render-blocking stylesheet request on / ;
+       the longhand form stays under. Keep it compact. */
+    transition-property: opacity, visibility, transform, box-shadow, background-color, filter;
+    transition-duration: var(--transition-base);
+    transition-timing-function: var(--ease-out-cubic);
     z-index: var(--z-navigation);
     box-shadow: var(--shadow-lg);
     border: none;
