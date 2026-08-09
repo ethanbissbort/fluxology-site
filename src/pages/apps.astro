@@ -1,66 +1,384 @@
 ---
 import ContentLayout from '../layouts/ContentLayout.astro';
+import ProductInterfacePreview from '../components/ProductInterfacePreview.astro';
+import { softwareProducts } from '../data/softwareProducts';
 ---
 
 <ContentLayout
   title="Software & Apps | Fluxology, Inc."
-  description="Fluxology, Inc. develops and publishes its own software products, including iOS applications and supporting web tools."
+  description="Explore software products developed and published by Fluxology, Inc., including active iOS development and supporting decision, research and comparison tools."
   eyebrow="Software publishing"
   heading="Independent software products from Fluxology, Inc."
-  intro="Fluxology, Inc. develops and publishes its own applications and digital tools. Software is a direct corporate activity: we are building products for end users, not offering contract app-development services."
+  intro="Fluxology, Inc. develops and publishes its own applications and digital tools. Software is a current corporate activity: products are built for end users, not as contract app-development services for clients."
 >
-  <section>
-    <h2>Current software activity</h2>
+  <section class="portfolio-intro" aria-labelledby="portfolio-status-heading">
+    <h2 id="portfolio-status-heading">Current software activity</h2>
     <p>
       Software development is active during Fluxology's current foundation period. The company is building iOS
-      applications for future App Store distribution alongside web-based research, comparison and workflow tools.
-      Product scope, support material and privacy disclosures are finalized before each public release.
+      applications for future App Store distribution while also operating web-based research, comparison and
+      workflow tools used in ongoing product development. Product scope, support material and privacy disclosures
+      are finalized before each public release.
     </p>
 
+    <div class="portfolio-status-grid" role="list" aria-label="Software portfolio status">
+      <div class="portfolio-status-card" role="listitem">
+        <strong>{softwareProducts.length}</strong>
+        <span>named products in active development</span>
+      </div>
+      <div class="portfolio-status-card" role="listitem">
+        <strong>iOS</strong>
+        <span>applications in active development</span>
+      </div>
+      <div class="portfolio-status-card" role="listitem">
+        <strong>Web</strong>
+        <span>supporting dashboards in active use</span>
+      </div>
+      <div class="portfolio-status-card" role="listitem">
+        <strong>Fluxology, Inc.</strong>
+        <span>developer and publisher</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="product-portfolio" aria-labelledby="products-heading">
+    <div class="section-lead">
+      <p class="apps-eyebrow">Product portfolio</p>
+      <h2 id="products-heading">Products built around decisions, not generic dashboards.</h2>
+      <p>
+        Both current products organize messy external information into explicit states: what is known, what is
+        unresolved, what changed, and what action comes next. The interfaces below are representative visualizations
+        of those workflows rather than live user data.
+      </p>
+    </div>
+
+    <div class="product-stack">
+      {softwareProducts.map((product, index) => (
+        <article id={product.id} class:list={['app-product', { reversed: index % 2 === 1 }]} aria-labelledby={`${product.id}-heading`}>
+          <div class="app-product-copy">
+            <div class="app-product-heading">
+              <img src={product.icon} alt="" width="56" height="56" aria-hidden="true" loading="lazy" />
+              <div>
+                <p class="app-status"><span aria-hidden="true"></span>{product.status}</p>
+                <h3 id={`${product.id}-heading`}>{product.name}</h3>
+                <p class="app-category">{product.category}</p>
+              </div>
+            </div>
+
+            <p class="app-summary">{product.shortDescription}</p>
+            <p class="app-detail">{product.longDescription}</p>
+
+            <div class="app-detail-columns">
+              <div>
+                <h4>Core capabilities</h4>
+                <ul>
+                  {product.capabilities.map((capability) => <li>{capability}</li>)}
+                </ul>
+              </div>
+              <div>
+                <h4>Workflow states</h4>
+                <div class="workflow-pills" role="list">
+                  {product.workflow.map((state) => <span role="listitem">{state}</span>)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ProductInterfacePreview
+            productName={product.name}
+            labels={product.previewLabels}
+            mirrored={index % 2 === 1}
+          />
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="development-model">
+    <h2>How Fluxology develops software</h2>
     <div class="content-card-grid">
       <article class="content-card">
-        <h3>Office Scout</h3>
-        <p class="content-meta">Active development · decision-support software</p>
+        <h3>Problem-specific products</h3>
         <p>
-          Office Scout organizes office-listing research around verified all-in cost, access and transit details,
-          fit scoring, listing changes and a personal review workflow. A supporting web dashboard is already used
-          for research and product development.
+          Products start from a concrete workflow that needs better structure: comparing offices using complete
+          occupancy cost, or comparing purchases when shipping and currency materially change the apparent deal.
         </p>
       </article>
-
       <article class="content-card">
-        <h3>Fluxology Deals</h3>
-        <p class="content-meta">Active development · deal research and comparison</p>
+        <h3>Explicit uncertainty</h3>
         <p>
-          Fluxology Deals organizes product searches across multiple categories, preserves listing history and
-          distinguishes verified landed-cost information from unresolved shipping or pricing data. A supporting
-          web dashboard is used for ongoing research and product development.
+          Unknown information stays unknown. Office Scout distinguishes verified costs from costs needing
+          verification; Fluxology Deals distinguishes resolved destination shipping from unresolved estimates.
+        </p>
+      </article>
+      <article class="content-card">
+        <h3>Persistent history</h3>
+        <p>
+          Useful prior states are preserved rather than silently disappearing. Product workflows retain listing
+          changes, status history or prior decisions when that history remains useful to the user.
+        </p>
+      </article>
+      <article class="content-card">
+        <h3>User-owned workflow state</h3>
+        <p>
+          The supporting dashboards keep personal review states and notes in the user's browser rather than making
+          those personal workflow fields part of the shared server listing feed.
         </p>
       </article>
     </div>
   </section>
 
   <section>
-    <h2>Publishing model</h2>
+    <h2>Publishing, support and release status</h2>
     <p>
       Apps and related intellectual property are developed and published by Fluxology, Inc. The corporation is the
       legal entity responsible for product distribution, customer support and applicable product policies. The
-      proposed trade, fabrication and homestead operating names described elsewhere on this site are separate
-      future operating lines of the same corporation; they are not the publisher of the software products.
+      proposed trade, fabrication and homestead operating names described elsewhere on this site are future
+      operating lines of the same corporation; they are not software publishers.
     </p>
-    <div class="content-callout">
-      <strong>Product support:</strong> <a href="/support/">fluxology.ca/support/</a><br />
-      <strong>Privacy:</strong> <a href="/privacy/">fluxology.ca/privacy/</a><br />
-      <strong>General contact:</strong> <a href="mailto:info@fluxology.ca">info@fluxology.ca</a>
+    <p>
+      The applications described here remain in development and are not represented as currently available on the
+      App Store. When an individual app is released, Fluxology will publish that app's dedicated support and privacy
+      pages under its own <code>/apps/&lt;app-name&gt;/</code> path together with applicable store links.
+    </p>
+
+    <div class="content-callout app-contact-block">
+      <div>
+        <span>Product support</span>
+        <a href="/support/">fluxology.ca/support/</a>
+      </div>
+      <div>
+        <span>Corporate privacy</span>
+        <a href="/privacy/">fluxology.ca/privacy/</a>
+      </div>
+      <div>
+        <span>General contact</span>
+        <a href="mailto:info@fluxology.ca">info@fluxology.ca</a>
+      </div>
     </div>
   </section>
-
-  <section>
-    <h2>Release status</h2>
-    <p>
-      The applications described here are in development and are not represented as currently available on the
-      App Store. When an app is released, Fluxology will publish the applicable support information, privacy
-      disclosures and store links on this site.
-    </p>
-  </section>
 </ContentLayout>
+
+<style>
+  .portfolio-status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+  }
+
+  .portfolio-status-card {
+    display: flex;
+    min-height: 132px;
+    padding: var(--spacing-lg);
+    border: 1px solid rgba(168, 218, 220, 0.18);
+    border-radius: var(--radius-lg);
+    background: rgba(9, 30, 45, 0.62);
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .portfolio-status-card strong {
+    color: #fff;
+    font-family: var(--font-corporate-heading);
+    font-size: clamp(1.35rem, 2.5vw, 1.9rem);
+  }
+
+  .portfolio-status-card span {
+    margin-top: 0.35rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: var(--font-size-sm);
+    line-height: 1.45;
+  }
+
+  .section-lead {
+    max-width: 760px;
+  }
+
+  .apps-eyebrow {
+    margin-bottom: var(--spacing-sm);
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+
+  .product-stack {
+    display: grid;
+    gap: var(--spacing-2xl);
+    margin-top: var(--spacing-2xl);
+  }
+
+  .app-product {
+    display: grid;
+    grid-template-columns: minmax(0, 0.96fr) minmax(360px, 1.04fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: center;
+    scroll-margin-top: 7rem;
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+    border: 1px solid rgba(168, 218, 220, 0.2);
+    border-radius: var(--radius-xl);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(58, 134, 255, 0.08), transparent 23rem),
+      rgba(9, 30, 45, 0.72);
+  }
+
+  .app-product.reversed .app-product-copy {
+    order: 2;
+  }
+
+  .app-product.reversed :global(.product-interface-preview) {
+    order: 1;
+  }
+
+  .app-product-heading {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .app-product-heading img {
+    width: 56px;
+    height: 56px;
+    padding: 9px;
+    border: 1px solid rgba(168, 218, 220, 0.22);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .app-status {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+    margin: 0 0 0.15rem;
+    color: #a8dadc;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .app-status span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #63d8a0;
+    box-shadow: 0 0 0 4px rgba(99, 216, 160, 0.1);
+  }
+
+  .app-product h3 {
+    margin: 0;
+    color: #fff;
+    font-family: var(--font-corporate-heading);
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+  }
+
+  .app-category {
+    margin: 0.15rem 0 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: var(--font-size-sm);
+  }
+
+  .app-summary {
+    color: rgba(255, 255, 255, 0.88);
+    font-size: var(--font-size-lg);
+    line-height: 1.65;
+  }
+
+  .app-detail {
+    color: rgba(255, 255, 255, 0.68);
+  }
+
+  .app-detail-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.65fr);
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+  }
+
+  .app-detail-columns h4 {
+    margin: 0 0 var(--spacing-sm);
+    color: rgba(255, 255, 255, 0.9);
+    font-family: var(--font-corporate-heading);
+    font-size: var(--font-size-md);
+  }
+
+  .app-detail-columns ul {
+    margin: 0;
+  }
+
+  .workflow-pills {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .workflow-pills span {
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgba(58, 134, 255, 0.22);
+    border-radius: var(--radius-full);
+    background: rgba(58, 134, 255, 0.08);
+    color: rgba(255, 255, 255, 0.68);
+    font-size: var(--font-size-xs);
+  }
+
+  .development-model .content-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-contact-block {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-lg);
+  }
+
+  .app-contact-block div {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .app-contact-block span {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  code {
+    padding: 0.12em 0.35em;
+    border: 1px solid rgba(168, 218, 220, 0.14);
+    border-radius: 0.3rem;
+    background: rgba(0, 0, 0, 0.18);
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  @media (max-width: 920px) {
+    .portfolio-status-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .app-product {
+      grid-template-columns: 1fr;
+    }
+
+    .app-product.reversed .app-product-copy,
+    .app-product.reversed :global(.product-interface-preview) {
+      order: initial;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .portfolio-status-grid,
+    .development-model .content-card-grid,
+    .app-contact-block,
+    .app-detail-columns {
+      grid-template-columns: 1fr;
+    }
+
+    .app-product {
+      padding: var(--spacing-lg);
+    }
+  }
+</style>
