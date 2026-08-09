@@ -1,5 +1,5 @@
 ---
-import { Image, getImage } from 'astro:assets';
+import { Picture, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
 interface ImageAsset {
@@ -92,10 +92,26 @@ const textureLayers = {
   'orchard': ['orchard-landscape', 'parallax-trees']
 }[id] ?? [];
 
-// Decorative section texture stays a CSS background, but the URL now points
-// at a build-time optimized rendition instead of the raw public/ file.
-const optimizedSectionBackground = sectionBackground
-  ? await getImage({ src: sectionBackground, width: 1600, format: 'webp' })
+// Decorative section texture stays a CSS background, so it cannot use
+// <picture> content negotiation; image-set() carries the AVIF/WebP chain
+// instead (see the @supports block below for why it is guarded).
+//
+// The WebP arm deliberately reuses the ORIGINAL asset when no downscale is
+// needed. The only source used here is 1536px wide, so the old
+// getImage({ width: 1600 }) call was a pure WebP->WebP re-encode that
+// measured 222,478 B against a 217,476 B source — an "optimised" rendition
+// 5,002 B LARGER than its input. Pointing at the original is both smaller and
+// one generation less lossy. Anything genuinely wider than the ladder step is
+// still resized.
+const textureWidth = sectionBackground ? Math.min(1600, sectionBackground.width) : 0;
+const sectionTexture = sectionBackground
+  ? {
+      webp:
+        textureWidth === sectionBackground.width
+          ? sectionBackground.src
+          : (await getImage({ src: sectionBackground, width: textureWidth, format: 'webp' })).src,
+      avif: (await getImage({ src: sectionBackground, width: textureWidth, format: 'avif' })).src,
+    }
   : undefined;
 
 // Shared responsive ladder (also used by DBADetailPage so renditions dedupe
@@ -109,7 +125,9 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
   id={id}
   data-theme={theme}
   class="section dba-section"
-  style={optimizedSectionBackground ? `--section-image: url('${optimizedSectionBackground.src}')` : undefined}
+  style={sectionTexture
+    ? `--section-image: url('${sectionTexture.webp}'); --section-image-avif: url('${sectionTexture.avif}')`
+    : undefined}
 >
   <div class="background-layer">
     <div class="parallax-bg"></div>
@@ -156,9 +174,11 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
             <article class:list={['service-card', { 'service-card--with-image': Boolean(service.image) }] }>
               <div class:list={['service-media', { 'service-media--placeholder': !service.image }] }>
                 {service.image ? (
-                  <Image
+                  <Picture
                     src={service.image.src}
                     alt={service.image.alt}
+                    formats={['avif', 'webp']}
+                    fallbackFormat="webp"
                     widths={responsiveWidths(service.image.src)}
                     width={fallbackWidth(service.image.src)}
                     sizes="(max-width: 767px) 100vw, (max-width: 1199px) 50vw, 570px"
@@ -214,9 +234,11 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
           <div class={`showcase-grid showcase-count-${showcaseImages.length}`}>
             {showcaseImages.map((image, index) => (
               <figure class:list={['showcase-item', { 'showcase-item--primary': index === 0 }]}>
-                <Image
+                <Picture
                   src={image.src}
                   alt={image.alt}
+                  formats={['avif', 'webp']}
+                  fallbackFormat="webp"
                   widths={responsiveWidths(image.src)}
                   width={fallbackWidth(image.src)}
                   sizes={index === 0
@@ -265,6 +287,28 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
     background-size: cover;
     mix-blend-mode: screen;
     opacity: 0.38;
+  }
+
+  /* AVIF only where the engine can both decode it and negotiate in CSS; the
+     WebP declaration above stays as the fallback. The @supports guard is load
+     bearing: image-set() delivered through a var() would be invalid at
+     COMPUTED-VALUE time on an engine that lacks it, which resolves
+     background-image to `none` and drops the texture entirely instead of
+     falling back. Gating on @supports keeps the failure mode "stays WebP". */
+  @supports (background-image: image-set(url('i.avif') type('image/avif'))) {
+    .section-image-texture {
+      background-image:
+        linear-gradient(135deg, rgba(10, 14, 39, 0.68), rgba(10, 14, 39, 0.82)),
+        image-set(var(--section-image-avif) type('image/avif'), var(--section-image) type('image/webp'));
+    }
+  }
+
+  /* <Picture> wraps each <img> in a <picture>. Every image box below sizes the
+     img with width/height:100% inside a position:relative parent, so an extra
+     block-level wrapper would break the percentage heights and re-introduce
+     layout shift. display:contents keeps the wrapper out of layout entirely. */
+  picture {
+    display: contents;
   }
 
   .dba-eyebrow,

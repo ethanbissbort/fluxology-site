@@ -66,6 +66,43 @@ export default defineConfig({
     // Custom asset directory (default is '_astro').
     assets: '_assets',
   },
+  image: {
+    // Per-format encoder options for the built-in sharp service. This is the
+    // only way to give AVIF its own quality: `quality` on <Picture> applies to
+    // EVERY format it emits, so it would drag the WebP fallback down with it.
+    //
+    // AVIF q60 was chosen by measurement, not by feel. On the five largest
+    // renditions, against the shipped WebP q80 baseline:
+    //
+    //   rendition                     webp q80   avif q50   avif q60   avif q70
+    //   showcase-understory @1200      266,250    131,139    193,440    266,463
+    //   orchard/showcase-main @1200    237,366    115,366    169,245    234,683
+    //   wireframe-background @1536     222,478    135,690    192,383    250,576
+    //   fruit-tree-production @800     221,508    104,945    151,152    208,283
+    //   perennial-crops @800           218,816    102,376    147,472    203,295
+    //
+    // q70 is pointless (1-6% off WebP, and it re-inflates wireframe-background
+    // to 250,576 B against a 217,476 B source). q50 is visibly mushy: at 3x
+    // magnification the leaf litter in showcase-understory loses individual
+    // leaf edges. q60 is indistinguishable from the shipped WebP at 1:1 on
+    // photographs — and every rendition on this site is displayed downscaled
+    // from its ladder step — while cutting the corpus by ~28%.
+    //
+    // Chroma subsampling is deliberately left at sharp's 4:4:4 default.
+    // '4:2:0' buys a further ~5% and encodes ~20% faster, but it visibly
+    // desaturates the fine magenta micro-text in 3d-lab/wireframe-background;
+    // 5% is not worth a format that damages one of the assets.
+    //
+    // `effort` is left at sharp's default 4: measured at q60, effort 6 and 7
+    // cost 2.5-3.5x the encode time for no byte saving at all (understory
+    // 193,440 B at e4 vs 195,350 B at e6).
+    service: {
+      entrypoint: 'astro/assets/services/sharp',
+      config: {
+        avif: { quality: 60 },
+      },
+    },
+  },
   // A range ('100 900') asks Google for the variable font; a single number
   // asks for that one static cut. Which is cheaper depends entirely on how
   // many weights a family is actually rendered at:

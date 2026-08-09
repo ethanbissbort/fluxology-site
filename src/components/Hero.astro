@@ -2,7 +2,7 @@
 // Above-the-fold company positioning. This reflects the portfolio's current
 // legal status and future launch horizon instead of presenting the DBAs as
 // active, staffed divisions.
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import logoMedallion from '../assets/images/corporate/logo-medallion.webp';
 ---
 
@@ -19,10 +19,15 @@ import logoMedallion from '../assets/images/corporate/logo-medallion.webp';
         Federally incorporated · Ontario · 2029-2035 planning horizon
       </p>
 
-      <Image
+      {/* The one eager fetchpriority=high image on this route, and its LCP
+          element. <Picture> serves AVIF first and WebP second; fallbackFormat
+          must be set explicitly or Astro fills the <img> with a PNG. */}
+      <Picture
         class="hero-brand-mark"
         src={logoMedallion}
         alt="Fluxology, Inc. circular flux-wave emblem"
+        formats={['avif', 'webp']}
+        fallbackFormat="webp"
         widths={[160, 320, 440]}
         width={440}
         sizes="(max-width: 767px) 140px, 220px"
@@ -60,6 +65,15 @@ import logoMedallion from '../assets/images/corporate/logo-medallion.webp';
 </section>
 
 <style>
+  /* <Picture> wraps the <img> in a <picture>, which would otherwise become the
+     laid-out box and break the img's own sizing/centering rules (base.css
+     styles .hero-brand-mark on the img). display:contents takes the wrapper
+     back out of the layout tree so the markup change is layout-invisible —
+     which is what keeps CLS at 0. */
+  picture {
+    display: contents;
+  }
+
   .hero-status {
     display: flex;
     gap: var(--spacing-sm);

@@ -1,7 +1,7 @@
 ---
 // Company-level facts and operating principles are drawn from the reworked
 // 2029+ portfolio. The DBA names are proposals, not separate legal entities.
-import { Image } from 'astro:assets';
+import { Picture } from 'astro:assets';
 import valueExcellence from '../assets/images/corporate/value-excellence.webp';
 import valueInnovation from '../assets/images/corporate/value-innovation.webp';
 import valueSustainability from '../assets/images/corporate/value-sustainability.webp';
@@ -88,9 +88,11 @@ const valueImages = [
           <ul class="values-list" role="list">
             {valueImages.map((value) => (
               <li class="value-item">
-                <Image
+                <Picture
                   src={value.src}
                   alt={value.alt}
+                  formats={['avif', 'webp']}
+                  fallbackFormat="webp"
                   widths={[76, 152]}
                   width={152}
                   sizes="(max-width: 767px) 64px, 76px"
@@ -127,6 +129,14 @@ const valueImages = [
 </section>
 
 <style>
+  /* .value-item is a two-column grid and base.css sizes the img itself; the
+     <picture> that <Picture> adds would otherwise become the grid item.
+     display:contents removes the wrapper from layout so the icons keep their
+     exact 76px/64px box — and the route keeps CLS 0. */
+  picture {
+    display: contents;
+  }
+
   .about-eyebrow {
     margin-bottom: var(--spacing-sm);
     color: var(--corporate-accent-silver);
