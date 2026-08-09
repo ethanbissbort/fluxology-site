@@ -1,0 +1,21 @@
+---
+import AppSupportPage from '../../../components/app/AppSupportPage.astro';
+import { appPages, type AppPageConfig } from '../../../data/appPages';
+
+export function getStaticPaths() {
+  return appPages
+    .filter((app) => app.published)
+    .map((app) => ({
+      params: { appName: app.slug },
+      props: { app },
+    }));
+}
+
+interface Props {
+  app: AppPageConfig;
+}
+
+const { app } = Astro.props;
+---
+
+<AppSupportPage app={app} />
