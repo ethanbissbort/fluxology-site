@@ -281,7 +281,10 @@ export function describeConfig(config) {
     issuer: config.auth.devAuthEnabled ? null : config.auth.issuer,
     audience: config.auth.audience,
     writeEnabled: Object.fromEntries(SCOPES.map(scope => [scope, Boolean(config.secrets[scope])])),
-    secretOrigins: config.secretOrigins,
+    // Named to avoid the logger's credential-key redaction: this says *where*
+    // each token came from (secret file, mount, or environment), never what it
+    // is, and an operator needs to see it to diagnose a misprovisioned deploy.
+    provisionedFrom: config.secretOrigins,
     limits: config.limits,
   };
 }

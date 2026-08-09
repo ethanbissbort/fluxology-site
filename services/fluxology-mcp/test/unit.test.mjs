@@ -8,7 +8,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ConfigError, OAUTH_SCOPES, loadConfig } from '../src/config.mjs';
+import { ConfigError, OAUTH_SCOPES, describeConfig, loadConfig } from '../src/config.mjs';
 import { buildChallenge, extractScopes, metadataCandidates, protectedResourceMetadataPath, scopeForTool } from '../src/auth.mjs';
 import { HttpError, ToolError, isRetryable } from '../src/errors.mjs';
 import { AUDIT_FIELDS, SERVER_OWNED_FIELDS, formatAjvErrors, majorVersion } from '../src/schemas.mjs';
@@ -73,6 +73,18 @@ describe('configuration', () => {
     const config = loadConfig({ ...BASE_ENV, OFFICE_INGEST_TOKEN_FILE: new URL('./helpers/fixtures.mjs', import.meta.url).pathname });
     assert.equal(config.secretOrigins.office.startsWith('file:'), true);
     assert.equal(config.secretOrigins.deals, 'env');
+  });
+
+  it('describes where each token came from without revealing any of them', () => {
+    const config = testConfig();
+    const described = redact(describeConfig(config));
+    // Survives redaction, so an operator can diagnose a misprovisioned deploy.
+    assert.deepEqual(described.provisionedFrom, { office: 'env', deals: 'env', jobs: 'env' });
+    assert.deepEqual(described.writeEnabled, { office: true, deals: true, jobs: true });
+    const serialized = JSON.stringify(described);
+    for (const scope of ['office', 'deals', 'jobs']) {
+      assert.equal(serialized.includes(config.secrets[scope]), false, `${scope} token leaked into the startup banner`);
+    }
   });
 });
 
