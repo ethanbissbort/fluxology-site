@@ -8,6 +8,7 @@
 
 /** Slugs accepted for the `serviceInterest` field. */
 export const ALLOWED_SERVICES = Object.freeze([
+  'software',
   'fabrication',
   '3d-lab',
   'greenhouse',
@@ -18,6 +19,7 @@ export const ALLOWED_SERVICES = Object.freeze([
 
 /** Human labels used in the notification email subject/body only. */
 export const SERVICE_LABELS = Object.freeze({
+  software: 'Software / app support',
   fabrication: 'Fabrication',
   '3d-lab': '3D Lab',
   greenhouse: 'Greenhouse',

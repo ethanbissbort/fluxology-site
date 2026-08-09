@@ -5,6 +5,7 @@ const isHomepage = Astro.url.pathname === '/';
 const homeSection = (id: string) => isHomepage ? `#${id}` : `/#${id}`;
 const divisionLink = (id: string) => isHomepage ? `#${id}` : `/${id}/`;
 const isCurrentDivision = (id: string) => Astro.url.pathname === `/${id}/`;
+const isAppsPage = Astro.url.pathname === '/apps/';
 ---
 
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -42,6 +43,7 @@ const isCurrentDivision = (id: string) => Astro.url.pathname === `/${id}/`;
 
     <ul class="nav-links" id="navLinks" role="list">
       <li><a href={homeSection('about')} class="nav-link" data-section="about">Company</a></li>
+      <li><a href="/apps/" class:list={['nav-link', { active: isAppsPage }]} aria-current={isAppsPage ? 'page' : undefined}>Apps</a></li>
       <li><a href={homeSection('operating-model')} class="nav-link" data-section="operating-model">Model</a></li>
       <li><a href={divisionLink('fabrication')} class:list={['nav-link', { active: isCurrentDivision('fabrication') }]} aria-current={isCurrentDivision('fabrication') ? 'page' : undefined} data-section="fabrication">Fabrication</a></li>
       <li><a href={divisionLink('3d-lab')} class:list={['nav-link', { active: isCurrentDivision('3d-lab') }]} aria-current={isCurrentDivision('3d-lab') ? 'page' : undefined} data-section="3d-lab">3D Lab</a></li>

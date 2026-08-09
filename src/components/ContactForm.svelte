@@ -1,15 +1,8 @@
 <script>
-  // POST target for both submit paths: the hydrated fetch below sends JSON
-  // here, and the form's own action/method posts urlencoded here when
-  // JavaScript never runs (the API answers those with a 303 to
-  // /contact-received/).
   const ENDPOINT = '/api/contact';
-
   const GENERIC_ERROR =
     'Sorry, there was a problem sending your message. Please try again, or email us directly at info@fluxology.ca.';
 
-  // Editable fields in DOM order — drives "focus the first field with an
-  // error", for both client-side validation and the API's 400 `fields` map.
   const FIELDS = ['companyName', 'fullName', 'email', 'phone', 'serviceInterest', 'message'];
 
   const emptyForm = () => ({
@@ -22,22 +15,11 @@
   });
 
   let formData = $state(emptyForm());
-
-  // Honeypot: real users leave this empty. The API silently discards any
-  // submission that fills it (answering 200 so bots learn nothing). The name
-  // is fixed by the contact API contract.
   let website = $state('');
-
   let errors = $state({});
   let isSubmitting = $state(false);
-  let submitStatus = $state(null); // 'success' | 'error' | null
+  let submitStatus = $state(null);
   let submitMessage = $state('');
-
-  // novalidate is hydration-gated: the server-rendered form must NOT carry it,
-  // so native required/email validation still guards pre-hydration and no-JS
-  // submits (a bare native POST would otherwise send empty required fields
-  // straight to the API). Once hydrated, novalidate hands validation over to
-  // validate() below.
   let hydrated = $state(false);
 
   $effect(() => {
@@ -70,18 +52,11 @@
     return Object.keys(errors).length === 0;
   }
 
-  // Move focus to the first invalid field so keyboard and screen-reader users
-  // land on the problem instead of a silent no-op.
   function focusFirstInvalid() {
     const firstInvalid = FIELDS.find((field) => errors[field]);
-    if (firstInvalid) {
-      document.getElementById(firstInvalid)?.focus();
-    }
+    if (firstInvalid) document.getElementById(firstInvalid)?.focus();
   }
 
-  // The API always answers JSON, but an edge/proxy error page might not —
-  // response.json() must never reject into the catch below and be reported as
-  // a network failure when the status code already says what happened.
   async function readJson(response) {
     try {
       return await response.json();
@@ -90,29 +65,18 @@
     }
   }
 
-  // Success is only ever claimed on a POSITIVELY parsed `{ ok: true }` body.
-  // A 200 whose body cannot be parsed (a captive portal, a corporate proxy
-  // interstitial, a hand-rolled maintenance `respond 200`) is NOT proof that
-  // the inquiry was stored, and reporting it as success both lies to the
-  // sender and wipes the message they typed.
   function isAccepted(response, data) {
     return response.ok && !!data && typeof data === 'object' && data.ok === true;
   }
 
-  // A 400 carries { fields: { <name>: '<human-readable message>' } }. Known
-  // fields become inline errors on their own input; anything unrecognised is
-  // folded into the status message rather than silently dropped.
   function applyFieldErrors(fields) {
     const applied = {};
     const extras = [];
 
     for (const [field, message] of Object.entries(fields)) {
       const text = typeof message === 'string' && message ? message : 'Please check this field';
-      if (FIELDS.includes(field)) {
-        applied[field] = text;
-      } else {
-        extras.push(text);
-      }
+      if (FIELDS.includes(field)) applied[field] = text;
+      else extras.push(text);
     }
 
     errors = applied;
@@ -121,7 +85,6 @@
 
   async function handleSubmit(e) {
     e.preventDefault();
-
     submitStatus = null;
     submitMessage = '';
 
@@ -142,11 +105,9 @@
       const data = await readJson(response);
 
       if (isAccepted(response, data)) {
-        // Reset form on success
         formData = emptyForm();
         website = '';
         errors = {};
-
         submitStatus = 'success';
         submitMessage = 'Your inquiry has been received. We will respond as the planning schedule permits.';
         return;
@@ -154,7 +115,6 @@
 
       if (response.status === 400 && data && typeof data.fields === 'object' && data.fields !== null) {
         const extras = applyFieldErrors(data.fields);
-
         submitStatus = 'error';
         submitMessage = extras.length
           ? extras.join(' ')
@@ -181,10 +141,7 @@
   }
 
   function clearError(field) {
-    // $state objects are deeply reactive, so a direct assignment updates the UI.
-    if (errors[field]) {
-      errors[field] = undefined;
-    }
+    if (errors[field]) errors[field] = undefined;
   }
 </script>
 
@@ -193,24 +150,25 @@
     <div class="info-block">
       <h3 class="info-title">Contact</h3>
       <p class="info-text">
-        Email: <a href="mailto:info@fluxology.ca">info@fluxology.ca</a>
+        Email: <a href="mailto:info@fluxology.ca">info@fluxology.ca</a><br />
+        Software support: <a href="/support/">fluxology.ca/support/</a>
       </p>
     </div>
 
     <div class="info-block">
       <h3 class="info-title">Current Phase</h3>
       <p class="info-text">
-        2026-2028 foundation period<br />
-        Training, employment entry, corporate maintenance and launch preparation<br />
-        Earliest commercial target: 2029
+        Software product development and publishing preparation are active now.<br />
+        The trade and homestead operating lines remain staged future activities.<br />
+        Earliest trade-service target: 2029
       </p>
     </div>
 
     <div class="info-block">
       <h3 class="info-title">Useful Inquiries</h3>
       <p class="info-text">
-        Future customer problems, local market validation, supplier relationships, used-equipment leads,
-        rural collaboration and questions about the operating plan.
+        Software support and feedback, company questions, future customer problems, local market validation,
+        supplier relationships, used-equipment leads, rural collaboration and questions about the operating plan.
       </p>
     </div>
   </div>
@@ -222,16 +180,10 @@
     onsubmit={handleSubmit}
     novalidate={hydrated || undefined}
   >
-    <!-- Honeypot: hidden from humans, catches naive bots that fill every input -->
     <p class="honeypot-field" aria-hidden="true">
       <label>
         Don't fill this out if you're human:
-        <input
-          name="website"
-          tabindex="-1"
-          autocomplete="off"
-          bind:value={website}
-        />
+        <input name="website" tabindex="-1" autocomplete="off" bind:value={website} />
       </label>
     </p>
 
@@ -342,6 +294,7 @@
           aria-describedby={errors.serviceInterest ? 'serviceInterest-error' : undefined}
         >
           <option value="">Select an inquiry topic...</option>
+          <option value="software">Software / App Support or Feedback</option>
           <option value="fabrication">Future Fabrication & Welding Need</option>
           <option value="3d-lab">Future 3D Lab Need</option>
           <option value="greenhouse">Greenhouse / Growing-System Interest</option>
@@ -360,11 +313,6 @@
         <label for="message" class="form-label">
           Message <span class="required">*</span>
         </label>
-        <!-- minlength mirrors the API's own limit (validate.mjs: message >= 10,
-             fullName >= 2). Without it the NATIVE (no-JS) submit sends a
-             too-short message, the API answers 303 -> /contact-received/?error=1,
-             and the reader is left to work out from the address bar that nothing
-             was saved. Native validation now stops it in the field it belongs to. -->
         <textarea
           id="message"
           name="message"
@@ -376,7 +324,7 @@
           minlength="10"
           aria-invalid={!!errors.message}
           aria-describedby={errors.message ? 'message-error' : undefined}
-          placeholder="Describe the future need, collaboration or question, including location and timing where relevant..."
+          placeholder="Describe the software issue, feedback, future need, collaboration or question, including relevant product and timing..."
         ></textarea>
         {#if errors.message}
           <span class="form-error" id="message-error" role="alert">{errors.message}</span>
@@ -384,9 +332,6 @@
       </div>
     </div>
 
-    <!-- Permanently rendered live region: aria-live only reliably announces
-         CHANGES inside an existing element, so the container stays in the DOM
-         (empty and collapsed when idle) and only its text/class swap. -->
     <div
       class="form-status"
       class:form-status--success={submitStatus === 'success'}
@@ -397,18 +342,13 @@
       {submitMessage}
     </div>
 
-    <button
-      type="submit"
-      class="cta-button cta-primary form-submit"
-      disabled={isSubmitting}
-    >
+    <button type="submit" class="cta-button cta-primary form-submit" disabled={isSubmitting}>
       {isSubmitting ? 'Sending...' : 'Send Inquiry'}
     </button>
   </form>
 </div>
 
 <style>
-  /* Honeypot — visually removed but still submitted with the form */
   .honeypot-field {
     position: absolute;
     left: -9999px;
@@ -417,8 +357,6 @@
     overflow: hidden;
   }
 
-  /* Box styles live on the modifier classes so the always-present live
-     region collapses to nothing while idle/empty. */
   .form-status {
     border-radius: 8px;
     font-size: 0.95rem;

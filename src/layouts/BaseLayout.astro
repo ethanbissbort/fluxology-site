@@ -4,10 +4,6 @@ import CursorEffects from '../components/CursorEffects.svelte';
 import { dbaPlans } from '../data/dbaPlans';
 import socialImage from '../assets/images/corporate/logo-medallion-og.png';
 
-// Global stylesheets — imported so Astro bundles, hashes, and injects them.
-// Referencing "/src/styles/*.css" via <link> does NOT work in a production
-// build (src/ is not served); imports are the correct mechanism. Order is
-// preserved, so the cascade matches the previous <link> order.
 import '../styles/reset.css';
 import '../styles/variables.css';
 import '../styles/base.css';
@@ -21,26 +17,24 @@ type Theme = 'corporate' | 'industrial' | 'tech' | 'natural';
 interface Props {
   title: string;
   description?: string;
-  /** Error pages: emit a robots noindex and omit canonical/og:url. */
   noindex?: boolean;
-  /** Theme of the page's hero — decides which heading font gets preloaded. */
   theme?: Theme;
 }
 
 const {
   title,
-  description = "Fluxology, Inc. is a one-owner Canadian-controlled private corporation developing a staged trade-led homestead micro-enterprise for a 2029-2035 planning horizon.",
+  description = "Fluxology, Inc. is a Canadian-controlled private corporation developing and publishing its own software products while building staged future operating plans for fabrication, digital production support and homestead food systems.",
   noindex = false,
   theme,
 } = Astro.props;
 
-// Resolve the page theme: explicit prop wins; otherwise DBA detail pages
-// (/{slug}/) take their plan's theme; everything else is corporate.
 const currentDba = dbaPlans.find((plan) => Astro.url.pathname === `/${plan.slug}/`);
 const resolvedTheme: Theme = theme ?? currentDba?.overview.theme ?? 'corporate';
 
-// Absolute URLs for canonical/social tags (Astro.site is set in astro.config.mjs).
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const socialImageURL = new URL('/images/corporate/logo-medallion.webp', Astro.site);
+const socialImageWidth = 640;
+const socialImageHeight = 640;
 // og:image is PNG, not the WebP the rest of the site ships. WebP share cards
 // are silently dropped by several major scrapers — LinkedIn and some
 // Slack/iMessage unfurl paths among them — so the one image whose whole job is
@@ -61,14 +55,6 @@ const socialImageWidth = socialImage.width;
 const socialImageHeight = socialImage.height;
 const socialImageAlt = 'Fluxology, Inc. logo medallion';
 
-// Fonts to preload. Outfit (nav wordmark, corporate headings) and Open Sans
-// (nav links, body copy) are above the fold on every page. Themed pages
-// additionally preload their theme's heading family, because the hero/LCP
-// <h1> renders in --current-font-heading (see src/styles/themes.css and
-// src/styles/variables.css) and would otherwise swap in late (FOUT).
-// Rajdhani ships discrete weight files (not variable), so its preload is
-// narrowed to the 700 weight that headings use (base.css h1-h6) instead of
-// pulling all five files.
 type PreloadFilter = import('astro:assets').FontPreloadFilter;
 const themeHeadingPreload: Record<Theme, { cssVariable: string; preload: PreloadFilter }> = {
   corporate: { cssVariable: '--font-outfit', preload: true },
@@ -105,7 +91,7 @@ const organizationSchema = JSON.stringify({
   logo: socialImageURL.toString(),
   email: 'info@fluxology.ca',
   description:
-    'One-owner Canadian-controlled private corporation developing staged operating plans for fabrication and welding, digital production support, subsistence-first protected growing, and perennial food systems.',
+    'Canadian-controlled private corporation developing and publishing independent software products, including iOS applications and supporting web tools, with staged future operating plans in fabrication, digital production support and homestead food systems.',
 });
 ---
 
@@ -115,14 +101,11 @@ const organizationSchema = JSON.stringify({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content={description}>
-  <meta name="keywords" content="Fluxology, mobile welding, custom fabrication, 3D scanning, FDM printing, homestead greenhouse, orchard, food forest, Ontario">
+  <meta name="keywords" content="Fluxology, software publisher, iOS apps, Office Scout, Fluxology Deals, mobile welding, custom fabrication, 3D scanning, Ontario">
   <meta name="author" content="Fluxology, Inc.">
 
   <title>{title}</title>
 
-  <!-- Canonical + social sharing. Error pages (noindex) have no canonical
-       address of their own, so the canonical link and og:url are omitted and
-       a robots noindex is emitted instead. -->
   {noindex && <meta name="robots" content="noindex">}
   {!noindex && <link rel="canonical" href={canonicalURL}>}
   <meta property="og:type" content="website">
@@ -140,26 +123,13 @@ const organizationSchema = JSON.stringify({
   <meta name="twitter:image" content={socialImageURL}>
   <meta name="twitter:image:alt" content={socialImageAlt}>
 
-  <!-- Structured data -->
   <script type="application/ld+json" set:html={organizationSchema} is:inline></script>
 
-  <!-- Scroll-reveal opt-IN. The .observe-* wrappers (see utilities.css) are
-       only hidden while html.js-reveal is present, so content is never hidden
-       by CSS that only JavaScript can undo. This runs before any island loads,
-       so there is no flash of revealed-then-hidden content, and it is skipped
-       entirely when scripting is off — which replaces the old <noscript>
-       override. The watchdog covers the harder case the noscript block could
-       not: JavaScript is alive but the island that adds `.observed` never
-       hydrates (all seven islands share one Svelte runtime chunk, so a single
-       404, blocked request or stale hash used to blank ~90% of the page AND
-       hide the still-working server-rendered contact form). -->
   <script is:inline>
     (function () {
       var root = document.documentElement;
       root.classList.add('js-reveal');
       var release = function () {
-        // ThemeTransition marks itself ready on mount; if it never did, stop
-        // hiding content it will never reveal.
         if (!root.classList.contains('reveal-ready')) root.classList.remove('js-reveal');
       };
       var arm = function () { setTimeout(release, 2500); };
@@ -168,14 +138,10 @@ const organizationSchema = JSON.stringify({
     })();
   </script>
 
-  <!-- Self-hosted fonts (astro:fonts). Preload the above-the-fold corporate
-       fonts plus the current theme's heading font (the hero <h1> renders in
-       it); everything else loads on demand with font-display: swap. -->
   {fontVariables.map((cssVariable) => (
     <Font cssVariable={cssVariable} preload={fontPreload(cssVariable)} />
   ))}
 
-  <!-- Icons / PWA -->
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -185,22 +151,17 @@ const organizationSchema = JSON.stringify({
 <body>
   <slot />
 
-  <!-- Site-wide layered cursor (fine pointers only; respects reduced motion) -->
   <CursorEffects client:idle />
 
   <script>
-    // Register service worker for PWA support. (No logging: terser strips
-    // console calls, and the observer-based perf logging that used to live
-    // here ran as a hollow no-op in production for the same reason.)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js').catch(() => {
-          // Registration failure is non-fatal — the site works without it.
+          // Registration failure is non-fatal.
         });
       });
     }
 
-    // Refresh the build-time footer year for long-cached pages.
     const yearElement = document.getElementById('currentYear');
     if (yearElement) {
       yearElement.textContent = new Date().getFullYear().toString();
