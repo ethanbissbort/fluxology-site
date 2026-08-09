@@ -1,0 +1,158 @@
+name: MCP connector tests
+
+# The connector's suites cover its own source, the canonical dashboard JSON
+# Schemas it compiles at build time, and the dashboard-api process its
+# integration tests actually run — so a change to any of those re-runs them.
+# Runs on every branch rather than only on pull requests: a commit pushed
+# before a PR exists would otherwise get no signal at all, and the resulting
+# commit status still shows up on the PR when one is opened. One trigger also
+# means one run per commit instead of a duplicate push/pull_request pair.
+on:
+  push:
+    branches: ['**']
+    paths:
+      - services/fluxology-mcp/**
+      - services/dashboard-api/**
+      - public/office-scout/data/**
+      - public/deals/data/**
+      - public/jobs/data/**
+      - docker-compose.yml
+      - .github/workflows/mcp-connector-tests.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit, contract, integration and protocol tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/fluxology-mcp/package-lock.json
+
+      - name: Install pinned dependencies
+        working-directory: services/fluxology-mcp
+        run: npm ci --no-audit --no-fund
+
+      - name: Run tests
+        working-directory: services/fluxology-mcp
+        run: npm test
+
+  packaging:
+    name: Deployment invariants
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # SDD §31: the connector must publish no host port. The edge proxy is the
+      # only public entrypoint, so a stray `ports:` mapping is a security
+      # regression, not a convenience.
+      - name: Assert no service publishes a host port
+        run: |
+          docker network create fluxology-edge >/dev/null 2>&1 || true
+          resolved="$(docker compose config)"
+          if printf '%s' "$resolved" | grep -q 'published:'; then
+            echo "::error::a service publishes a host port; the edge proxy must be the only public entrypoint"
+            printf '%s' "$resolved" | grep -n -B 4 'published:'
+            exit 1
+          fi
+          echo "no host ports published"
+
+      # The image copies the canonical schemas at build time (SDD §12.1). If a
+      # dashboard schema is renamed or moved, the build must fail here rather
+      # than producing an image that silently falls back to nothing.
+      - name: Assert the canonical schemas the image copies exist
+        run: |
+          set -e
+          for schema in \
+            public/office-scout/data/schema.json \
+            public/deals/data/schema.json \
+            public/jobs/data/schema.json
+          do
+            test -f "$schema" || { echo "::error::missing $schema"; exit 1; }
+            node -e "JSON.parse(require('fs').readFileSync('$schema','utf8'))"
+          done
+          echo "all three canonical schemas present and parseable"
+
+      - name: Build the connector image
+        run: docker build -f services/fluxology-mcp/Dockerfile -t fluxology-mcp:ci .
+
+      - name: Assert the image runs as a non-root user with the schemas in place
+        run: |
+          set -e
+          uid="$(docker run --rm --entrypoint node fluxology-mcp:ci -e 'console.log(process.getuid())')"
+          if [ "$uid" = "0" ]; then
+            echo "::error::the connector image must not run as root"
+            exit 1
+          fi
+          # `ls` rather than a node one-liner: /app/package.json declares
+          # "type": "module", which makes `node -e` CJS/ESM ambiguous. The
+          # files are copied verbatim and the previous step already parsed them.
+          docker run --rm --entrypoint sh fluxology-mcp:ci -c \
+            'ls -l /app/schemas/office.json /app/schemas/deals.json /app/schemas/jobs.json'
+          echo "image runs as uid $uid with all three packaged schemas readable"
+
+      - name: Assert the image boots on a production-shaped configuration
+        run: |
+          docker run -d --name mcp-boot \
+            -e NODE_ENV=production \
+            -e MCP_PUBLIC_URL=https://mcp.example.test/mcp \
+            -e OAUTH_ISSUER=https://auth.example.test \
+            -e OFFICE_INGEST_TOKEN=ci-placeholder-office-token \
+            -e DEALS_INGEST_TOKEN=ci-placeholder-deals-token \
+            -e JOBS_INGEST_TOKEN=ci-placeholder-jobs-token \
+            fluxology-mcp:ci >/dev/null
+          listening=0
+          for _ in $(seq 1 30); do
+            if docker logs mcp-boot 2>&1 | grep -q '"event":"listening"'; then listening=1; break; fi
+            sleep 1
+          done
+          docker logs mcp-boot 2>&1 | head -20
+          docker rm -f mcp-boot >/dev/null 2>&1 || true
+          if [ "$listening" != "1" ]; then
+            echo "::error::the image never reached a listening state"
+            exit 1
+          fi
+          echo "image booted and is listening"
+
+      # Startup must fail loudly on a configuration that would expose the
+      # service: development bearer auth while NODE_ENV=production (SDD §9.5).
+      # The same configuration boots fine in the step above, so a failure here
+      # can only come from the guard.
+      - name: Assert production refuses development auth
+        run: |
+          output="$(docker run --rm \
+            -e NODE_ENV=production \
+            -e MCP_PUBLIC_URL=https://mcp.example.test/mcp \
+            -e OAUTH_ISSUER=https://auth.example.test \
+            -e OFFICE_INGEST_TOKEN=ci-placeholder-office-token \
+            -e DEALS_INGEST_TOKEN=ci-placeholder-deals-token \
+            -e JOBS_INGEST_TOKEN=ci-placeholder-jobs-token \
+            -e MCP_DEV_AUTH_ENABLED=true \
+            -e MCP_DEV_AUTH_TOKEN=0123456789abcdef0123 \
+            fluxology-mcp:ci 2>&1)" && status=0 || status=$?
+          echo "$output"
+          if [ "$status" = "0" ]; then
+            echo "::error::the connector started with development auth enabled in production"
+            exit 1
+          fi
+          if ! printf '%s' "$output" | grep -q 'MCP_DEV_AUTH_ENABLED'; then
+            echo "::error::startup failed, but not because of the development-auth guard"
+            exit 1
+          fi
+          echo "production correctly refused development auth"
