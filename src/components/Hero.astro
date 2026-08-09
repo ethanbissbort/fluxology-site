@@ -1,7 +1,7 @@
 ---
-// Above-the-fold company positioning. This reflects the portfolio's current
-// legal status and future launch horizon instead of presenting the DBAs as
-// active, staffed divisions.
+// Above-the-fold company positioning. Software development is a current
+// corporate activity; the four trade/homestead operating names remain staged
+// future lines rather than active divisions.
 import { Picture } from 'astro:assets';
 import logoMedallion from '../assets/images/corporate/logo-medallion.webp';
 ---
@@ -16,12 +16,9 @@ import logoMedallion from '../assets/images/corporate/logo-medallion.webp';
     <div class="container">
       <p class="hero-status">
         <span class="hero-status-dot" aria-hidden="true"></span>
-        Federally incorporated · Ontario · 2029-2035 planning horizon
+        Federally incorporated · Ontario · Software development active
       </p>
 
-      {/* The one eager fetchpriority=high image on this route, and its LCP
-          element. <Picture> serves AVIF first and WebP second; fallbackFormat
-          must be set explicitly or Astro fills the <img> with a PNG. */}
       <Picture
         class="hero-brand-mark"
         src={logoMedallion}
@@ -37,39 +34,34 @@ import logoMedallion from '../assets/images/corporate/logo-medallion.webp';
       />
       <h1 class="hero-title">
         <span class="hero-title-main">Fluxology, Inc.</span>
-        <span class="hero-title-sub">Trade-led. Technology-enabled. Homestead-integrated.</span>
+        <span class="hero-title-sub">Independent software. Trade capability. Long-term resilience.</span>
       </h1>
 
       <p class="hero-description">
-        A one-owner Canadian-controlled private corporation building a disciplined path from mobile repair and
-        fabrication to digital production support and subsistence-first homestead agriculture.
+        A one-owner Canadian-controlled private corporation developing and publishing its own software products now,
+        with staged future operating lines in fabrication, digital production support and homestead food systems.
       </p>
 
       <ul class="hero-facts" role="list">
-        <li><strong>1</strong><span>corporation</span></li>
-        <li><strong>4</strong><span>proposed operating names</span></li>
-        <li><strong>2029</strong><span>earliest commercial launch</span></li>
+        <li><strong>Now</strong><span>software product development</span></li>
+        <li><strong>iOS</strong><span>applications in active development</span></li>
+        <li><strong>2029+</strong><span>earliest trade-line launch</span></li>
       </ul>
 
       <div class="hero-cta-group">
-        <a href="#operating-model" class="cta-button cta-primary">See how the pieces fit</a>
-        <a href="#roadmap" class="cta-button cta-secondary">View the staged roadmap</a>
+        <a href="/apps/" class="cta-button cta-primary">Software & Apps</a>
+        <a href="#operating-model" class="cta-button cta-secondary">See the full operating model</a>
       </div>
 
       <div class="hero-scroll-indicator" aria-hidden="true">
         <span class="scroll-arrow">↓</span>
-        <span class="scroll-text">Explore the operating plan</span>
+        <span class="scroll-text">Explore Fluxology</span>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-  /* <Picture> wraps the <img> in a <picture>, which would otherwise become the
-     laid-out box and break the img's own sizing/centering rules (base.css
-     styles .hero-brand-mark on the img). display:contents takes the wrapper
-     back out of the layout tree so the markup change is layout-invisible —
-     which is what keeps CLS at 0. */
   picture {
     display: contents;
   }
