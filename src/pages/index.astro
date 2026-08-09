@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navigation from '../components/Navigation.astro';
 import Hero from '../components/Hero.astro';
+import SoftwareShowcase from '../components/SoftwareShowcase.astro';
 import About from '../components/About.astro';
 import OperatingModel from '../components/OperatingModel.astro';
 import DBASection from '../components/DBASection.astro';
@@ -20,7 +21,7 @@ import { dbaOverviews } from '../data/dbaPlans';
 
 <BaseLayout
   title="Fluxology, Inc. | Independent Software Publisher & Staged Micro-Enterprise"
-  description="Fluxology, Inc. is a Canadian corporation developing and publishing its own software products, including iOS applications, alongside staged future plans for fabrication, digital production support and homestead food systems."
+  description="Fluxology, Inc. is a federally incorporated Canadian company developing and publishing independent software products, including iOS applications, alongside staged future plans for fabrication, digital production support and homestead food systems."
 >
   <ScrollProgress client:load />
   <ThemeTransition client:load />
@@ -31,6 +32,7 @@ import { dbaOverviews } from '../data/dbaPlans';
 
   <main id="main-content" tabindex="-1">
     <Hero />
+    <SoftwareShowcase />
     <About />
     <OperatingModel />
 
