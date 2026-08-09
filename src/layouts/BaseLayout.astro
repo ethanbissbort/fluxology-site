@@ -32,9 +32,6 @@ const currentDba = dbaPlans.find((plan) => Astro.url.pathname === `/${plan.slug}
 const resolvedTheme: Theme = theme ?? currentDba?.overview.theme ?? 'corporate';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
-const socialImageURL = new URL('/images/corporate/logo-medallion.webp', Astro.site);
-const socialImageWidth = 640;
-const socialImageHeight = 640;
 // og:image is PNG, not the WebP the rest of the site ships. WebP share cards
 // are silently dropped by several major scrapers — LinkedIn and some
 // Slack/iMessage unfurl paths among them — so the one image whose whole job is
