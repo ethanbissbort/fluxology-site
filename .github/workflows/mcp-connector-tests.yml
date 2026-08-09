@@ -3,18 +3,13 @@ name: MCP connector tests
 # The connector's suites cover its own source, the canonical dashboard JSON
 # Schemas it compiles at build time, and the dashboard-api process its
 # integration tests actually run — so a change to any of those re-runs them.
+# Runs on every branch rather than only on pull requests: a commit pushed
+# before a PR exists would otherwise get no signal at all, and the resulting
+# commit status still shows up on the PR when one is opened. One trigger also
+# means one run per commit instead of a duplicate push/pull_request pair.
 on:
-  pull_request:
-    paths:
-      - services/fluxology-mcp/**
-      - services/dashboard-api/**
-      - public/office-scout/data/**
-      - public/deals/data/**
-      - public/jobs/data/**
-      - docker-compose.yml
-      - .github/workflows/mcp-connector-tests.yml
   push:
-    branches: [main]
+    branches: ['**']
     paths:
       - services/fluxology-mcp/**
       - services/dashboard-api/**
