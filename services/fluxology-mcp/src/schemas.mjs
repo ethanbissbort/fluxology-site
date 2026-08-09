@@ -44,9 +44,13 @@ export const FRESHNESS_FIELD = Object.freeze({
 });
 
 /**
- * Fields excluded from the material-change comparison (SDD §14). These mirror
- * `DASHBOARDS[scope].freshnessFields` in services/dashboard-api/server.mjs so
- * the connector's "unchanged" verdict matches what the Dashboard API would do.
+ * Fields excluded from the material-change comparison (SDD §14). Office and
+ * jobs match `DASHBOARDS[scope].freshnessFields` in
+ * services/dashboard-api/server.mjs exactly; the deals set is deliberately
+ * wider, because the connector also treats `lastVerified` as an audit field
+ * there and the Dashboard API does not. The divergence cannot change a verdict
+ * (deals records carry no caller-writable `lastVerified`), but the two lists
+ * are not identical and this comment used to claim that they were.
  */
 export const AUDIT_FIELDS = Object.freeze({
   office: Object.freeze(new Set(['lastVerified', 'firstSeen', 'lastSeen', 'lastChanged', 'priceHistory'])),
@@ -135,6 +139,14 @@ export function loadSchemas(config) {
 
     const standaloneItem = { $schema: 'https://json-schema.org/draft/2020-12/schema', ...itemSchema };
 
+    /**
+     * Every property name the canonical contract knows about. `additionalProperties`
+     * stays `true` so additive schema evolution keeps flowing (SDD §24) — this set
+     * is what lets the pipeline tell "a field the contract gained" from "a field
+     * the caller misspelled".
+     */
+    const knownProperties = Object.freeze(new Set(Object.keys(itemSchema.properties ?? {})));
+
     categories[scope] = {
       scope,
       file,
@@ -142,6 +154,11 @@ export function loadSchemas(config) {
       source: raw,
       schemaVersion: declaredSchemaVersion(raw, config.expectedSchemaVersions[scope]),
       requiredFields: Object.freeze([...(itemSchema.required ?? [])]),
+      knownProperties,
+      /** Lowercased name -> canonical name, for detecting case-only near misses. */
+      propertyByLowerName: Object.freeze(
+        new Map([...knownProperties].map(name => [name.toLowerCase(), name])),
+      ),
       validateFeed: ajv.compile(raw),
       validateListing: ajv.compile(standaloneItem),
       inputSchema: Object.freeze(toInputSchema(itemSchema, scope)),

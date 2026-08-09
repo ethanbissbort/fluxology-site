@@ -52,6 +52,63 @@ describe('configuration', () => {
     assert.throws(() => loadConfig({ NODE_ENV: 'test' }), /OAUTH_ISSUER is required/);
   });
 
+  it('treats any unrecognised NODE_ENV as production', () => {
+    // The guard used to be `nodeEnv === 'production'`, so 'prod', 'Production'
+    // and an unset value all quietly disabled it along with the https rule.
+    // An UNSET NODE_ENV still means development, per the Node convention the
+    // rest of the ecosystem uses; a *misspelled* one no longer does.
+    for (const nodeEnv of ['prod', 'Production', 'staging', 'prod-eu']) {
+      assert.throws(
+        () => loadConfig({ ...BASE_ENV, NODE_ENV: nodeEnv, MCP_PUBLIC_URL: 'https://mcp.fluxology.ca/mcp', OAUTH_ISSUER: 'https://auth.fluxology.ca' }),
+        ConfigError,
+        `NODE_ENV=${JSON.stringify(nodeEnv)} must not enable development auth`,
+      );
+    }
+    // ...while the genuinely relaxed environments still work.
+    for (const nodeEnv of ['development', 'test', 'local']) {
+      assert.equal(loadConfig({ ...BASE_ENV, NODE_ENV: nodeEnv }).production, false);
+    }
+  });
+
+  it('grants the development bearer read-only scopes by default', () => {
+    // It carries no issuer, no audience and no expiry; defaulting it to all
+    // four scopes made it a full write credential for all three dashboards.
+    assert.deepEqual(testConfig().auth.devAuthScopes, [OAUTH_SCOPES.read]);
+    assert.deepEqual(testConfig({ MCP_DEV_AUTH_SCOPES: 'dashboards:read jobs:write' }).auth.devAuthScopes, [
+      OAUTH_SCOPES.read,
+      OAUTH_SCOPES.jobs,
+    ]);
+  });
+
+  it('refuses a cleartext token trust root outside development', () => {
+    assert.throws(
+      () => loadConfig({ NODE_ENV: 'production', MCP_PUBLIC_URL: 'https://mcp.fluxology.ca/mcp', OAUTH_ISSUER: 'http://auth.internal' }),
+      /OAUTH_ISSUER must be https/,
+    );
+  });
+
+  it('refuses signing keys hosted on an origin other than the issuer', () => {
+    assert.throws(
+      () =>
+        loadConfig({
+          NODE_ENV: 'production',
+          MCP_PUBLIC_URL: 'https://mcp.fluxology.ca/mcp',
+          OAUTH_ISSUER: 'https://auth.fluxology.ca',
+          OAUTH_JWKS_URI: 'https://169.254.169.254/latest/meta-data/',
+        }),
+      /must share the OAUTH_ISSUER origin/,
+    );
+    assert.equal(
+      loadConfig({
+        NODE_ENV: 'production',
+        MCP_PUBLIC_URL: 'https://mcp.fluxology.ca/mcp',
+        OAUTH_ISSUER: 'https://auth.fluxology.ca',
+        OAUTH_JWKS_URI: 'https://auth.fluxology.ca/jwks',
+      }).auth.jwksUri,
+      'https://auth.fluxology.ca/jwks',
+    );
+  });
+
   it('clamps limits to their safe upper bounds', () => {
     assert.throws(() => loadConfig({ ...BASE_ENV, MCP_MAX_LISTINGS_PER_WRITE: '100000' }), /must be between/);
     assert.equal(loadConfig({ ...BASE_ENV, MCP_MAX_LISTINGS_PER_WRITE: '25' }).limits.maxListingsPerWrite, 25);
@@ -187,8 +244,36 @@ describe('office invariants (SDD §13.1)', () => {
     assert.match(errors.join(' '), /requires mandatoryFeesKnown:true/);
   });
 
-  it('rejects verified without a finite all-in cost', () => {
+  it('rejects a claim that the fees are known with no all-in figure', () => {
+    // The dashboard recomputes the badge from mandatoryFeesKnown plus a finite
+    // estimatedAllInMonthly and ignores stored costStatus, so the invariant is
+    // attached to those two facts rather than to the costStatus label.
     const { errors } = office.check({ ...OFFICE_RECORD, estimatedAllInMonthly: null }, ctx);
+    assert.match(errors.join(' '), /mandatoryFeesKnown:true/);
+  });
+
+  it('rejects a zero all-in figure, which Number.isFinite would accept as verified', () => {
+    const { errors } = office.check({ ...OFFICE_RECORD, estimatedAllInMonthly: 0 }, ctx);
+    assert.match(errors.join(' '), /above zero/);
+  });
+
+  it('rejects the cost-honesty bypass even when costStatus is not "verified"', () => {
+    const { errors } = office.check({ ...OFFICE_RECORD, costStatus: 'plausible', estimatedAllInMonthly: null }, ctx);
+    assert.match(errors.join(' '), /mandatoryFeesKnown:true/);
+  });
+
+  it('still accepts an honest record whose known costs sit above the ceiling', () => {
+    // costStatus 'over' is the truthful state for a record whose real all-in
+    // figure exceeds the budget; only the "verified" claim is ceiling-bound.
+    const { errors } = office.check(
+      { ...OFFICE_RECORD, costStatus: 'over', mandatoryFeesKnown: true, estimatedAllInMonthly: 900.61 },
+      ctx,
+    );
+    assert.deepEqual(errors, []);
+  });
+
+  it('rejects verified without a finite all-in cost', () => {
+    const { errors } = office.check({ ...OFFICE_RECORD, mandatoryFeesKnown: false, estimatedAllInMonthly: null }, ctx);
     assert.match(errors.join(' '), /requires a finite all-in monthly cost/);
   });
 
@@ -429,6 +514,23 @@ describe('secret redaction (SDD §19.1, §25.1)', () => {
   it('omits listing bodies entirely', () => {
     const out = redact({ listings: [{ id: 'a' }, { id: 'b' }], notes: 'personal note' });
     assert.equal(out.listings, '[2 item(s) omitted]');
+    assert.equal(out.notes, '[omitted]');
+  });
+
+  it('keeps the one credential-shaped key that carries no credential', () => {
+    // secretOrigins says whether each ingest token came from a Docker secret
+    // mount, an env var or nowhere. It was redacted by its own name.
+    const out = redact({ secretOrigins: { office: 'file:/run/secrets/office_ingest_token', deals: 'env', jobs: 'unset' } });
+    assert.equal(out.secretOrigins.deals, 'env');
+    assert.equal(out.secretOrigins.jobs, 'unset');
+  });
+
+  it('lets the bounded before-image through, and only that', () => {
+    const out = redact({
+      beforeImage: { 'rec-1': { notes: '"landlord confirmed 780"', operator: '"Regus"' } },
+      notes: 'a listing body that is not a before-image',
+    });
+    assert.equal(out.beforeImage['rec-1'].notes, '"landlord confirmed 780"', 'a write must stay reconstructable');
     assert.equal(out.notes, '[omitted]');
   });
 

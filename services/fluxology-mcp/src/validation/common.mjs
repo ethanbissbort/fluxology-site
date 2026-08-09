@@ -18,6 +18,18 @@ const MAX_FIELDS_PER_RECORD = 200;
 /** C0 control characters other than tab, newline and carriage return. */
 const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
 
+/**
+ * Token for a key that is absent (or explicitly `undefined`).
+ *
+ * `JSON.stringify(undefined)` is `undefined`, so the previous `?? 'null'`
+ * fallback collapsed "the record has no such field" and "the record has this
+ * field, set to null" onto the same string. That made absent -> null invisible
+ * to the material diff, and absent -> null is exactly the mutation that flips a
+ * dashboard badge (`Number(null) === 0`). A bare `undefined` cannot collide
+ * with any JSON output: `JSON.stringify('undefined')` is `"undefined"`, quoted.
+ */
+const ABSENT = 'undefined';
+
 /** Deterministic serialisation, identical in spirit to the Dashboard API's. */
 export function stableStringify(value) {
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
@@ -27,7 +39,7 @@ export function stableStringify(value) {
       .map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
       .join(',')}}`;
   }
-  return JSON.stringify(value) ?? 'null';
+  return JSON.stringify(value) ?? ABSENT;
 }
 
 /** Field names whose values differ, ignoring server-owned audit fields. */
@@ -188,6 +200,109 @@ export function requireText(record, field, maxChars) {
   if (typeof value !== 'string' || !value.trim()) return `${field}: is required on a new record`;
   if (value.length > maxChars) return `${field}: exceeds ${maxChars} characters`;
   return null;
+}
+
+/**
+ * Ranking fields where an explicit `null` must never be stored.
+ *
+ * Every validation layer reads `null` as "unknown", but every dashboard reads
+ * it as zero: `Number(null) === 0` passes `Number.isFinite`, so a null landed
+ * cost becomes `$0.00/lb` and wins the "≤ $8/LB" badge, a null fit score sorts
+ * as 0, and `{mandatoryFeesKnown:true, estimatedAllInMonthly:null}` renders
+ * "VERIFIED ≤ $850" next to "Unknown". An ABSENT field already degrades
+ * correctly on all three dashboards, so `null` is normalised to absent here and
+ * the two layers finally agree.
+ */
+export const NULL_AS_ABSENT_FIELDS = Object.freeze({
+  office: Object.freeze(['estimatedAllInMonthly']),
+  deals: Object.freeze(['landedCadPerLb']),
+  jobs: Object.freeze(['fitScore', 'finalWalkMinutes']),
+});
+
+/**
+ * Apply the null-is-absent rule to one merged record.
+ *
+ * A null for a field the stored record does not have is dropped: the result is
+ * the "unknown" the caller meant. A null for a field that *does* have a stored
+ * value is refused, because the Dashboard API merges per id with a shallow
+ * spread — omitting the key there restores the stored value, so accepting the
+ * null would report a change the store would silently undo.
+ */
+export function applyNullAsAbsent({ incoming, prior, merged, fields }) {
+  if (!fields?.length) return { merged, warnings: [], errors: [] };
+  const warnings = [];
+  const errors = [];
+  let out = merged;
+
+  for (const field of fields) {
+    if (!Object.prototype.hasOwnProperty.call(incoming ?? {}, field) || incoming[field] !== null) continue;
+    if (prior?.[field] != null) {
+      errors.push(
+        `${field}: null cannot clear a stored value — omit the field to leave it unchanged, or send the number you observed`,
+      );
+      continue;
+    }
+    if (out === merged) out = { ...merged };
+    delete out[field];
+    warnings.push(`${field}: null was stored as an absent field, because the dashboards read null as zero and absent as unknown`);
+  }
+
+  return { merged: out, warnings, errors };
+}
+
+/** An ISO 8601 instant with an explicit offset, or an unambiguous calendar date. */
+const OFFSET_TIMESTAMP = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})$/i;
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Validate and normalise a caller-supplied record timestamp.
+ *
+ * A timezone-less value is refused rather than guessed at: the browser parses
+ * `"2026-08-09 20:00"` as *local* time, which silently moves the deals auction
+ * countdown by the viewer's UTC offset (four hours under America/Toronto).
+ * A date-only value is unambiguous by specification (UTC midnight) and is kept.
+ */
+export function normalizeTimestampField(value) {
+  if (typeof value !== 'string' || !value.trim()) {
+    return { ok: false, reason: 'must be an ISO 8601 timestamp string' };
+  }
+  const trimmed = value.trim();
+  if (!OFFSET_TIMESTAMP.test(trimmed) && !DATE_ONLY.test(trimmed)) {
+    return {
+      ok: false,
+      reason: 'must be an ISO 8601 timestamp with an explicit UTC offset, for example 2026-08-09T20:00:00-04:00 or 2026-08-10T00:00:00Z',
+    };
+  }
+  const parsed = Date.parse(trimmed);
+  if (!Number.isFinite(parsed)) return { ok: false, reason: `is not a parseable timestamp: ${trimmed.slice(0, 40)}` };
+  return { ok: true, value: new Date(parsed).toISOString() };
+}
+
+/** Normalise every declared temporal field in place-ish, returning a new record when needed. */
+export function normalizeTimestamps(merged, fields) {
+  let out = merged;
+  for (const field of fields) {
+    const value = merged[field];
+    if (value == null) continue;
+    const normalized = normalizeTimestampField(value);
+    if (!normalized.ok) continue; // reported by checkTimestamps, which runs at step 9
+    if (normalized.value === value) continue;
+    if (out === merged) out = { ...merged };
+    out[field] = normalized.value;
+  }
+  return out;
+}
+
+/** Reject temporal fields the connector cannot place on a timeline. */
+export function checkTimestamps(record, fields) {
+  const errors = [];
+  for (const field of fields) {
+    const value = record[field];
+    if (value == null) continue;
+    const normalized = normalizeTimestampField(value);
+    if (!normalized.ok) errors.push(`${field}: ${normalized.reason}`);
+  }
+  return errors;
 }
 
 /** Drop `undefined` so a partial update never blanks a stored field by accident. */

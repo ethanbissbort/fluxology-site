@@ -8,9 +8,20 @@ import NavigationMenu from '../components/NavigationMenu.svelte';
 // /contact-received/?error=1 (validation/server failure). The hydrated Svelte
 // form never navigates here — it reports status inline instead.
 //
-// This is a static build, so the query string cannot be read at build time.
-// Both outcomes are rendered and the inline script below (placed before the
-// panels, so the class lands ahead of first paint) selects the failure view.
+// This is a static build, so the query string cannot be read at build time and
+// CSS cannot read it at runtime: only JavaScript can tell the two outcomes
+// apart. That is a problem, because this page's entire audience is people
+// whose JavaScript did not run.
+//
+// So the DEFAULT rendering — the one a no-JS visitor gets — is the honest
+// "submitted, outcome unconfirmed" panel, which never claims the message was
+// saved and tells the reader exactly how to check and what to do. The inline
+// script below (placed before the panels, so the class lands ahead of first
+// paint) upgrades that to a definite "received" or "not sent" panel when it
+// can actually determine the outcome.
+//
+// Exactly one <h1> is emitted; its three outcome spans are display:none'd down
+// to the one that applies, so the accessible name is always a single heading.
 ---
 
 <BaseLayout
@@ -19,18 +30,41 @@ import NavigationMenu from '../components/NavigationMenu.svelte';
   noindex
 >
   <script is:inline>
-    if (new URLSearchParams(window.location.search).get('error')) {
-      document.documentElement.classList.add('inquiry-failed');
-    }
+    document.documentElement.classList.add(
+      new URLSearchParams(window.location.search).get('error') ? 'inquiry-failed' : 'inquiry-sent'
+    );
   </script>
 
   <Navigation />
   <NavigationMenu client:load />
 
   <main id="main-content" tabindex="-1" class="received">
-    <div class="received-panel received-success">
-      <p class="received-eyebrow">Planning inquiry</p>
-      <h1 class="received-title">Inquiry received</h1>
+    <p class="received-eyebrow">Planning inquiry</p>
+
+    <h1 class="received-title">
+      <span class="outcome outcome-unknown">Inquiry submitted</span>
+      <span class="outcome outcome-sent">Inquiry received</span>
+      <span class="outcome outcome-failed">Your inquiry was not sent</span>
+    </h1>
+
+    {/* Zero-JavaScript default. Keep an inline tag and the words either side of
+        it on ONE line — compressHTML collapses a newline+indent next to an
+        inline tag to nothing (this page used to render "was notsaved"). */}
+    <div class="received-panel outcome outcome-unknown">
+      <p class="received-text">
+        Your message was submitted. This page cannot confirm the result without JavaScript, so please
+        check the address bar: if it ends in <code>?error=1</code>, the message was <strong>not</strong> saved
+        and nothing has reached us.
+      </p>
+      <p class="received-text received-note">
+        Either way, you can email <a href="mailto:info@fluxology.ca">info@fluxology.ca</a> directly and
+        we will pick it up. Fluxology is in its 2026-2028 foundation period, so replies are considered,
+        not immediate.
+      </p>
+      <a href="/#contact" class="cta-button cta-primary received-link">Back to the form</a>
+    </div>
+
+    <div class="received-panel outcome outcome-sent">
       <p class="received-text">
         Thank you — your message has been recorded. We will respond as the planning schedule
         permits. Fluxology is in its 2026-2028 foundation period, so replies are considered, not
@@ -39,18 +73,10 @@ import NavigationMenu from '../components/NavigationMenu.svelte';
       <p class="received-text received-note">
         Prefer email? Write to <a href="mailto:info@fluxology.ca">info@fluxology.ca</a> at any time.
       </p>
-      <noscript>
-        <p class="received-text received-note">
-          If the address bar of this page ends in <code>?error=1</code>, the inquiry was <strong>not</strong>
-          saved — please email <a href="mailto:info@fluxology.ca">info@fluxology.ca</a> directly.
-        </p>
-      </noscript>
       <a href="/" class="cta-button cta-primary received-link">Back to the homepage</a>
     </div>
 
-    <div class="received-panel received-error">
-      <p class="received-eyebrow">Planning inquiry</p>
-      <h1 class="received-title">Your inquiry was not sent</h1>
+    <div class="received-panel outcome outcome-failed">
       <p class="received-text">
         Something went wrong and the message was not recorded. Nothing has been saved, so please
         do not assume it reached us.
@@ -82,24 +108,29 @@ import NavigationMenu from '../components/NavigationMenu.svelte';
   }
 
   .received-panel {
-    display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
     max-width: 40rem;
   }
 
-  /* Success is the default view; the failure view replaces it only when the
-     API redirected with ?error=1 (see the inline script above). */
-  .received-error {
+  /* Outcome gating. Nothing here depends on JavaScript to REVEAL content: the
+     unhinted state (no class on <html>) shows the honest "unconfirmed" copy,
+     and the inline script only swaps in a more specific truth when it knows
+     one. The three heading spans keep the page at exactly one <h1>. */
+  .outcome {
     display: none;
   }
 
-  :global(html.inquiry-failed) .received-success {
-    display: none;
+  :global(html:not(.inquiry-sent):not(.inquiry-failed)) span.outcome-unknown,
+  :global(html.inquiry-sent) span.outcome-sent,
+  :global(html.inquiry-failed) span.outcome-failed {
+    display: inline;
   }
 
-  :global(html.inquiry-failed) .received-error {
+  :global(html:not(.inquiry-sent):not(.inquiry-failed)) .received-panel.outcome-unknown,
+  :global(html.inquiry-sent) .received-panel.outcome-sent,
+  :global(html.inquiry-failed) .received-panel.outcome-failed {
     display: flex;
   }
 
@@ -109,11 +140,13 @@ import NavigationMenu from '../components/NavigationMenu.svelte';
     font-weight: var(--font-weight-bold);
     letter-spacing: var(--letter-spacing-wider);
     text-transform: uppercase;
+    margin-bottom: 1rem;
   }
 
   .received-title {
     font-family: var(--font-corporate-heading);
     font-size: var(--font-size-2xl);
+    margin-bottom: 1rem;
   }
 
   .received-text {
@@ -124,6 +157,11 @@ import NavigationMenu from '../components/NavigationMenu.svelte';
 
   .received-note {
     font-size: var(--font-size-sm);
+  }
+
+  .received-text code {
+    color: var(--corporate-neutral-white);
+    white-space: nowrap;
   }
 
   /* Accessible link tint on the navy gradient (matches the AA-checked pairing

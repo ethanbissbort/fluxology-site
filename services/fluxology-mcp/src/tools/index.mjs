@@ -9,6 +9,8 @@
  */
 import { randomUUID } from 'node:crypto';
 
+import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
+
 import { ToolError } from '../errors.mjs';
 import { formatAjvErrors } from '../schemas.mjs';
 import { createReadTools } from './read-tools.mjs';
@@ -83,13 +85,23 @@ export function createToolRegistry({ config, schemas, client, pipeline, log }) {
     return byName.get(name) ?? null;
   }
 
-  async function call(name, rawArgs, { authInfo, requireScope } = {}) {
+  /** `tools/list` narrowed to what the presented token may actually call. */
+  function definitionsFor(grantedScopes) {
+    if (!Array.isArray(grantedScopes)) return definitions;
+    const granted = new Set(grantedScopes);
+    return definitions.filter(definition => granted.has(byName.get(definition.name).requiredScope));
+  }
+
+  async function call(name, rawArgs, { authInfo, requireScope, httpRequestId } = {}) {
     const tool = byName.get(name);
     const requestId = randomUUID();
     const startedAt = Date.now();
 
     const logFields = () => ({
       requestId,
+      // The HTTP layer's id is what the X-Request-Id response header carries;
+      // without it on this line the two correlation ids can never be joined.
+      httpRequestId: httpRequestId ?? null,
       tool: name,
       subject: authInfo?.extra?.subject ?? authInfo?.clientId ?? 'unknown',
       clientId: authInfo?.clientId ?? 'unknown',
@@ -99,7 +111,9 @@ export function createToolRegistry({ config, schemas, client, pipeline, log }) {
 
     if (!tool) {
       log.warn('tool_unknown', logFields());
-      throw new ToolError('VALIDATION_ERROR', `unknown tool ${String(name).slice(0, 60)}`);
+      // A protocol error, not a tool result: ToolError.code is a string, which
+      // the SDK maps to InternalError (-32603) where the spec wants InvalidParams.
+      throw new McpError(ErrorCode.InvalidParams, `unknown tool ${String(name).slice(0, 60)}`);
     }
 
     try {
@@ -136,8 +150,27 @@ export function createToolRegistry({ config, schemas, client, pipeline, log }) {
         counts: result.counts ?? null,
         changedIds: (result.changedIds ?? []).slice(0, MAX_LOGGED_IDS),
         changedIdCount: (result.changedIds ?? []).length,
+        deactivatedIds: (result.deactivatedIds ?? []).slice(0, MAX_LOGGED_IDS),
         downstreamChanged: structured?.downstream?.changed ?? null,
       });
+
+      /*
+       * Recovery record. dashboard_data is the only copy of these feeds and the
+       * downstream audit entry stores ids and counts but no prior values, so
+       * without this line a bad write — a mass `active:false`, an overwritten
+       * address — cannot be reconstructed from anything.
+       */
+      if (result.beforeImage && Object.keys(result.beforeImage).length) {
+        log.info('write_before_image', {
+          requestId,
+          httpRequestId: httpRequestId ?? null,
+          tool: name,
+          scope: tool.dashboardScope ?? null,
+          subject: authInfo?.extra?.subject ?? authInfo?.clientId ?? 'unknown',
+          deactivatedIds: (result.deactivatedIds ?? []).slice(0, MAX_LOGGED_IDS),
+          beforeImage: result.beforeImage,
+        });
+      }
 
       return {
         content: [{ type: 'text', text: result.text }],
@@ -165,6 +198,13 @@ export function createToolRegistry({ config, schemas, client, pipeline, log }) {
         message: toolError.message,
       });
 
+      // The ids a failed write may have touched are exactly what an operator
+      // needs afterwards, and the success path already logs them.
+      const affectedIds = (partial.results ?? [])
+        .filter(entry => entry.outcome === 'unknown')
+        .map(entry => entry.id)
+        .filter(Boolean);
+
       log.warn('tool_invocation', {
         ...logFields(),
         outcome: 'error',
@@ -172,22 +212,36 @@ export function createToolRegistry({ config, schemas, client, pipeline, log }) {
         scope: payload.scope ?? null,
         source: partial.source ?? null,
         received: partial.received ?? null,
+        persistence: partial.persistence ?? null,
+        unknownIds: affectedIds.slice(0, MAX_LOGGED_IDS),
+        unknownIdCount: affectedIds.length,
         counts: partial.received == null ? null : {
           created: partial.created ?? 0,
           updated: partial.updated ?? 0,
           touched: partial.touched ?? 0,
           unchanged: partial.unchanged ?? 0,
           rejected: partial.rejected ?? 0,
+          unknown: partial.unknown ?? 0,
         },
       });
 
+      /*
+       * Say the ambiguity out loud in the text block too. `ok:false` alone reads
+       * as "nothing happened", and for this class of failure that is exactly
+       * what the model must not assume.
+       */
+      const ambiguityNote =
+        payload.persistence === 'unknown'
+          ? `. ${affectedIds.length} record(s) were accepted before the failure and may or may not have been persisted — re-read them with get_dashboard_listing before retrying.`
+          : '';
+
       return {
-        content: [{ type: 'text', text: `${toolError.code}: ${toolError.message}` }],
+        content: [{ type: 'text', text: `${toolError.code}: ${toolError.message}${ambiguityNote}` }],
         structuredContent: payload,
         isError: true,
       };
     }
   }
 
-  return { definitions, tools, get, call };
+  return { definitions, definitionsFor, tools, get, call };
 }

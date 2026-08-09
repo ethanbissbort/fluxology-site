@@ -115,9 +115,19 @@ function normalizeBaseUrl(raw, name) {
   return { origin: url.origin, path, href: `${url.origin}${path}`, protocol: url.protocol };
 }
 
+/**
+ * Environments where the relaxed local-development rules apply.
+ *
+ * The production guard used to be `nodeEnv === 'production'`, so `NODE_ENV`
+ * unset, `prod`, or `Production` all silently disabled both the https
+ * requirement and the development-bearer refusal. Fail closed: anything that is
+ * not explicitly a development or test environment is treated as production.
+ */
+const RELAXED_ENVIRONMENTS = Object.freeze(['development', 'test', 'local']);
+
 export function loadConfig(env = process.env) {
   const nodeEnv = str(env, 'NODE_ENV', 'development');
-  const production = nodeEnv === 'production';
+  const production = !RELAXED_ENVIRONMENTS.includes(nodeEnv.toLowerCase());
 
   const publicUrlRaw = str(env, 'MCP_PUBLIC_URL', 'http://127.0.0.1:8083/mcp');
   const parsedPublic = normalizeBaseUrl(publicUrlRaw, 'MCP_PUBLIC_URL');
@@ -132,14 +142,21 @@ export function loadConfig(env = process.env) {
   const devAuthEnabled = bool(env, 'MCP_DEV_AUTH_ENABLED', false);
   if (production && devAuthEnabled) {
     // SDD §9.5: production startup SHALL fail if development authentication is enabled.
-    throw new ConfigError('MCP_DEV_AUTH_ENABLED must not be set when NODE_ENV=production (SDD §9.5)');
+    throw new ConfigError(
+      `MCP_DEV_AUTH_ENABLED must not be set unless NODE_ENV is one of ${RELAXED_ENVIRONMENTS.join('/')} (got ${JSON.stringify(nodeEnv)}) (SDD §9.5)`,
+    );
   }
 
   const devAuthToken = str(env, 'MCP_DEV_AUTH_TOKEN');
   if (devAuthEnabled && devAuthToken.length < 16) {
     throw new ConfigError('MCP_DEV_AUTH_TOKEN must be at least 16 characters when development auth is enabled');
   }
-  const devAuthScopes = str(env, 'MCP_DEV_AUTH_SCOPES', ALL_OAUTH_SCOPES.join(' '))
+  /**
+   * Read-only by default. The development bearer has no issuer, no audience and
+   * no expiry; defaulting it to all four scopes made it a full write credential
+   * for all three dashboards on every local run. Opt into writes explicitly.
+   */
+  const devAuthScopes = str(env, 'MCP_DEV_AUTH_SCOPES', OAUTH_SCOPES.read)
     .split(/\s+/)
     .filter(Boolean);
   for (const scope of devAuthScopes) {
@@ -152,8 +169,21 @@ export function loadConfig(env = process.env) {
 
   if (!devAuthEnabled) {
     if (!oauthIssuer) throw new ConfigError('OAUTH_ISSUER is required unless development auth is enabled');
-    normalizeBaseUrl(oauthIssuer, 'OAUTH_ISSUER');
-    if (oauthJwksUri) normalizeBaseUrl(oauthJwksUri, 'OAUTH_JWKS_URI');
+    const issuerUrl = normalizeBaseUrl(oauthIssuer, 'OAUTH_ISSUER');
+    // The token trust root decides who may write to all three dashboards. Over
+    // cleartext http, any on-path attacker serves their own metadata and JWKS.
+    if (production && issuerUrl.protocol !== 'https:') {
+      throw new ConfigError('OAUTH_ISSUER must be https outside development (it is the token trust root)');
+    }
+    if (oauthJwksUri) {
+      const jwksUrl = normalizeBaseUrl(oauthJwksUri, 'OAUTH_JWKS_URI');
+      if (production && jwksUrl.protocol !== 'https:') {
+        throw new ConfigError('OAUTH_JWKS_URI must be https outside development');
+      }
+      if (jwksUrl.origin !== issuerUrl.origin) {
+        throw new ConfigError('OAUTH_JWKS_URI must share the OAUTH_ISSUER origin: signing keys may not live on an unrelated host');
+      }
+    }
   }
 
   const secrets = {};
@@ -206,6 +236,18 @@ export function loadConfig(env = process.env) {
       maxBodyBytes: num(env, 'MCP_MAX_BODY_BYTES', 524_288, 1_024, 4_194_304),
       /** SDD §10.3-10.5: listings per write tool. */
       maxListingsPerWrite: num(env, 'MCP_MAX_LISTINGS_PER_WRITE', 50, 1, 200),
+      /**
+       * Ceiling on the whole stored feed. Per-call limits bound one invocation
+       * but nothing bounded the store, so a looping or badly de-duplicating
+       * client could append new ids indefinitely into the only copy of the data.
+       */
+      maxFeedListings: num(env, 'MCP_MAX_FEED_LISTINGS', 5_000, 10, 200_000),
+      /**
+       * JSON-RPC `tools/call` elements one HTTP request may carry. MCP dropped
+       * batching in 2025-06-18 and the official SDK client sends one message per
+       * POST, so anything beyond a handful is a bespoke client.
+       */
+      maxToolCallsPerRequest: num(env, 'MCP_MAX_TOOL_CALLS_PER_REQUEST', 8, 1, 100),
       readsPerMinute: num(env, 'MCP_READS_PER_MINUTE', 120, 1, 6_000),
       writesPerMinute: num(env, 'MCP_WRITES_PER_MINUTE', 30, 1, 3_000),
       maxSourceChars: num(env, 'MCP_MAX_SOURCE_CHARS', 100, 8, 100),

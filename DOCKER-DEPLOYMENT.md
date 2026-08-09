@@ -100,7 +100,14 @@ docker compose logs -f contact-api
 docker compose logs -f dashboard-api
 ```
 
-Each service uses Docker JSON log rotation at 10 MB × 3 files.
+Each service uses Docker JSON log rotation at 10 MB × 3 files. That covers
+**container stdout/stderr only**. The two append-only data files inside the
+volumes — `/data/audit.jsonl` (dashboard writes) and `/data/inquiries.jsonl`
+(contact submissions) — are not logs in that sense and are not rotated,
+capped or pruned by anything. They are data: back them up (see
+`docs/DEPLOYMENT-VPS.md` section 10) rather than expecting them to be
+recycled. At current write rates they grow by roughly 150 bytes per feed
+write, so size is a bookkeeping matter, not an operational risk.
 
 ## Health checks
 
@@ -110,7 +117,12 @@ From inside the shared network, the services answer:
 http://fluxology-apache:6080/
 http://fluxology-contact-api:8081/api/health
 http://fluxology-dashboard-api:8082/health
+http://fluxology-dashboard-api:8082/v1/{office|deals|jobs}/health
+http://fluxology-mcp:8083/readyz
 ```
+
+The per-scope dashboard route is what each dashboard's public `/api/health`
+maps to, and what the edge's active health checks probe.
 
 Public health requests are routed by the VPS edge config documented in `docs/CADDY-INTEGRATION.md`.
 

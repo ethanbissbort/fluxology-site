@@ -1,17 +1,39 @@
 const FEED_URL = "./data/listings.json";
 const REFRESH_INTERVAL = 60 * 60 * 1000;
+// The feed is republished by an irregular curated-search run, not a cron, so a
+// threshold near REFRESH_INTERVAL would cry wolf on every normal visit. A feed
+// that has not moved in a day is either a paused search or the failure this
+// guards: the build-time snapshot being served because the edge rewrite of
+// /data/listings.json is missing (docs/DEPLOYMENT-VPS.md).
+const STALE_AFTER = 24 * 60 * 60 * 1000;
 const BUDGET = 850;
 const STORAGE_KEY = "fluxology.officeScout.workspace.v2.5";
+const WORKFLOW_STATES = ["unreviewed","saved","contacted","tour_booked","rejected","leased"];
 
 let feed = { listings: [] };
 let lastLoad = null;
+let feedOk = false;
+let storageBlocked = false;
 let workspace = loadWorkspace();
 let selectedId = null;
 
 const $ = (s) => document.querySelector(s);
-const money = (v) => v == null || Number.isNaN(Number(v))
-  ? "Unknown"
-  : new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 }).format(Number(v));
+// A cost is a number or it is nothing. A string, NaN, null and an absent field
+// are all "unknown" — never 0 — so an explicit null behaves exactly like an
+// absent field everywhere (badge, Fit, queue, sort, price observation).
+const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+// The displayed number must agree with the BUDGET comparison: whole dollars
+// print whole, anything carrying cents prints its cents. Two listings that both
+// read "$850" are therefore both exactly 850 and cannot get opposite verdicts.
+const money = (v) => {
+  const n = num(v);
+  if (n == null) return "Unknown";
+  const digits = Number.isInteger(n) ? 0 : 2;
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency", currency: "CAD",
+    minimumFractionDigits: digits, maximumFractionDigits: digits
+  }).format(n);
+};
 
 function esc(v = "") {
   return String(v).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
@@ -53,25 +75,57 @@ function dateTime(v) {
 function loadWorkspace() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const listings = parsed && parsed.listings;
+    // `typeof null === "object"`, so check the shape properly: a stored
+    // {"listings":null} used to make every localFor() call throw.
     return {
       version: "2.5",
-      listings: parsed && typeof parsed.listings === "object" ? parsed.listings : {}
+      listings: listings && typeof listings === "object" && !Array.isArray(listings) ? listings : {}
     };
   } catch {
     return { version:"2.5", listings:{} };
   }
 }
+// Returns true only when the workspace actually reached localStorage. Callers
+// must not tell the user something was saved on a false.
 function saveWorkspace() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
+    if (storageBlocked) { storageBlocked = false; showStorageWarning(false); }
+    return true;
+  } catch (e) {
+    // Log once per transition into the failed state, not once per keystroke.
+    if (!storageBlocked) console.error(e);
+    storageBlocked = true;
+    showStorageWarning(true, e);
+    return false;
+  }
+}
+function showStorageWarning(on, err) {
+  const el = $("#storageWarning");
+  if (!el) return;
+  el.hidden = !on;
+  if (on) {
+    el.textContent = `Not saved — this browser refused to store the workspace (${(err && err.name) || "storage error"}). `
+      + "Notes and workflow changes made now will be lost on reload. Copy anything important elsewhere, "
+      + "then free up storage for this site.";
+  }
 }
 function localFor(id) {
-  if (!workspace.listings[id]) {
-    workspace.listings[id] = { workflow:"unreviewed", notes:"", priceHistory:[] };
+  const key = String(id);
+  const existing = workspace.listings[key];
+  if (!existing || typeof existing !== "object") {
+    workspace.listings[key] = { workflow:"unreviewed", notes:"", priceHistory:[] };
   }
-  const row = workspace.listings[id];
-  if (!["unreviewed","saved","contacted","tour_booked","rejected","leased"].includes(row.workflow)) row.workflow = "unreviewed";
-  row.notes ||= "";
-  row.priceHistory = Array.isArray(row.priceHistory) ? row.priceHistory : [];
+  const row = workspace.listings[key];
+  // A stored workspace can hold any shape (hand-edited file, foreign export),
+  // so coerce every field rather than trusting it: a non-string `notes` used to
+  // throw on the first keystroke in the search box and kill search for good.
+  if (!WORKFLOW_STATES.includes(row.workflow)) row.workflow = "unreviewed";
+  if (typeof row.notes !== "string") row.notes = "";
+  row.priceHistory = Array.isArray(row.priceHistory)
+    ? row.priceHistory.filter(p => p && typeof p === "object")
+    : [];
   return row;
 }
 
@@ -95,11 +149,15 @@ function workflowBadge(v) {
 }
 
 function costStatus(l) {
-  const estimate = Number(l.estimatedAllInMonthly);
-  if (l.mandatoryFeesKnown === true && Number.isFinite(estimate)) {
+  const estimate = num(l.estimatedAllInMonthly);
+  const asking = num(l.askingRent);
+  // Verified requires BOTH that the mandatory fees are known and that we hold a
+  // real all-in number. `estimatedAllInMonthly: null` (or "" or absent) is an
+  // unknown cost, so the listing stays in the verification queue.
+  if (l.mandatoryFeesKnown === true && estimate != null) {
     return estimate <= BUDGET ? "verified" : "over";
   }
-  if (l.costStatus === "over" && ((Number.isFinite(estimate) && estimate > BUDGET) || Number(l.askingRent) > BUDGET)) {
+  if (l.costStatus === "over" && ((estimate != null && estimate > BUDGET) || (asking != null && asking > BUDGET))) {
     return "over";
   }
   return "plausible";
@@ -120,26 +178,31 @@ function fit(l) {
   if (l.directoryRights) s += 5;
   if (l.shortCommitment) s += 7;
   if (l.skateboardPractical) s += 6;
-  if (typeof l.finalWalkMinutes === "number") s += Math.max(0, 8 - l.finalWalkMinutes / 3);
-  if (typeof l.estimatedAllInMonthly === "number") s += Math.max(0, (BUDGET - l.estimatedAllInMonthly) / 35);
+  const walk = num(l.finalWalkMinutes);
+  const allIn = num(l.estimatedAllInMonthly);
+  if (walk != null) s += Math.max(0, 8 - walk / 3);
+  if (allIn != null) s += Math.max(0, (BUDGET - allIn) / 35);
   return Math.round(Math.max(0, Math.min(100, s)));
 }
 
 function normalizeHistoryEntry(p) {
-  const allIn = p.estimatedAllInMonthly ?? p.allIn ?? null;
-  const asking = p.askingRent ?? p.asking ?? null;
+  if (!p || typeof p !== "object") return null;
+  const allIn = num(p.estimatedAllInMonthly ?? p.allIn);
+  const asking = num(p.askingRent ?? p.asking);
   const when = p.date || p.at || p.observedAt || null;
-  if (!when || (allIn == null && asking == null)) return null;
-  return {
-    date: when,
-    estimatedAllInMonthly: allIn == null ? null : Number(allIn),
-    askingRent: asking == null ? null : Number(asking)
-  };
+  if (!when || typeof when !== "string" || (allIn == null && asking == null)) return null;
+  return { date: when, estimatedAllInMonthly: allIn, askingRent: asking };
+}
+const byDate = (a,b) => (asDate(a.date)?.getTime() || 0) - (asDate(b.date)?.getTime() || 0);
+function feedHistoryFor(l) {
+  return (Array.isArray(l.priceHistory) ? l.priceHistory : [])
+    .map(normalizeHistoryEntry).filter(Boolean).sort(byDate);
+}
+function localHistoryFor(l) {
+  return localFor(l.id).priceHistory.map(normalizeHistoryEntry).filter(Boolean);
 }
 function historyFor(l) {
-  const local = localFor(l.id);
-  const feedHistory = Array.isArray(l.priceHistory) ? l.priceHistory.map(normalizeHistoryEntry).filter(Boolean) : [];
-  const combined = [...feedHistory, ...local.priceHistory.map(normalizeHistoryEntry).filter(Boolean)];
+  const combined = [...feedHistoryFor(l), ...localHistoryFor(l)];
   const seen = new Set();
   return combined
     .filter(p => {
@@ -148,22 +211,27 @@ function historyFor(l) {
       seen.add(key);
       return true;
     })
-    .sort((a,b) => (asDate(a.date)?.getTime() || 0) - (asDate(b.date)?.getTime() || 0));
+    .sort(byDate);
 }
 function observePrices() {
   let dirty = false;
   for (const l of feed.listings) {
     const local = localFor(l.id);
-    const allIn = l.estimatedAllInMonthly == null ? null : Number(l.estimatedAllInMonthly);
-    const asking = l.askingRent == null ? null : Number(l.askingRent);
+    const allIn = num(l.estimatedAllInMonthly);
+    const asking = num(l.askingRent);
     if (allIn == null && asking == null) continue;
 
-    const existing = historyFor(l);
-    const last = existing.at(-1);
-    const differs = !last || last.estimatedAllInMonthly !== allIn || last.askingRent !== asking;
-    if (differs) {
+    // Record an observation only when this price is not already at the tail of
+    // what we know — the last row WE appended, or the newest row the feed
+    // carries. Comparing against the date-sorted tail of the merged series used
+    // to make every single load look like a change and append a duplicate row
+    // forever whenever the feed's history ran past our own newest stamp.
+    const holds = (p) => !!p && p.estimatedAllInMonthly === allIn && p.askingRent === asking;
+    if (!holds(localHistoryFor(l).at(-1)) && !holds(feedHistoryFor(l).at(-1))) {
       local.priceHistory.push({
-        date: l.lastChanged || feed.generatedAt || new Date().toISOString(),
+        // Stamp the OBSERVATION time. Stamping l.lastChanged inserted today's
+        // price into the middle of the series and rendered a drop as a rise.
+        date: new Date().toISOString(),
         estimatedAllInMonthly: allIn,
         askingRent: asking
       });
@@ -221,7 +289,11 @@ function sparkMarkup(l, large = false) {
 }
 
 function uncertaintyFields(l) {
-  if (l.mandatoryFeesKnown === true) return [];
+  // A listing can need verification for either reason: the mandatory fees are
+  // not known, or the all-in amount itself is missing (null / "" / absent).
+  const out = [];
+  if (num(l.estimatedAllInMonthly) == null) out.push("all-in monthly amount");
+  if (l.mandatoryFeesKnown === true) return out;
   const checks = [
     ["TMI", l.tmiStatus],
     ["utilities", l.utilitiesStatus],
@@ -233,7 +305,7 @@ function uncertaintyFields(l) {
     const s = String(v || "").toLowerCase();
     return !s || ["unknown","verify","not explicitly","not clearly","appears","can vary","not separately disclosed","must be confirmed","needs final"].some(x => s.includes(x));
   };
-  const out = checks.filter(([,v]) => uncertain(v)).map(([k]) => k);
+  out.push(...checks.filter(([,v]) => uncertain(v)).map(([k]) => k));
   return out.length ? out : ["mandatory recurring costs"];
 }
 
@@ -257,12 +329,12 @@ function card(l) {
         </div>
         <div class="badges"><span class="badge ${st}">${esc(costLabel(st))}</span>${wfBadge}</div>
       </div>
-      <div class="price">${l.estimatedAllInMonthly == null ? "Unknown" : esc(money(l.estimatedAllInMonthly))} <span>estimated all-in / month</span></div>
-      <div class="asking">${l.askingRent == null ? "Asking rent unknown" : `Asking ${esc(money(l.askingRent))}/mo`}${l.hstStatus ? ` · HST tracked` : ""}${deltaHtml(l)}</div>
+      <div class="price">${esc(money(l.estimatedAllInMonthly))} <span>estimated all-in / month</span></div>
+      <div class="asking">${num(l.askingRent) == null ? "Asking rent unknown" : `Asking ${esc(money(l.askingRent))}/mo`}${l.hstStatus ? ` · HST tracked` : ""}${deltaHtml(l)}</div>
       <div class="facts">
         <div class="fact"><small>Space</small><div>${esc(safe(l.size))}</div></div>
         <div class="fact"><small>Transit</small><div>${esc(safe(l.transitConnection))}</div></div>
-        <div class="fact"><small>Final walk</small><div>${l.finalWalkMinutes == null ? "Unknown" : `${esc(l.finalWalkMinutes)} min`}</div></div>
+        <div class="fact"><small>Final walk</small><div>${num(l.finalWalkMinutes) == null ? "Unknown" : `${esc(num(l.finalWalkMinutes))} min`}</div></div>
       </div>
     </div>
     <div class="cb">
@@ -308,8 +380,8 @@ function sortedListings(items) {
   if (mode === "fit") copy.sort((a,b) => fit(b) - fit(a));
   if (mode === "newest") copy.sort((a,b) => (asDate(b.lastVerified)?.getTime() || 0) - (asDate(a.lastVerified)?.getTime() || 0));
   if (mode === "changed") copy.sort((a,b) => (asDate(b.lastChanged)?.getTime() || 0) - (asDate(a.lastChanged)?.getTime() || 0));
-  if (mode === "cost") copy.sort((a,b) => (a.estimatedAllInMonthly ?? 99999) - (b.estimatedAllInMonthly ?? 99999));
-  if (mode === "walk") copy.sort((a,b) => (a.finalWalkMinutes ?? 999) - (b.finalWalkMinutes ?? 999));
+  if (mode === "cost") copy.sort((a,b) => (num(a.estimatedAllInMonthly) ?? 99999) - (num(b.estimatedAllInMonthly) ?? 99999));
+  if (mode === "walk") copy.sort((a,b) => (num(a.finalWalkMinutes) ?? 999) - (num(b.finalWalkMinutes) ?? 999));
   if (mode === "delta") copy.sort((a,b) => (priceDelta(a) ?? 99999) - (priceDelta(b) ?? 99999));
   return copy;
 }
@@ -352,7 +424,7 @@ function renderVerificationQueue() {
   $("#verificationItems").innerHTML = items.slice(0,6).map(l => `
     <article class="queue-item" data-id="${esc(l.id)}" tabindex="0">
       <div class="queue-title">${esc(safe(l.operator))} · ${esc(safe(l.address))}</div>
-      <div class="queue-meta">${l.estimatedAllInMonthly == null ? "all-in unknown" : `${esc(money(l.estimatedAllInMonthly))}/mo provisional`} · Fit ${fit(l)}/100</div>
+      <div class="queue-meta">${num(l.estimatedAllInMonthly) == null ? "all-in unknown" : `${esc(money(l.estimatedAllInMonthly))}/mo provisional`} · Fit ${fit(l)}/100</div>
       <div class="queue-missing">Resolve: ${esc(uncertaintyFields(l).join(" · "))}</div>
     </article>`).join("");
   document.querySelectorAll(".queue-item").forEach(el => {
@@ -380,9 +452,9 @@ function openDetail(l) {
   $("#detail").innerHTML = `
     <div class="dh">
       <div class="eyebrow">${esc(safe(l.operator))} · ${esc(safe(l.leaseType))}</div>
-      <h2>${esc(safe(l.address))}</h2>
+      <h2 id="dTitle">${esc(safe(l.address))}</h2>
       <p>${esc(safe(l.municipality))}, Ontario</p>
-      <div class="dp">${l.estimatedAllInMonthly == null ? "All-in cost unknown" : `${esc(money(l.estimatedAllInMonthly))}/mo`}</div>
+      <div class="dp">${num(l.estimatedAllInMonthly) == null ? "All-in cost unknown" : `${esc(money(l.estimatedAllInMonthly))}/mo`}</div>
       <div class="dh-badges">
         <span class="badge ${st}">${esc(costLabel(st))}</span>
         <span class="badge ${workflowBadge(local.workflow)}">${esc(workflowLabel(local.workflow).toUpperCase())}</span>
@@ -406,8 +478,8 @@ function openDetail(l) {
       <div class="dg">
         <section class="sec">
           <h4>Cost</h4>
-          ${detailLine("Asking rent", l.askingRent == null ? "Unknown" : `${money(l.askingRent)}/mo`)}
-          ${detailLine("Estimated all-in", l.estimatedAllInMonthly == null ? "Unknown" : `${money(l.estimatedAllInMonthly)}/mo`)}
+          ${detailLine("Asking rent", num(l.askingRent) == null ? "Unknown" : `${money(l.askingRent)}/mo`)}
+          ${detailLine("Estimated all-in", num(l.estimatedAllInMonthly) == null ? "Unknown" : `${money(l.estimatedAllInMonthly)}/mo`)}
           ${detailLine("HST", l.hstStatus)}
           ${detailLine("TMI", l.tmiStatus)}
           ${detailLine("Utilities", l.utilitiesStatus)}
@@ -427,7 +499,7 @@ function openDetail(l) {
         <section class="sec">
           <h4>Transit</h4>
           ${detailLine("Connection", l.transitConnection)}
-          ${detailLine("Final walk", l.finalWalkMinutes == null ? "Unknown" : `${l.finalWalkMinutes} minutes`)}
+          ${detailLine("Final walk", num(l.finalWalkMinutes) == null ? "Unknown" : `${num(l.finalWalkMinutes)} minutes`)}
           ${detailLine("Skateboard practical", yn(l.skateboardPractical))}
           ${detailLine("Route note", l.skateboardNote)}
         </section>
@@ -464,25 +536,66 @@ function openDetail(l) {
 
   $("#detailWorkflow").addEventListener("change", e => {
     localFor(l.id).workflow = e.target.value;
-    saveWorkspace();
+    const saved = saveWorkspace();
     renderStats(); render(); renderVerificationQueue();
-    toast(`Workflow: ${workflowLabel(e.target.value)}`);
+    toast(saved
+      ? `Workflow: ${workflowLabel(e.target.value)}`
+      : "NOT SAVED — this browser refused to store it");
   });
   $("#personalNotes").addEventListener("input", e => {
     localFor(l.id).notes = e.target.value;
-    saveWorkspace();
-    $("#noteState").textContent = "Saved.";
+    const saved = saveWorkspace();
+    const state = $("#noteState");
+    state.classList.toggle("save-error", !saved);
+    if (!saved) {
+      // Never claim an autosave that did not happen.
+      state.textContent = "NOT SAVED — this browser refused to store it. Copy this note somewhere else.";
+      return;
+    }
+    state.textContent = "Saved.";
     setTimeout(() => {
-      if ($("#noteState")) $("#noteState").textContent = "Autosaves as you type.";
+      if ($("#noteState") && !$("#noteState").classList.contains("save-error")) {
+        $("#noteState").textContent = "Autosaves as you type.";
+      }
     }, 900);
   });
 
+  // Name the dialog from the heading that was just written, so assistive tech
+  // announces the listing rather than an unnamed dialog.
+  $("#dialog").setAttribute("aria-labelledby", "dTitle");
   $("#dialog").showModal();
+}
+
+function feedAgeMs() {
+  const d = asDate(feed.generatedAt);
+  return d ? Date.now() - d.getTime() : null;
+}
+function ageLabel(ms) {
+  const mins = Math.max(0, Math.round(ms / 60000));
+  if (mins < 60) return `${mins} min old`;
+  const hours = Math.round(mins / 60);
+  if (hours < 48) return `${hours} h old`;
+  return `${Math.round(hours / 24)} days old`;
+}
+// "Live" is an affirmative claim. If the edge is not routing /data/listings.json
+// to the live API, the browser silently reads the build-time snapshot; say so
+// instead of badging a frozen feed green.
+function setFeedState() {
+  const el = $("#live");
+  const age = feedAgeMs();
+  const stale = age == null || age > STALE_AFTER;
+  const count = `${feed.listings.length} listing${feed.listings.length === 1 ? "" : "s"}`;
+  el.textContent = age == null
+    ? `Feed date unknown · ${count}`
+    : stale ? `Stale · ${ageLabel(age)} · ${count}` : `Live · ${count}`;
+  el.parentElement.classList.toggle("stale", stale);
+  $("#updated").classList.toggle("warn-text", stale);
 }
 
 function times() {
   $("#updated").textContent = `Feed updated ${feed.generatedAt ? dateTime(feed.generatedAt) : "unknown"}`;
   if (lastLoad) $("#next").textContent = `Next refresh ~${dateTime(new Date(lastLoad.getTime() + REFRESH_INTERVAL))}`;
+  if (feedOk) setFeedState();
 }
 
 async function load(manual = false) {
@@ -492,20 +605,25 @@ async function load(manual = false) {
     if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
     const parsed = await r.json();
     if (!parsed || !Array.isArray(parsed.listings)) throw new Error("Invalid listings feed");
-    feed = parsed;
+    // Entries that are not objects cannot be rendered at all; drop them rather
+    // than counting them as listings.
+    feed = { ...parsed, listings: parsed.listings.filter(l => l && typeof l === "object") };
     lastLoad = new Date();
+    feedOk = true;
     observePrices();
     rebuildCities();
     renderStats();
     renderVerificationQueue();
     render();
     times();
-    $("#live").textContent = `Live · ${feed.listings.length} listings`;
+    setFeedState();
     if (selectedId && $("#dialog").open) openDetail(feed.listings.find(x => x.id === selectedId));
     if (manual) toast("Feed refreshed");
   } catch (e) {
     console.error(e);
+    feedOk = false;
     $("#live").textContent = "Feed unavailable";
+    $("#live").parentElement.classList.add("stale");
     $("#grid").innerHTML = '<div class="empty panel"><h3>Could not load listings feed</h3><p>Try Refresh now.</p></div>';
   }
 }
@@ -552,23 +670,104 @@ function exportWorkspace() {
   URL.revokeObjectURL(url);
   toast("Workspace exported");
 }
+function sanitizeIncomingRow(row) {
+  if (!row || typeof row !== "object") return null;
+  return {
+    workflow: WORKFLOW_STATES.includes(row.workflow) ? row.workflow : "unreviewed",
+    notes: typeof row.notes === "string" ? row.notes : "",
+    priceHistory: (Array.isArray(row.priceHistory) ? row.priceHistory : []).filter(p => p && typeof p === "object")
+  };
+}
+function unionHistory(mine, theirs) {
+  const seen = new Set();
+  const out = [];
+  for (const p of [...mine, ...theirs]) {
+    const n = normalizeHistoryEntry(p);
+    if (!n) continue;
+    const key = `${n.date}|${n.estimatedAllInMonthly}|${n.askingRent}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(n);
+  }
+  return out.sort(byDate).slice(-50);
+}
+// Merge one incoming record into one existing record. A field the incoming
+// record does not carry (absent, or an empty note, or "unreviewed") never
+// clears what is already here, and two different notes are combined rather than
+// replaced — hand-entered research is the only data in this app that cannot be
+// regenerated from the feed.
+function mergeRow(mine, theirs, stamp) {
+  const merged = { workflow: mine.workflow, notes: mine.notes, priceHistory: mine.priceHistory };
+  const changes = [];
+  if (theirs.workflow !== "unreviewed" && theirs.workflow !== mine.workflow) {
+    merged.workflow = theirs.workflow;
+    changes.push(`workflow ${workflowLabel(mine.workflow)} → ${workflowLabel(theirs.workflow)}`);
+  }
+  if (theirs.notes && theirs.notes !== mine.notes && !mine.notes.includes(theirs.notes)) {
+    merged.notes = mine.notes ? `${mine.notes}\n\n--- imported ${stamp} ---\n${theirs.notes}` : theirs.notes;
+    changes.push(mine.notes ? "notes combined (existing note kept)" : "notes added");
+  }
+  const beforeCount = mine.priceHistory.length;
+  merged.priceHistory = unionHistory(mine.priceHistory, theirs.priceHistory);
+  const gained = merged.priceHistory.length - beforeCount;
+  if (gained > 0) changes.push(`${gained} price observation${gained === 1 ? "" : "s"} added`);
+  return { merged, changes };
+}
+
 async function importWorkspace(file) {
   try {
     const parsed = JSON.parse(await file.text());
     const incoming = parsed.workspace || parsed;
-    if (!incoming || typeof incoming.listings !== "object") throw new Error("No workspace listings found");
-    workspace = {
-      version: "2.5",
-      listings: { ...workspace.listings, ...incoming.listings }
-    };
-    saveWorkspace();
+    if (!incoming || typeof incoming.listings !== "object" || Array.isArray(incoming.listings)) {
+      throw new Error("No workspace listings found");
+    }
+    const stamp = new Date().toISOString().slice(0,10);
+    const pending = new Map();
+    const plan = [];
+    let addedCount = 0;
+
+    for (const [rawId, rawRow] of Object.entries(incoming.listings)) {
+      const id = String(rawId);
+      const theirs = sanitizeIncomingRow(rawRow);
+      if (!theirs) continue;
+      if (!Object.prototype.hasOwnProperty.call(workspace.listings, id)) {
+        pending.set(id, theirs);
+        addedCount++;
+        continue;
+      }
+      const { merged, changes } = mergeRow(localFor(id), theirs, stamp);
+      if (!changes.length) continue;
+      pending.set(id, merged);
+      plan.push(`${id}: ${changes.join("; ")}`);
+    }
+
+    if (!pending.size) { toast("Import: nothing to change"); return; }
+
+    if (plan.length) {
+      const shown = plan.slice(0,8).join("\n");
+      const more = plan.length > 8 ? `\n…and ${plan.length - 8} more` : "";
+      const ok = confirm(
+        `Import will change ${plan.length} existing record${plan.length === 1 ? "" : "s"}`
+        + `${addedCount ? ` and add ${addedCount} new one${addedCount === 1 ? "" : "s"}` : ""}:\n\n`
+        + `${shown}${more}\n\n`
+        + "Nothing you have written is deleted — notes are combined, not replaced.\n\nApply this import?"
+      );
+      if (!ok) { toast("Import cancelled — nothing changed"); return; }
+    }
+
+    for (const [id, row] of pending) workspace.listings[id] = row;
+    const saved = saveWorkspace();
     observePrices();
     renderStats(); renderVerificationQueue(); render();
     if (selectedId && $("#dialog").open) openDetail(feed.listings.find(x => x.id === selectedId));
-    toast("Workspace imported");
+    const summary = [
+      addedCount ? `${addedCount} added` : "",
+      plan.length ? `${plan.length} merged` : ""
+    ].filter(Boolean).join(" · ");
+    toast(saved ? `Imported · ${summary}` : `Imported · ${summary} — NOT SAVED to this browser`);
   } catch (e) {
     console.error(e);
-    toast("Import failed");
+    toast("Import failed — nothing changed");
   } finally {
     $("#importWorkspace").value = "";
   }

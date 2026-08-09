@@ -1,0 +1,125 @@
+name: CI
+
+# Until this workflow existed, nothing in CI ran a test, a build, or a config
+# check. The repository's only workflow pushed JSON at production. A green
+# repository therefore meant nothing: the contact-api suite could go red, the
+# site could stop building, and docker/apache/httpd.conf or the edge blocks in
+# docs/CADDY-INTEGRATION.md could stop parsing, all without a signal.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contact-api-tests:
+    name: contact-api test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/contact-api/package-lock.json
+
+      - name: Install dependencies
+        working-directory: services/contact-api
+        run: npm ci
+
+      # The suite starts a real child-process server and drives it over HTTP.
+      - name: Run tests
+        working-directory: services/contact-api
+        run: npm test
+
+  build:
+    name: Site build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # `build` also runs the postbuild step (terser on the service worker plus
+      # the unused-image prune), so this covers the whole ship path.
+      - name: Build the site
+        run: npm run build
+
+      - name: Check the build produced the expected entry points
+        run: |
+          set -euo pipefail
+          for f in dist/index.html dist/404.html dist/robots.txt \
+                   dist/office-scout/index.html dist/deals/index.html dist/jobs/index.html; do
+            test -s "$f" || { echo "missing or empty: $f" >&2; exit 1; }
+          done
+          echo "build output looks complete"
+
+  edge-config:
+    name: Edge and origin configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Two config files decide how every request in this system is routed, and
+      # both validate in well under a second. httpd.conf + vhost.conf are 470
+      # lines; the documented Caddy blocks are ~290. Neither was ever checked.
+      - name: Validate the Apache origin configuration
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD/docker/apache:/fluxology-conf:ro" httpd:2.4-alpine sh -c '
+            cp /fluxology-conf/vhost.conf /usr/local/apache2/conf/extra/vhost.conf &&
+            httpd -t -f /fluxology-conf/httpd.conf'
+
+      # docs/CADDY-INTEGRATION.md is the source of truth for the edge, and the
+      # edge lives outside this repository — so the one thing CI can do is make
+      # sure the config a human is told to copy actually parses. Every drift
+      # class at the edge fails OPEN (a 200 with stale or wrong content), so a
+      # block that does not even load is the cheapest failure to catch here.
+      - name: Extract the documented Caddy blocks
+        run: |
+          set -euo pipefail
+          awk '/^```caddyfile$/{f=1;next} /^```$/{f=0;next} f' \
+            docs/CADDY-INTEGRATION.md > caddy-from-doc.Caddyfile
+          test -s caddy-from-doc.Caddyfile || {
+            echo 'No ```caddyfile blocks found in docs/CADDY-INTEGRATION.md' >&2; exit 1; }
+          grep -q 'Strict-Transport-Security' caddy-from-doc.Caddyfile || {
+            echo 'The documented edge config no longer sets HSTS. Apache is forbidden' >&2
+            echo 'from setting it (see docker/apache/httpd.conf), so nothing would.' >&2; exit 1; }
+          grep -q '^	log {' caddy-from-doc.Caddyfile || {
+            echo 'The documented edge config no longer has an access log — /api/*' >&2
+            echo 'and /data/listings.json would be unlogged everywhere.' >&2; exit 1; }
+          wc -l caddy-from-doc.Caddyfile
+
+      - name: Validate the documented Caddy blocks
+        run: |
+          set -euo pipefail
+          docker run --rm -v "$PWD/caddy-from-doc.Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2 validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+      - name: Validate the Compose file
+        run: docker compose config --quiet
+
+      - name: Syntax-check the feed-sync helper
+        run: bash -n .github/scripts/post-feed.sh
+
+# Not wired up yet: services/fluxology-mcp has a `npm test` suite of its own.
+# It was red at the time this workflow was written, so adding it here would
+# have shipped a permanently-failing pipeline. Add a job identical to
+# contact-api-tests, pointing at services/fluxology-mcp, once that suite is
+# green — a test suite nothing runs is the problem this file exists to fix.

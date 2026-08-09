@@ -9,11 +9,21 @@
 
 // Single version string — both cache names derive from it, so one bump on a
 // deploy that changes cached behavior/content evicts everything stale.
-const CACHE_VERSION = 'v2.4.0';
+// v2.5.0 changes both the install scope and the cache-key scheme, so the
+// bump is what retires the old, image-heavy, URL-keyed caches on existing
+// clients.
+const CACHE_VERSION = 'v2.5.0';
 const CACHE_NAME = 'fluxology-' + CACHE_VERSION;
 // Versioned so the activate handler evicts stale runtime entries on each
 // release instead of serving poisoned/outdated assets indefinitely.
 const RUNTIME_CACHE = 'fluxology-runtime-' + CACHE_VERSION;
+
+// Hard ceiling on runtime entries. Cache keys are normalised to the pathname
+// (see cacheKey below), so a visitor can only ever store as many entries as
+// there are files on the origin — dist ships ~134. This is a backstop against
+// a future change reintroducing per-URL keys, not a policy anyone should hit:
+// legitimate browsing cannot reach it.
+const MAX_RUNTIME_ENTRIES = 200;
 
 // Precache the app shell HTML and the dedicated offline fallback page.
 // Content-hashed CSS/JS and the astro:fonts woff2 files under /_assets are
@@ -64,10 +74,60 @@ function offlineFallback() {
 // chunks) — so fonts, island hydration, and CSS imagery also work offline
 // after one visit. Extension-gated so page links like /fabrication/ are
 // skipped.
+//
+// Deliberately NOT matching image extensions (webp/avif/png/jpe?g/svg/ico).
+// The <img> fallback `src` of every rendition on the shell is an image URL, so
+// including them made install fetch the whole homepage image corpus up front:
+// measured, a first mobile visit to '/' cost 87 requests / 4,768,282 B against
+// the 26 / 646,084 B the page itself needs. Images the visitor actually loads
+// are still cached by the fetch handler (/_assets/ cache-first, everything
+// else stale-while-revalidate), so a visited page keeps its imagery offline;
+// what is given up is priming images the visitor never saw.
+//
+// The url(...) pattern is font-only for the same reason, and one more: a
+// background texture is now declared once per format (AVIF and WebP), and a
+// crawler cannot tell which one the browser will choose. Priming both meant
+// every first visit paid for a texture it would never decode — 605 kB -> 792 kB
+// on the homepage. Fonts have no such fallback chain, and an unstyled offline
+// render is exactly what this priming exists to prevent, so they stay.
 const HTML_ASSET_PATTERN =
-  /(?:href|src|component-url|renderer-url)="(\/[^"]+\.(?:css|js|mjs|woff2?|webp|avif|png|jpe?g|svg|ico))"/g;
-const CSS_URL_PATTERN = /url\(\s*['"]?(\/[^'")]+)['"]?\s*\)/g;
+  /(?:href|src|component-url|renderer-url)="(\/[^"]+\.(?:css|js|mjs|woff2?))"/g;
+const CSS_URL_PATTERN = /url\(\s*['"]?(\/[^'")]+\.woff2?)['"]?\s*\)/g;
 const JS_IMPORT_PATTERN = /(?:import|from)\s*\(?\s*["']([^"']+\.(?:js|mjs))["']/g;
+
+// Cache key for every runtime read and write: origin + pathname, query
+// dropped. Everything this worker stores is a static file that the server
+// resolves by PATH alone, so '?utm_source=…' and the dashboards'
+// '?v=' + Date.now() cache-busters are noise. Keying on the full URL minted a
+// brand-new permanent entry per variant that could never be hit again
+// (measured: 4 visits to /?utm_source=x0..x3 stored 4 full ~100 kB HTML
+// copies; the runtime cache grew 58 -> 70 in eight navigations and only a
+// hand-bumped CACHE_VERSION ever cleared it). Normalising bounds the cache by
+// the number of files on the origin instead of by the number of distinct URLs
+// a visitor can be sent to.
+function cacheKey(url) {
+  return url.origin + url.pathname;
+}
+
+// Backstop eviction: keep the runtime cache under MAX_RUNTIME_ENTRIES,
+// dropping the least-recently-written entries first. Cache.keys() is
+// insertion-ordered and put() re-appends a replaced key, so the head of the
+// list is the coldest entry.
+function trimRuntimeCache() {
+  return caches
+    .open(RUNTIME_CACHE)
+    .then((cache) =>
+      cache.keys().then((keys) => {
+        if (keys.length <= MAX_RUNTIME_ENTRIES) {
+          return undefined;
+        }
+        return Promise.all(
+          keys.slice(0, keys.length - MAX_RUNTIME_ENTRIES).map((key) => cache.delete(key))
+        );
+      })
+    )
+    .catch(() => undefined);
+}
 
 function extractMatches(text, pattern) {
   const urls = [];
@@ -82,7 +142,11 @@ function extractMatches(text, pattern) {
 // Fetch-and-cache a set of asset paths, recursively following CSS/JS
 // references. Wholly best-effort: one missing asset must not fail the whole
 // install. cache:'reload' bypasses the HTTP cache — primed entries must come
-// from the network, not a possibly stale local copy.
+// from the network, not a possibly stale local copy — except under /_assets/,
+// where the filename contains a content hash and a local copy therefore
+// cannot be stale. Letting the HTTP cache answer those is worth 14 requests /
+// 438,036 B on a first visit, because the page has just downloaded most of
+// them and 'reload' forced a second trip to the network for every one.
 function primeRuntimeCache(paths) {
   const seen = new Set();
 
@@ -100,7 +164,8 @@ function primeRuntimeCache(paths) {
   }
 
   function primeOne(path) {
-    return fetch(new Request(path, { cache: 'reload' }))
+    const cacheMode = path.startsWith('/_assets/') ? 'default' : 'reload';
+    return fetch(new Request(path, { cache: cacheMode }))
       .then((response) => {
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return undefined;
@@ -139,8 +204,9 @@ function primeRuntimeCache(paths) {
 }
 
 // Install event - cache the app shell, then prime the runtime cache with the
-// shell's actual subresources so a single visit is enough for a styled,
-// hydrated offline render.
+// shell's CSS, JS and fonts so a single visit is enough for a styled,
+// hydrated offline render. Imagery is deliberately not primed here (see
+// HTML_ASSET_PATTERN); it is cached as the visitor actually loads it.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
@@ -176,6 +242,7 @@ self.addEventListener('activate', (event) => {
           })
         )
       )
+      .then(trimRuntimeCache)
       .then(() => self.clients.claim())
   );
 });
@@ -208,19 +275,34 @@ self.addEventListener('fetch', (event) => {
     (request.headers.get('accept') || '').includes('text/html');
 
   if (isNavigation) {
+    const key = cacheKey(url);
     event.respondWith(
       fetch(request)
         .then((response) => {
           if (response && response.status === 200 && response.type === 'basic') {
             const runtimeCopy = response.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, runtimeCopy));
+            // waitUntil keeps the worker alive until the write lands: the UA
+            // may terminate it as soon as respondWith settles, and a rejected
+            // put (quota) would otherwise be an unhandled rejection.
+            event.waitUntil(
+              caches
+                .open(RUNTIME_CACHE)
+                .then((cache) => cache.put(key, runtimeCopy))
+                .then(trimRuntimeCache)
+                .catch(() => undefined)
+            );
 
             // Keep the app-shell copy of '/' fresh too — otherwise the
             // install-time snapshot in CACHE_NAME can shadow newer runtime
-            // copies when caches.match(request) runs in the fallback below.
+            // copies when caches.match() runs in the fallback below.
             if (url.pathname === '/') {
               const shellCopy = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put('/', shellCopy));
+              event.waitUntil(
+                caches
+                  .open(CACHE_NAME)
+                  .then((cache) => cache.put('/', shellCopy))
+                  .catch(() => undefined)
+              );
             }
           }
           return response;
@@ -228,7 +310,9 @@ self.addEventListener('fetch', (event) => {
         .catch(() =>
           // Cached copy of the requested page, else the offline page — never
           // another page's content masquerading under the requested URL.
-          caches.match(request).then((cached) => cached || offlineFallback())
+          // Matched on the normalised key so /?utm_source=x resolves to the
+          // stored copy of '/' rather than falling through to offline.html.
+          caches.match(key).then((cached) => cached || offlineFallback())
         )
     );
     return;
@@ -238,8 +322,9 @@ self.addEventListener('fetch', (event) => {
   // the filename changes whenever the content does, so a cached copy can
   // never be stale.
   if (url.pathname.startsWith('/_assets/')) {
+    const key = cacheKey(url);
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
+      caches.match(key).then((cachedResponse) => {
         if (cachedResponse) {
           return cachedResponse;
         }
@@ -257,9 +342,12 @@ self.addEventListener('fetch', (event) => {
             }
 
             const responseToCache = response.clone();
-            caches.open(RUNTIME_CACHE).then((cache) => {
-              cache.put(request, responseToCache);
-            });
+            event.waitUntil(
+              caches
+                .open(RUNTIME_CACHE)
+                .then((cache) => cache.put(key, responseToCache))
+                .catch(() => undefined)
+            );
 
             return response;
           })
@@ -269,13 +357,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // A query string on an unhashed subresource is a deliberate cache-buster —
+  // the three dashboards fetch './data/listings.json?v=' + Date.now() exactly
+  // so that no layer answers from a cache. Honour that: pass it straight to
+  // the network, uncached. (Storing it was pure loss anyway — a timestamped
+  // key can never be read back, so every load minted a permanent entry that
+  // bought nothing.)
+  if (url.search) {
+    return;
+  }
+
   // Unhashed same-origin assets (public/ images, icons, manifest, robots…):
   // stale-while-revalidate. Serve the cache for speed/offline, but refresh in
   // the background so a replaced file reaches returning visitors without a
   // manual CACHE_VERSION bump.
+  const key = cacheKey(url);
   event.respondWith(
     caches.open(RUNTIME_CACHE).then((cache) =>
-      cache.match(request).then((cachedResponse) => {
+      cache.match(key).then((cachedResponse) => {
         // cache:'no-cache' makes the refresh revalidate with the server —
         // a plain fetch could be answered by still-"fresh" HTTP cache entries,
         // which would defeat the revalidation half of stale-while-revalidate.
@@ -283,7 +382,10 @@ self.addEventListener('fetch', (event) => {
           const contentType = response && response.headers.get('content-type');
           const isHtml = contentType && contentType.includes('text/html');
           if (response && response.status === 200 && response.type === 'basic' && !isHtml) {
-            cache.put(request, response.clone());
+            // Called synchronously inside this handler, i.e. before the
+            // response reaches respondWith, so the event is still active and
+            // the copy is guaranteed a chance to finish.
+            event.waitUntil(cache.put(key, response.clone()).catch(() => undefined));
           }
           return response;
         });

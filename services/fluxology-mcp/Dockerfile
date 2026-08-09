@@ -39,9 +39,11 @@ ENV NODE_ENV=production \
 
 EXPOSE 8083
 
-# Readiness covers schemas, authorization-server metadata, Dashboard API
-# reachability and feed schema drift (SDD §19.3).
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8083)+'/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+# Container health is process liveness. /healthz answers from memory in
+# milliseconds; /readyz reaches out to the Dashboard API for three feeds and
+# fails on any dependency blip or schema drift, so it belongs to the operator
+# and the deploy gate, not to a --timeout=10s probe it cannot finish.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8083)+'/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "src/server.mjs"]

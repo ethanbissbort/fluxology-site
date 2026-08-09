@@ -129,6 +129,15 @@ export function metadataCandidates(issuer) {
   return candidates;
 }
 
+/** True when both URLs parse and share scheme, host and port. */
+export function sameOrigin(candidate, reference) {
+  try {
+    return new URL(candidate).origin === new URL(reference).origin;
+  } catch {
+    return false;
+  }
+}
+
 export function createAuthenticator(config, log) {
   const { auth } = config;
 
@@ -149,12 +158,24 @@ export function createAuthenticator(config, log) {
           continue;
         }
         const doc = await res.json();
-        if (doc?.issuer && doc.issuer.replace(/\/+$/, '') !== auth.issuer.replace(/\/+$/, '')) {
-          errors.push(`${candidate} -> issuer mismatch`);
+        // RFC 8414 §3.3 makes `issuer` REQUIRED. Validating it only when present
+        // meant a document that simply omitted it skipped the check entirely.
+        if (typeof doc?.issuer !== 'string' || doc.issuer.replace(/\/+$/, '') !== auth.issuer.replace(/\/+$/, '')) {
+          errors.push(`${candidate} -> issuer missing or mismatched`);
           continue;
         }
         if (typeof doc?.jwks_uri !== 'string') {
           errors.push(`${candidate} -> no jwks_uri`);
+          continue;
+        }
+        /*
+         * The discovered jwks_uri decides which keys may mint every write scope
+         * on this connector. Honouring whatever origin the document names turns
+         * one hijacked or misconfigured metadata response into a full trust-root
+         * relocation — and into a blind SSRF primitive inside the edge network.
+         */
+        if (!sameOrigin(doc.jwks_uri, auth.issuer)) {
+          errors.push(`${candidate} -> jwks_uri is not on the issuer's origin`);
           continue;
         }
         return doc.jwks_uri;
@@ -228,11 +249,16 @@ export function createAuthenticator(config, log) {
         issuer: auth.issuer,
         audience: auth.audience,
         clockTolerance: auth.clockToleranceSeconds,
+        // jose only enforces exp when the claim is present, so a token that
+        // simply omitted it validated and then never expired. RFC 9068 makes
+        // exp REQUIRED for a JWT access token; require it.
+        requiredClaims: ['iss', 'aud', 'sub', 'exp'],
       }));
     } catch (err) {
       const reason =
         err?.code === 'ERR_JWT_EXPIRED' ? 'the access token has expired'
         : err?.code === 'ERR_JWT_CLAIM_VALIDATION_FAILED' && err?.claim === 'aud' ? 'the access token was not issued for this MCP resource'
+        : err?.code === 'ERR_JWT_CLAIM_VALIDATION_FAILED' && err?.reason === 'missing' ? `the access token is missing the required ${err.claim} claim`
         : err?.code === 'ERR_JWT_CLAIM_VALIDATION_FAILED' ? `the access token has an invalid ${err.claim} claim`
         : 'the access token could not be validated';
       throw unauthorized(config, reason);

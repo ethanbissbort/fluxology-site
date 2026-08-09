@@ -1,5 +1,5 @@
 ---
-import { Image, getImage } from 'astro:assets';
+import { Picture, getImage } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navigation from './Navigation.astro';
@@ -28,10 +28,26 @@ const localNav = [
   ['gallery', 'Gallery']
 ];
 
-// Decorative hero texture stays a CSS background, but the URL now points at a
-// build-time optimized rendition instead of the raw public/ file.
-const optimizedSectionBackground = overview.sectionBackground
-  ? await getImage({ src: overview.sectionBackground, width: 1600, format: 'webp' })
+// Decorative hero texture stays a CSS background, so it cannot use <picture>
+// content negotiation; image-set() carries the AVIF/WebP chain instead (see
+// the @supports block below for why it is guarded). Kept byte-identical to
+// DBASection's texture so the same renditions are shared across both pages.
+//
+// As there, the WebP arm reuses the ORIGINAL asset when no downscale is
+// needed: the only source here is 1536px wide, so the old
+// getImage({ width: 1600 }) call was a pure re-encode that emitted 222,478 B
+// from a 217,476 B source.
+const textureWidth = overview.sectionBackground
+  ? Math.min(1600, overview.sectionBackground.width)
+  : 0;
+const sectionTexture = overview.sectionBackground
+  ? {
+      webp:
+        textureWidth === overview.sectionBackground.width
+          ? overview.sectionBackground.src
+          : (await getImage({ src: overview.sectionBackground, width: textureWidth, format: 'webp' })).src,
+      avif: (await getImage({ src: overview.sectionBackground, width: textureWidth, format: 'avif' })).src,
+    }
   : undefined;
 
 // Shared responsive ladder (kept identical to DBASection so the same source
@@ -53,10 +69,10 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
     <section class="section detail-hero" id={`${plan.slug}-detail`} data-theme={overview.theme}>
       <div class="background-layer">
         <div class="parallax-bg"></div>
-        {optimizedSectionBackground && (
+        {sectionTexture && (
           <div
             class="detail-section-texture"
-            style={`--detail-texture: url('${optimizedSectionBackground.src}')`}
+            style={`--detail-texture: url('${sectionTexture.webp}'); --detail-texture-avif: url('${sectionTexture.avif}')`}
             aria-hidden="true"
           ></div>
         )}
@@ -83,9 +99,11 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
           </div>
 
           <figure class="detail-hero-figure">
-            <Image
+            <Picture
               src={detail.heroImage.src}
               alt={detail.heroImage.alt}
+              formats={['avif', 'webp']}
+              fallbackFormat="webp"
               widths={responsiveWidths(detail.heroImage.src)}
               width={fallbackWidth(detail.heroImage.src)}
               sizes="(max-width: 1199px) 100vw, 660px"
@@ -302,9 +320,11 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
           <div class="detail-gallery observe-scale">
             {detail.gallery.map((image, index) => (
               <figure class:list={{ 'gallery-primary': index === 0 }}>
-                <Image
+                <Picture
                   src={image.src}
                   alt={image.alt}
+                  formats={['avif', 'webp']}
+                  fallbackFormat="webp"
                   widths={responsiveWidths(image.src)}
                   width={fallbackWidth(image.src)}
                   sizes={index === 0
@@ -360,6 +380,29 @@ const fallbackWidth = (img: ImageMetadata) => Math.max(...responsiveWidths(img))
     background-position: center;
     background-size: cover;
     opacity: 0.42;
+  }
+
+  /* AVIF only where the engine can both decode it and negotiate in CSS; the
+     WebP declaration above stays as the fallback. The @supports guard is load
+     bearing: image-set() delivered through a var() would be invalid at
+     COMPUTED-VALUE time on an engine that lacks it, which resolves
+     background-image to `none` and drops the texture entirely instead of
+     falling back. Gating on @supports keeps the failure mode "stays WebP". */
+  @supports (background-image: image-set(url('i.avif') type('image/avif'))) {
+    .detail-section-texture {
+      background-image:
+        linear-gradient(135deg, rgba(10, 14, 39, 0.78), rgba(10, 14, 39, 0.88)),
+        image-set(var(--detail-texture-avif) type('image/avif'), var(--detail-texture) type('image/webp'));
+    }
+  }
+
+  /* <Picture> wraps each <img> in a <picture>. The hero figure and every
+     gallery cell size the img with width/height:100% against a
+     position:relative parent, so an extra block-level wrapper would break
+     those percentage heights and re-introduce layout shift. display:contents
+     keeps the wrapper out of layout entirely. */
+  picture {
+    display: contents;
   }
 
   .detail-hero-grid {

@@ -9,6 +9,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node server.mjs",
+    "test": "node --test --test-timeout=120000 test/*.test.mjs"
   }
 }

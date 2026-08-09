@@ -132,6 +132,10 @@ export async function startHarness({ portBase = 8200, mcpEnv = {}, tokens = TOKE
       DASHBOARD_API_URL: `http://127.0.0.1:${dashboardPort}`,
       MCP_DEV_AUTH_ENABLED: 'true',
       MCP_DEV_AUTH_TOKEN: DEV_TOKEN,
+      // The development bearer defaults to read-only (it has no issuer, no
+      // audience and no expiry). Tests that exercise writes ask for the write
+      // scopes explicitly, exactly as a local developer now has to.
+      MCP_DEV_AUTH_SCOPES: 'dashboards:read office:write deals:write jobs:write',
       MCP_SCHEMA_DIR: path.join(tmpRoot, 'no-such-schema-dir'),
       OFFICE_INGEST_TOKEN: tokens.office ?? '',
       DEALS_INGEST_TOKEN: tokens.deals ?? '',

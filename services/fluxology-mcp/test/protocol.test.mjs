@@ -67,7 +67,10 @@ describe('MCP protocol surface', () => {
     for (const tool of tools) {
       const write = tool.name.startsWith('upsert_');
       assert.equal(tool.annotations.readOnlyHint, !write);
-      assert.equal(tool.annotations.destructiveHint, false);
+      // A write tool can retire an entire dashboard in one call (`active:false`
+      // is the documented retirement mechanism) and the SDK defaults this flag
+      // to true, so declaring false actively overrode a safe default.
+      assert.equal(tool.annotations.destructiveHint, write, `${tool.name} must declare destructiveHint honestly`);
       assert.equal(tool.annotations.idempotentHint, !write);
       assert.equal(tool.annotations.openWorldHint, false);
     }
@@ -195,10 +198,24 @@ describe('MCP protocol surface', () => {
   it('serves liveness and readiness outside the MCP tool surface', async () => {
     const live = await harness.http('/healthz');
     assert.equal(live.status, 200);
-    const ready = await harness.http('/readyz');
+    const ready = await harness.http('/readyz', { headers: { authorization: `Bearer ${DEV_TOKEN}` } });
     assert.equal(ready.status, 200);
     assert.equal(ready.json.checks.schemaDrift.ok, true);
     assert.equal(ready.json.checks.auth.mode, 'development-bearer');
+  });
+
+  it('gives an anonymous /readyz caller the verdict but not the internals', async () => {
+    const anonymous = await harness.http('/readyz');
+    assert.equal(anonymous.status, 200);
+    assert.equal(anonymous.json.status, 'ready');
+    // The documented edge config proxies this hostname with no path matcher, so
+    // this body is internet-facing: no on-disk paths, no JWKS URI, no map of
+    // which downstream ingest tokens are live.
+    assert.equal(anonymous.json.checks, undefined);
+    const body = JSON.stringify(anonymous.json);
+    assert.equal(body.includes('schema.json'), false);
+    assert.equal(body.includes('writeEnabled'), false);
+    assert.equal(body.includes('jwksUri'), false);
   });
 
   it('sets conservative response headers', async () => {

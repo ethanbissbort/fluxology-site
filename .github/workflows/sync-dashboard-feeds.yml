@@ -12,38 +12,84 @@ on:
 permissions:
   contents: read
 
+# Serialize every run of this workflow. Two pushes in quick succession used to
+# run in parallel, and because /api/upsert is merge-by-id and last-writer-wins
+# per field, an older feed landing after a newer one silently resurrects
+# superseded values — a 200 with wrong data, no error anywhere.
+# cancel-in-progress stays false: a half-finished run has already POSTed some
+# of the three feeds, so cancelling it would leave them inconsistent.
+concurrency:
+  group: sync-dashboard-feeds
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
+    # Branch guard for manual runs. `push` is already restricted to main by the
+    # trigger above, but workflow_dispatch runs against whatever ref is chosen
+    # in the UI, actions/checkout checks that ref out, and the dispatch branch
+    # of the detect step marks all three feeds changed — so without this line a
+    # dispatch from any feature branch pushes THAT branch's listings.json
+    # straight into the three production feeds. Repository secrets are not
+    # environment-scoped, so nothing else stops it.
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          # Full history. This was fetch-depth: 2, which is enough only for a
+          # single-commit push: `git diff "$before" "$after"` on a push of two
+          # or more commits asks for a SHA that is not in the shallow clone,
+          # and under `set -euo pipefail` the whole run dies before any feed is
+          # POSTed. Because this is the only signal that a feed change reached
+          # production, that failure looked like "CI is broken", not "the feed
+          # never shipped".
+          fetch-depth: 0
 
       - name: Detect changed feeds
         id: changed
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+
+          mark_all() {
             echo "office=true" >> "$GITHUB_OUTPUT"
-            echo "deals=true" >> "$GITHUB_OUTPUT"
-            echo "jobs=true" >> "$GITHUB_OUTPUT"
+            echo "deals=true"  >> "$GITHUB_OUTPUT"
+            echo "jobs=true"   >> "$GITHUB_OUTPUT"
+          }
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo 'Manual dispatch on main: syncing all three feeds.'
+            mark_all
             exit 0
           fi
 
           before="${{ github.event.before }}"
           after="${{ github.sha }}"
+
+          # `before` is the all-zeros SHA on the first push to a branch, and a
+          # discarded commit after a force-push. In both cases it is not a
+          # readable object and `git diff` would abort the run. Re-syncing all
+          # three is safe: the push already matched the paths filter, and an
+          # upsert of unchanged listings is a no-op (the API answers
+          # {"changed": false} and writes no audit line).
+          if [[ -z "$before" || "$before" =~ ^0+$ ]] || ! git cat-file -e "${before}^{commit}" 2>/dev/null; then
+            echo "Base commit ${before:-<empty>} is unavailable; syncing all three feeds."
+            mark_all
+            exit 0
+          fi
+
           files="$(git diff --name-only "$before" "$after")"
+          echo "Changed files:"
+          echo "$files" | sed 's/^/  /'
 
           grep -qx 'public/office-scout/data/listings.json' <<<"$files" && office=true || office=false
-          grep -qx 'public/deals/data/listings.json' <<<"$files" && deals=true || deals=false
-          grep -qx 'public/jobs/data/listings.json' <<<"$files" && jobs=true || jobs=false
+          grep -qx 'public/deals/data/listings.json'        <<<"$files" && deals=true  || deals=false
+          grep -qx 'public/jobs/data/listings.json'         <<<"$files" && jobs=true   || jobs=false
 
           echo "office=$office" >> "$GITHUB_OUTPUT"
-          echo "deals=$deals" >> "$GITHUB_OUTPUT"
-          echo "jobs=$jobs" >> "$GITHUB_OUTPUT"
+          echo "deals=$deals"   >> "$GITHUB_OUTPUT"
+          echo "jobs=$jobs"     >> "$GITHUB_OUTPUT"
 
       - name: Sync Office feed
         if: steps.changed.outputs.office == 'true'
@@ -53,13 +99,9 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$TOKEN" || { echo 'Missing OFFICE_INGEST_TOKEN repository secret' >&2; exit 1; }
-          jq -c '{listings:.listings}' public/office-scout/data/listings.json |
-            curl --fail-with-body --retry 3 --retry-all-errors \
-              -X POST 'https://office.fluxology.ca/api/upsert' \
-              -H "Authorization: Bearer $TOKEN" \
-              -H 'X-Fluxology-Source: github-feed-sync' \
-              -H 'Content-Type: application/json' \
-              --data-binary @-
+          .github/scripts/post-feed.sh \
+            'https://office.fluxology.ca/api/upsert' \
+            public/office-scout/data/listings.json
 
       - name: Sync Deals feed
         if: steps.changed.outputs.deals == 'true'
@@ -69,13 +111,9 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$TOKEN" || { echo 'Missing DEALS_INGEST_TOKEN repository secret' >&2; exit 1; }
-          jq -c '{listings:.listings}' public/deals/data/listings.json |
-            curl --fail-with-body --retry 3 --retry-all-errors \
-              -X POST 'https://deals.fluxology.ca/api/upsert' \
-              -H "Authorization: Bearer $TOKEN" \
-              -H 'X-Fluxology-Source: github-feed-sync' \
-              -H 'Content-Type: application/json' \
-              --data-binary @-
+          .github/scripts/post-feed.sh \
+            'https://deals.fluxology.ca/api/upsert' \
+            public/deals/data/listings.json
 
       - name: Sync Jobs feed
         if: steps.changed.outputs.jobs == 'true'
@@ -85,10 +123,6 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$TOKEN" || { echo 'Missing JOBS_INGEST_TOKEN repository secret' >&2; exit 1; }
-          jq -c '{listings:.listings}' public/jobs/data/listings.json |
-            curl --fail-with-body --retry 3 --retry-all-errors \
-              -X POST 'https://jobs.fluxology.ca/api/upsert' \
-              -H "Authorization: Bearer $TOKEN" \
-              -H 'X-Fluxology-Source: github-feed-sync' \
-              -H 'Content-Type: application/json' \
-              --data-binary @-
+          .github/scripts/post-feed.sh \
+            'https://jobs.fluxology.ca/api/upsert' \
+            public/jobs/data/listings.json

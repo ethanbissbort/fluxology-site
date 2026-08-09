@@ -71,10 +71,17 @@
 
     regenerate();
     smallViewport.addEventListener('change', onViewportChange);
+    // regenerate() reads reducedMotion.matches, so it has to re-run when that
+    // query flips too: without this listener, turning the OS setting ON left
+    // up to 15 animated nodes per section in the DOM (hidden only by CSS) and
+    // turning it OFF never brought the field back without a reload.
+    // CursorEffects tracks both queries for the same reason.
+    reducedMotion.addEventListener('change', onViewportChange);
 
     return () => {
       clearTimeout(debounce);
       smallViewport.removeEventListener('change', onViewportChange);
+      reducedMotion.removeEventListener('change', onViewportChange);
     };
   });
 </script>

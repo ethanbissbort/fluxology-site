@@ -87,10 +87,15 @@ const isCurrentDivision = (id: string) => Astro.url.pathname === `/${id}/`;
   }
 
   .skip-link {
-    position: absolute;
+    /* fixed, not absolute: with no positioned ancestor `top: 0` resolved
+       against the document, so a link focused at any scroll offset rendered
+       off-screen unless the browser scrolled the page back to the top. */
+    position: fixed;
     top: -100px;
     left: 0;
-    background: var(--corporate-accent-blue);
+    /* #3A86FF is only 3.48:1 under white at this 18px regular size; the deep
+       tone is 5.49:1 and clears AA. */
+    background: var(--corporate-accent-blue-deep);
     color: white;
     padding: var(--spacing-md);
     text-decoration: none;

@@ -11,15 +11,33 @@
  *      were built by code we do not own.
  *
  * Callers are additionally expected never to hand full listing bodies to the
- * logger; `MAX_STRING` truncation bounds the damage if one slips through.
+ * logger; `MAX_STRING` truncation bounds the damage if one slips through. The
+ * single exception is `beforeImage`, the bounded pre-write reconstruction
+ * record the pipeline builds — see AUDIT_KEY_RE below.
  */
 
 const LEVELS = Object.freeze({ debug: 10, info: 20, warn: 30, error: 40 });
 
 const SECRET_KEY_RE = /(authorization|auth[-_]?header|token|secret|password|passwd|credential|cookie|api[-_]?key|bearer|jwks|private[-_]?key)/i;
 
+/**
+ * Keys the credential pattern matches by name but which carry no credential.
+ * `secretOrigins` is the startup diagnostic that says whether each ingest token
+ * came from a Docker secret mount, an env var, or nowhere — the one field that
+ * answers the SDD's credential-precedence question, and it was being redacted
+ * into uselessness by its own name.
+ */
+const SAFE_KEYS = new Set(['secretOrigins']);
+
 /** Field names that carry model-supplied listing content and must not be logged. */
 const BODY_KEY_RE = /^(listings|listing|record|records|payload|body|notes|summary|calculation|priceHistory)$/;
+
+/**
+ * The one deliberate exception to the body rule: a bounded, pre-serialised map
+ * of the values a write overwrote. It exists so a bad write can be reconstructed
+ * and it is built by the pipeline, not taken from caller input.
+ */
+const AUDIT_KEY_RE = /^beforeImage$/;
 
 const MAX_STRING = 512;
 const MAX_ARRAY = 50;
@@ -64,7 +82,7 @@ function truncate(text) {
  * Deep-copy a value with credentials removed, listing bodies dropped, and
  * strings/arrays bounded.
  */
-export function redact(value, depth = 0) {
+export function redact(value, depth = 0, { allowBody = false } = {}) {
   if (value == null) return value ?? null;
   if (typeof value === 'string') return truncate(value);
   if (typeof value === 'number' || typeof value === 'boolean') return value;
@@ -76,7 +94,7 @@ export function redact(value, depth = 0) {
   if (depth >= MAX_DEPTH) return '[truncated]';
 
   if (Array.isArray(value)) {
-    const items = value.slice(0, MAX_ARRAY).map(item => redact(item, depth + 1));
+    const items = value.slice(0, MAX_ARRAY).map(item => redact(item, depth + 1, { allowBody }));
     if (value.length > MAX_ARRAY) items.push(`[+${value.length - MAX_ARRAY} more]`);
     return items;
   }
@@ -84,15 +102,19 @@ export function redact(value, depth = 0) {
   if (typeof value === 'object') {
     const out = {};
     for (const [key, item] of Object.entries(value)) {
-      if (SECRET_KEY_RE.test(key)) {
+      if (SECRET_KEY_RE.test(key) && !SAFE_KEYS.has(key)) {
         out[key] = REDACTED;
         continue;
       }
-      if (BODY_KEY_RE.test(key)) {
+      if (AUDIT_KEY_RE.test(key)) {
+        out[key] = redact(item, depth + 1, { allowBody: true });
+        continue;
+      }
+      if (!allowBody && BODY_KEY_RE.test(key)) {
         out[key] = Array.isArray(item) ? `[${item.length} item(s) omitted]` : '[omitted]';
         continue;
       }
-      out[key] = redact(item, depth + 1);
+      out[key] = redact(item, depth + 1, { allowBody });
     }
     return out;
   }
