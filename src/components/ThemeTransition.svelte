@@ -21,12 +21,22 @@
   // Do NOT "unify" these by copying one into the other: it is a silent
   // contrast change in whichever context loses. If they are ever merged, split
   // the token into text/non-text variants first.
+  //
+  // focusRing IS that split, made for the one consumer that needed it. The
+  // keyboard ring must hold WCAG 1.4.11's 3:1 against whatever it is drawn
+  // over, and the saturated corporate blue does not: measured on the built
+  // site it scored 2.87:1 over the hero, 2.47:1 over the contact panel and
+  // 1.96:1 over the lighter steel end of the roadmap gradient. The other three
+  // brand tones are light enough to serve as their own ring (orange 4.27:1,
+  // cyan >14:1, terracotta 4.08:1 on the nav), so only corporate diverges —
+  // to the same text-safe tint the contact fields already use.
   const themes = {
     corporate: {
       bgPrimary: 'var(--corporate-primary-navy)',
       textPrimary: 'var(--corporate-neutral-white)',
       textSecondary: 'var(--corporate-neutral-gray)',
       accentPrimary: 'var(--corporate-accent-blue)',
+      focusRing: 'var(--corporate-accent-blue-text)',
       fontHeading: 'var(--font-corporate-heading)'
     },
     industrial: {
@@ -34,6 +44,7 @@
       textPrimary: 'var(--industrial-neutral-white)',
       textSecondary: 'var(--industrial-neutral-silver)',
       accentPrimary: 'var(--industrial-accent-orange)',
+      focusRing: 'var(--industrial-accent-orange)',
       fontHeading: 'var(--font-industrial-heading)'
     },
     tech: {
@@ -41,6 +52,7 @@
       textPrimary: 'var(--tech-neutral-white)',
       textSecondary: 'var(--tech-neutral-gray)',
       accentPrimary: 'var(--tech-accent-cyan)',
+      focusRing: 'var(--tech-accent-cyan)',
       fontHeading: 'var(--font-tech-heading)'
     },
     natural: {
@@ -48,6 +60,7 @@
       textPrimary: 'var(--natural-neutral-white)',
       textSecondary: 'var(--natural-neutral-cream)',
       accentPrimary: 'var(--natural-accent-terracotta)',
+      focusRing: 'var(--natural-accent-terracotta)',
       fontHeading: 'var(--font-natural-heading)'
     }
   };
@@ -62,6 +75,7 @@
     root.style.setProperty('--current-text-primary', theme.textPrimary);
     root.style.setProperty('--current-text-secondary', theme.textSecondary);
     root.style.setProperty('--current-accent-primary', theme.accentPrimary);
+    root.style.setProperty('--current-focus-ring', theme.focusRing);
     root.style.setProperty('--current-font-heading', theme.fontHeading);
 
     // Update navigation theme attribute
