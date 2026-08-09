@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.5",
   "appVersion": "2.5.0",
-  "generatedAt": "2026-08-08T09:32:00-04:00",
+  "generatedAt": "2026-08-09T08:03:00-04:00",
   "searchName": "Fluxology GTA private office scout",
   "hardAllInCeilingCad": 850,
   "listings": [
@@ -42,9 +42,7 @@
       "lastVerified": "2026-08-08",
       "lastChanged": "2026-08-08",
       "active": true,
-      "priceHistory": [
-        {"date":"2026-08-08","askingRent":650,"estimatedAllInMonthly":734.5}
-      ]
+      "priceHistory": [{"date":"2026-08-08","askingRent":650,"estimatedAllInMonthly":734.5}]
     },
     {
       "id": "village-hive-duncan-mill",
@@ -83,9 +81,7 @@
       "lastVerified": "2026-08-07",
       "lastChanged": "2026-08-07",
       "active": true,
-      "priceHistory": [
-        {"date":"2026-08-07","askingRent":650,"estimatedAllInMonthly":734.5}
-      ]
+      "priceHistory": [{"date":"2026-08-07","askingRent":650,"estimatedAllInMonthly":734.5}]
     },
     {
       "id": "humbold-1120-finch",
@@ -124,9 +120,7 @@
       "lastVerified": "2026-08-07",
       "lastChanged": "2026-08-07",
       "active": true,
-      "priceHistory": [
-        {"date":"2026-08-07","askingRent":652,"estimatedAllInMonthly":736.76}
-      ]
+      "priceHistory": [{"date":"2026-08-07","askingRent":652,"estimatedAllInMonthly":736.76}]
     },
     {
       "id": "gtec-2985-drew",
@@ -165,9 +159,124 @@
       "lastVerified": "2026-08-08",
       "lastChanged": "2026-08-08",
       "active": true,
-      "priceHistory": [
-        {"date":"2026-08-08","askingRent":797,"estimatedAllInMonthly":900.61}
-      ]
+      "priceHistory": [{"date":"2026-08-08","askingRent":797,"estimatedAllInMonthly":900.61}]
+    },
+    {
+      "id": "office146-1p-597",
+      "operator": "Office146",
+      "address": "146 Thirtieth Street, Suite 100",
+      "municipality": "Toronto",
+      "askingRent": 597,
+      "estimatedAllInMonthly": 674.61,
+      "costStatus": "plausible",
+      "mandatoryFeesKnown": false,
+      "hstStatus": "HST is not stated on the direct offer; if 13% applies, $597 becomes $674.61.",
+      "tmiStatus": "Advertised as all-inclusive; no separate TMI identified.",
+      "utilitiesStatus": "Office146 states utilities are included in its all-inclusive private-office amenities.",
+      "internetStatus": "High-speed Bell Fibre Wi-Fi included.",
+      "cleaningStatus": "Daily cleaning/supportive cleaning services included.",
+      "mandatoryFeeNotes": "Direct listing says up to 3 months at 50% off for $597/month and terms apply; post-promotion price and any mandatory setup/service fee remain unknown.",
+      "size": "100 sq ft, 1-person private office",
+      "leaseType": "Private office / coworking membership",
+      "lockableDoor": true,
+      "access24h": true,
+      "furnished": true,
+      "mailRights": true,
+      "directoryRights": null,
+      "signageRights": "Unknown",
+      "shortCommitment": true,
+      "term": "1 month; promotional terms apply",
+      "amenities": ["24/7 secure access", "Bell Fibre Wi-Fi", "daily cleaning", "mail service", "meeting-room credits", "printing/scanning", "free parking"],
+      "parking": "Free for members and guests",
+      "transitConnection": "TTC and Long Branch GO in the surrounding area",
+      "finalWalkMinutes": null,
+      "skateboardPractical": true,
+      "skateboardNote": "South Etobicoke street network makes a short final skateboard leg plausible; exact stop-to-door time should be route-checked.",
+      "summary": "High-priority Toronto West lead: secure 1-person office, 24/7 access, internet, cleaning and mail service at a $597 promotional base rate.",
+      "notes": "Do not mark verified until HST, post-promotion rate and every mandatory fee are confirmed in writing.",
+      "sourceUrl": "https://www.spacelist.ca/listings/948585/on/toronto/for-lease/coworking/1-person_private_office_at_office146-146_thirtieth_street",
+      "lastVerified": "2026-08-09",
+      "lastChanged": "2026-08-09",
+      "active": true,
+      "priceHistory": [{"date":"2026-08-09","askingRent":597,"estimatedAllInMonthly":674.61}]
+    },
+    {
+      "id": "kijiji-1720342996",
+      "operator": "Private owner (Kijiji)",
+      "address": "251 Consumers Rd",
+      "municipality": "Toronto",
+      "askingRent": 499.99,
+      "estimatedAllInMonthly": 564.99,
+      "costStatus": "plausible",
+      "mandatoryFeesKnown": false,
+      "hstStatus": "Explicitly $499.99/month plus HST; 13% HST gives approximately $564.99.",
+      "tmiStatus": "No separate TMI charge identified in the listing.",
+      "utilitiesStatus": "Utilities explicitly included.",
+      "internetStatus": "Free Wi-Fi explicitly included.",
+      "cleaningStatus": "Not stated.",
+      "mandatoryFeeNotes": "Refundable $300 security deposit is non-recurring. Listing does not state whether cleaning or another recurring service charge applies.",
+      "size": "Private office rooms; exact available room size varies",
+      "leaseType": "Private office room in professional office building",
+      "lockableDoor": true,
+      "access24h": true,
+      "furnished": null,
+      "mailRights": null,
+      "directoryRights": null,
+      "signageRights": "Unknown",
+      "shortCommitment": true,
+      "term": "Month-to-month or 1-year lease",
+      "amenities": ["own key", "24-hour access", "free Wi-Fi", "utilities included", "free parking", "security", "client waiting area"],
+      "parking": "Free",
+      "transitConnection": "Consumers Road / Fairview Mall area; TTC service nearby",
+      "finalWalkMinutes": null,
+      "skateboardPractical": true,
+      "skateboardNote": "Urban office-park streets and sidewalks; exact route should be checked from the selected TTC stop.",
+      "summary": "Very strong North York budget lead: lockable private room with 24/7 access, Wi-Fi and utilities included at $499.99 + HST.",
+      "notes": "High priority for direct verification of room availability, cleaning, mail/directory rights and any undisclosed recurring fee.",
+      "sourceUrl": "https://www.kijiji.ca/v-commercial-office-space/city-of-toronto/private-office-room-no-last-month-scarborough-no-credit-check/1720342996",
+      "lastVerified": "2026-08-09",
+      "lastChanged": "2026-08-09",
+      "active": true,
+      "priceHistory": [{"date":"2026-08-09","askingRent":499.99,"estimatedAllInMonthly":564.99}]
+    },
+    {
+      "id": "kijiji-1741067556",
+      "operator": "Private owner (Kijiji)",
+      "address": null,
+      "municipality": "Brampton",
+      "askingRent": 549,
+      "estimatedAllInMonthly": null,
+      "costStatus": "plausible",
+      "mandatoryFeesKnown": false,
+      "hstStatus": "Not stated. If HST applies, $549 becomes $620.37.",
+      "tmiStatus": "TMI explicitly included.",
+      "utilitiesStatus": "All utilities explicitly included.",
+      "internetStatus": "Internet explicitly included.",
+      "cleaningStatus": "Light weekly janitorial for common areas included; private-room cleaning not stated.",
+      "mandatoryFeeNotes": "Exact street address and HST treatment are not disclosed; no claim that there are zero additional mandatory fees.",
+      "size": "160 sq ft private office room",
+      "leaseType": "Private office room / month-to-month rental",
+      "lockableDoor": null,
+      "access24h": true,
+      "furnished": true,
+      "mailRights": null,
+      "directoryRights": null,
+      "signageRights": "Unknown",
+      "shortCommitment": true,
+      "term": "Month-to-month",
+      "amenities": ["24/7 access", "security alarm", "internet", "utilities", "TMI", "light weekly common-area janitorial", "free parking"],
+      "parking": "Lots of free parking",
+      "transitConnection": "Steeles & Dixie area; listing says about 5 minutes to a GO station",
+      "finalWalkMinutes": null,
+      "skateboardPractical": true,
+      "skateboardNote": "Industrial-area final leg may be skateboard-practical, but exact address is required for a route check.",
+      "summary": "Exceptionally cheap office-room lead with TMI, utilities and internet stated as included.",
+      "notes": "Potentially excellent, but exact address, HST and private-room cleaning responsibility must be resolved before verification.",
+      "sourceUrl": "https://www.kijiji.ca/v-commercial-office-space/mississauga-peel-region/big-private-office-room-for-month-to-month-rental-tmi-inc/1741067556",
+      "lastVerified": "2026-08-09",
+      "lastChanged": "2026-08-09",
+      "active": true,
+      "priceHistory": [{"date":"2026-08-09","askingRent":549,"estimatedAllInMonthly":null}]
     }
   ]
 }
