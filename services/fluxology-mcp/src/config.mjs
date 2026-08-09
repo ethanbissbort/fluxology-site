@@ -168,7 +168,18 @@ export function loadConfig(env = process.env) {
   const oauthJwksUri = str(env, 'OAUTH_JWKS_URI');
 
   if (!devAuthEnabled) {
-    if (!oauthIssuer) throw new ConfigError('OAUTH_ISSUER is required unless development auth is enabled');
+    // Name both spellings: docker-compose.yml maps OAUTH_ISSUER=${MCP_OAUTH_ISSUER},
+    // so an operator reading this log sets a variable whose name never appears
+    // in it, and dev auth is not an escape hatch here — compose pins
+    // NODE_ENV=production, which refuses MCP_DEV_AUTH_ENABLED outright.
+    if (!oauthIssuer) {
+      throw new ConfigError(
+        'OAUTH_ISSUER is required unless development auth is enabled. ' +
+          'Under docker compose set MCP_OAUTH_ISSUER in .env (compose passes it through as OAUTH_ISSUER) ' +
+          'to the https URL of your authorization server. To deploy the rest of the stack without this ' +
+          'connector, run: docker compose up -d --scale mcp=0',
+      );
+    }
     const issuerUrl = normalizeBaseUrl(oauthIssuer, 'OAUTH_ISSUER');
     // The token trust root decides who may write to all three dashboards. Over
     // cleartext http, any on-path attacker serves their own metadata and JWKS.
