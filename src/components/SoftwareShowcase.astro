@@ -1,0 +1,524 @@
+---
+const products = [
+  {
+    id: 'office-scout',
+    name: 'Office Scout',
+    status: 'Active development',
+    category: 'Decision-support software',
+    icon: '/office-scout/favicon.svg',
+    description:
+      'Office Scout turns office-listing research into a structured decision workflow built around verified all-in cost, access, transit and fit rather than headline rent alone.',
+    capabilities: [
+      'Verified vs. unresolved cost status',
+      'Fit scoring and comparison',
+      'Transit, access and amenity fields',
+      'Listing-change and price-history tracking',
+      'Saved, contacted, tour and review workflow states',
+    ],
+    previewLabels: ['All-in cost', 'Fit /100', 'Transit', 'Recently changed'],
+  },
+  {
+    id: 'fluxology-deals',
+    name: 'Fluxology Deals',
+    status: 'Active development',
+    category: 'Deal research and comparison',
+    icon: '/deals/favicon.svg',
+    description:
+      'Fluxology Deals consolidates product searches into a persistent comparison workflow, with explicit landed-cost logic and a hard distinction between verified destination shipping and unresolved estimates.',
+    capabilities: [
+      'Multi-category deal feeds',
+      'Landed-cost comparison in CAD',
+      'Resolved vs. unresolved shipping status',
+      'Listing history and status preservation',
+      'Watch, save, purchase and reject workflow states',
+    ],
+    previewLabels: ['Landed cost', 'Shipping status', 'Listing history', 'Category feed'],
+  },
+];
+---
+
+<section class="section software-showcase" id="software" data-theme="corporate">
+  <div class="background-layer">
+    <div class="software-glow"></div>
+  </div>
+
+  <div class="content-layer">
+    <div class="container">
+      <header class="section-header observe-fade">
+        <p class="software-eyebrow">Current operating activity</p>
+        <h2 class="section-title">Software is what Fluxology is building now.</h2>
+        <p class="section-subtitle">
+          Fluxology, Inc. develops and publishes its own software products. The current portfolio combines iOS work
+          in active development with web-based tools already used for research, comparison and decision workflows.
+        </p>
+      </header>
+
+      <div class="software-product-grid">
+        {products.map((product) => (
+          <article class="software-product-card observe-slide-up" aria-labelledby={`${product.id}-title`}>
+            <div class="product-copy">
+              <div class="product-heading-row">
+                <img class="product-icon" src={product.icon} alt="" width="52" height="52" aria-hidden="true" loading="lazy" />
+                <div>
+                  <p class="product-status"><span aria-hidden="true"></span>{product.status}</p>
+                  <h3 id={`${product.id}-title`}>{product.name}</h3>
+                  <p class="product-category">{product.category}</p>
+                </div>
+              </div>
+
+              <p class="product-description">{product.description}</p>
+
+              <ul class="product-capabilities" role="list">
+                {product.capabilities.map((capability) => (
+                  <li>{capability}</li>
+                ))}
+              </ul>
+
+              <a class="product-link" href={`/apps/#${product.id}`}>
+                Explore {product.name} <span aria-hidden="true">→</span>
+              </a>
+            </div>
+
+            <div class="product-visual" aria-hidden="true">
+              <div class="mock-window">
+                <div class="mock-window-bar">
+                  <span></span><span></span><span></span>
+                  <div class="mock-title">{product.name}</div>
+                </div>
+                <div class="mock-toolbar">
+                  <div class="mock-search"></div>
+                  <div class="mock-filter"></div>
+                  <div class="mock-filter short"></div>
+                </div>
+                <div class="mock-metrics">
+                  {product.previewLabels.map((label, index) => (
+                    <div class="mock-metric">
+                      <span class="mock-metric-label">{label}</span>
+                      <span class:list={['mock-metric-value', { accent: index === 0 }]}></span>
+                    </div>
+                  ))}
+                </div>
+                <div class="mock-results">
+                  <div class="mock-result featured">
+                    <span class="mock-result-kicker"></span>
+                    <span class="mock-result-line wide"></span>
+                    <span class="mock-result-line"></span>
+                    <div class="mock-pills"><span></span><span></span><span></span></div>
+                  </div>
+                  <div class="mock-result">
+                    <span class="mock-result-kicker"></span>
+                    <span class="mock-result-line wide"></span>
+                    <span class="mock-result-line"></span>
+                    <div class="mock-pills"><span></span><span></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div class="software-actions observe-fade">
+        <div>
+          <strong>Developer & publisher:</strong> Fluxology, Inc.
+          <span>Products are developed for end users; Fluxology is not offering contract app-development services.</span>
+        </div>
+        <div class="software-action-links">
+          <a href="/apps/" class="cta-button cta-primary">Software & Apps</a>
+          <a href="/support/" class="cta-button cta-secondary">Product Support</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .software-showcase {
+    position: relative;
+    overflow: hidden;
+    background: #071d2b;
+  }
+
+  .software-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 18% 20%, rgba(58, 134, 255, 0.14), transparent 28rem),
+      radial-gradient(circle at 88% 68%, rgba(168, 218, 220, 0.09), transparent 32rem);
+    pointer-events: none;
+  }
+
+  .software-eyebrow {
+    margin-bottom: var(--spacing-sm);
+    color: var(--corporate-accent-silver);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wider);
+    text-transform: uppercase;
+  }
+
+  .software-product-grid {
+    display: grid;
+    gap: var(--spacing-xl);
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  .software-product-card {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+    padding: clamp(1.5rem, 4vw, 3rem);
+    border: 1px solid rgba(168, 218, 220, 0.2);
+    border-radius: var(--radius-xl);
+    background: linear-gradient(135deg, rgba(9, 30, 45, 0.9), rgba(11, 43, 60, 0.66));
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
+  }
+
+  .software-product-card:nth-child(even) .product-copy {
+    order: 2;
+  }
+
+  .software-product-card:nth-child(even) .product-visual {
+    order: 1;
+  }
+
+  .product-heading-row {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .product-icon {
+    width: 52px;
+    height: 52px;
+    padding: 9px;
+    border: 1px solid rgba(168, 218, 220, 0.22);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .product-status {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+    margin: 0 0 0.2rem;
+    color: #a8dadc;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .product-status span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #63d8a0;
+    box-shadow: 0 0 0 4px rgba(99, 216, 160, 0.1);
+  }
+
+  .product-copy h3 {
+    margin: 0;
+    color: #fff;
+    font-family: var(--font-corporate-heading);
+    font-size: clamp(1.75rem, 3vw, 2.45rem);
+  }
+
+  .product-category {
+    margin: 0.15rem 0 0;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: var(--font-size-sm);
+  }
+
+  .product-description {
+    margin: 0 0 var(--spacing-lg);
+    color: rgba(255, 255, 255, 0.76);
+    line-height: var(--line-height-loose);
+  }
+
+  .product-capabilities {
+    display: grid;
+    gap: var(--spacing-sm);
+    margin: 0 0 var(--spacing-xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .product-capabilities li {
+    position: relative;
+    padding-left: 1.55rem;
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.5;
+  }
+
+  .product-capabilities li::before {
+    content: '';
+    position: absolute;
+    top: 0.62em;
+    left: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--corporate-accent-blue);
+  }
+
+  .product-link {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: #8ec8ff;
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+  }
+
+  .product-link:hover,
+  .product-link:focus-visible {
+    color: #c4e4ff;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .product-visual {
+    min-width: 0;
+    perspective: 1200px;
+  }
+
+  .mock-window {
+    overflow: hidden;
+    border: 1px solid rgba(168, 218, 220, 0.22);
+    border-radius: 18px;
+    background: #0a1f2d;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.34);
+    transform: rotateY(-2deg) rotateX(1deg);
+  }
+
+  .software-product-card:nth-child(even) .mock-window {
+    transform: rotateY(2deg) rotateX(1deg);
+  }
+
+  .mock-window-bar {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .mock-window-bar > span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .mock-title {
+    margin-left: auto;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .mock-toolbar {
+    display: grid;
+    grid-template-columns: minmax(100px, 1fr) 92px 70px;
+    gap: 0.6rem;
+    padding: 1rem;
+  }
+
+  .mock-search,
+  .mock-filter {
+    height: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  .mock-search::after {
+    content: '';
+    display: block;
+    width: 44%;
+    height: 5px;
+    margin: 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .mock-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+    padding: 0 1rem 1rem;
+  }
+
+  .mock-metric {
+    padding: 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.065);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .mock-metric-label {
+    display: block;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 0.58rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mock-metric-value {
+    display: block;
+    width: 56%;
+    height: 8px;
+    margin-top: 0.48rem;
+    border-radius: 999px;
+    background: rgba(168, 218, 220, 0.18);
+  }
+
+  .mock-metric-value.accent {
+    width: 72%;
+    background: rgba(58, 134, 255, 0.55);
+  }
+
+  .mock-results {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+    padding: 0 1rem 1rem;
+  }
+
+  .mock-result {
+    min-height: 126px;
+    padding: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.025);
+  }
+
+  .mock-result.featured {
+    border-color: rgba(58, 134, 255, 0.28);
+    background: rgba(58, 134, 255, 0.055);
+  }
+
+  .mock-result-kicker,
+  .mock-result-line {
+    display: block;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .mock-result-kicker {
+    width: 25%;
+    height: 5px;
+    margin-bottom: 0.75rem;
+    background: rgba(168, 218, 220, 0.28);
+  }
+
+  .mock-result-line {
+    width: 64%;
+    height: 7px;
+    margin-bottom: 0.55rem;
+  }
+
+  .mock-result-line.wide {
+    width: 88%;
+    height: 9px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .mock-pills {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 1rem;
+  }
+
+  .mock-pills span {
+    width: 30%;
+    height: 18px;
+    border-radius: 999px;
+    background: rgba(58, 134, 255, 0.12);
+  }
+
+  .software-actions {
+    display: flex;
+    gap: var(--spacing-xl);
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1180px;
+    margin: var(--spacing-2xl) auto 0;
+    padding: var(--spacing-xl);
+    border-top: 1px solid rgba(168, 218, 220, 0.18);
+  }
+
+  .software-actions > div:first-child {
+    display: grid;
+    gap: 0.35rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .software-actions strong {
+    color: #fff;
+  }
+
+  .software-actions span {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: var(--font-size-sm);
+  }
+
+  .software-action-links {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 920px) {
+    .software-product-card {
+      grid-template-columns: 1fr;
+    }
+
+    .software-product-card:nth-child(even) .product-copy,
+    .software-product-card:nth-child(even) .product-visual {
+      order: initial;
+    }
+
+    .mock-window,
+    .software-product-card:nth-child(even) .mock-window {
+      transform: none;
+    }
+
+    .software-actions {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .software-product-card {
+      padding: var(--spacing-lg);
+    }
+
+    .mock-metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mock-results {
+      grid-template-columns: 1fr;
+    }
+
+    .software-action-links {
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .software-action-links .cta-button {
+      justify-content: center;
+      text-align: center;
+    }
+  }
+</style>
