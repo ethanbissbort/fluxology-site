@@ -452,7 +452,7 @@ function openDetail(l) {
   $("#detail").innerHTML = `
     <div class="dh">
       <div class="eyebrow">${esc(safe(l.operator))} · ${esc(safe(l.leaseType))}</div>
-      <h2>${esc(safe(l.address))}</h2>
+      <h2 id="dTitle">${esc(safe(l.address))}</h2>
       <p>${esc(safe(l.municipality))}, Ontario</p>
       <div class="dp">${num(l.estimatedAllInMonthly) == null ? "All-in cost unknown" : `${esc(money(l.estimatedAllInMonthly))}/mo`}</div>
       <div class="dh-badges">
@@ -560,6 +560,9 @@ function openDetail(l) {
     }, 900);
   });
 
+  // Name the dialog from the heading that was just written, so assistive tech
+  // announces the listing rather than an unnamed dialog.
+  $("#dialog").setAttribute("aria-labelledby", "dTitle");
   $("#dialog").showModal();
 }
 

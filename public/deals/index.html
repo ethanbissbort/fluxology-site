@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b1a2c">
+  <!-- Internal research tool: never index it, including at the fluxology.ca/deals/ shadow path. -->
+  <meta name="robots" content="noindex">
   <title>Fluxology Deals</title>
   <link rel="icon" href="./favicon.svg">
   <link rel="stylesheet" href="./styles.css">
@@ -38,7 +40,7 @@
       <label class="check"><input id="activeOnly" type="checkbox" checked> Active only</label>
     </section>
 
-    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant listings</h3></div><div class="meta"><span id="resultCount">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
+    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant listings</h3></div><div class="meta"><span id="resultCount" role="status" aria-live="polite" aria-atomic="true">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
     <section id="grid" class="grid" tabindex="-1"></section>
     <section id="empty" class="empty" hidden><h3>No matching listings</h3><p>Change the filters or wait for the next curated search run.</p></section>
   </main>

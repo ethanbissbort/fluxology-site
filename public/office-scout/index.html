@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b1a2c">
   <meta name="description" content="Fluxology Office Scout — curated GTA private-office acquisition dashboard.">
+  <!-- Internal research tool: never index it, including at the fluxology.ca/office-scout/ shadow path. -->
+  <meta name="robots" content="noindex">
   <title>Fluxology Office Scout v2.5</title>
   <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="./styles.css">
@@ -100,7 +102,7 @@
           <span class="eyebrow">RESULT FEED</span>
           <h3>Relevant listings</h3>
         </div>
-        <div class="meta"><span id="resultCount">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div>
+        <div class="meta"><span id="resultCount" role="status" aria-live="polite" aria-atomic="true">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div>
       </section>
 
       <section id="grid" class="grid" aria-live="polite"></section>

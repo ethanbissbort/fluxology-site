@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b1a2c">
+  <!-- Internal research tool: never index it, including at the fluxology.ca/jobs/ shadow path. -->
+  <meta name="robots" content="noindex">
   <title>Fluxology Jobs</title>
   <link rel="icon" href="./favicon.svg">
   <link rel="stylesheet" href="./styles.css">
@@ -37,14 +39,14 @@
       <label class="check"><input type="checkbox" id="activeOnly" checked> Active only</label>
     </section>
 
-    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant openings</h3></div><div class="meta"><span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
+    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant openings</h3></div><div class="meta"><span id="resultCount" role="status" aria-live="polite" aria-atomic="true">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
     <section id="grid" class="grid"></section>
     <section id="empty" class="empty" hidden><h3 id="emptyTitle">No jobs in this feed yet</h3><p id="emptyBody">The dashboard is working — the feed is simply empty. Openings appear here once the trades job scout publishes them to this dashboard’s API (POST /api/upsert on jobs.fluxology.ca); nothing has been published yet.</p><button class="smallbtn" id="clear" hidden>Clear filters</button></section>
   </main>
 
   <footer><span>Fluxology Jobs v3</span><span>Feed refreshes every hour while this tab is open.</span></footer>
 </div>
-<dialog id="dialog"><div class="ds"><button class="close" id="close">×</button><div id="detail"></div></div></dialog>
+<dialog id="dialog"><div class="ds"><button class="close" id="close" aria-label="Close listing details">×</button><div id="detail"></div></div></dialog>
 <script src="./app.js"></script>
 </body>
 </html>
