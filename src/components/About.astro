@@ -1,38 +1,34 @@
 ---
-// Company-level facts and operating principles are drawn from the reworked
-// 2029+ portfolio. The DBA names are proposals, not separate legal entities.
 import { Picture } from 'astro:assets';
 import valueExcellence from '../assets/images/corporate/value-excellence.webp';
 import valueInnovation from '../assets/images/corporate/value-innovation.webp';
 import valueSustainability from '../assets/images/corporate/value-sustainability.webp';
 import valueIntegrity from '../assets/images/corporate/value-integrity.webp';
 
-// Rendered at 64-76px CSS pixels (base/responsive.css), so 2x = 152px covers
-// every display density without shipping the 360px originals.
 const valueImages = [
   {
     src: valueExcellence,
     alt: 'Polished achievement trophy',
     strong: 'Controlled scope',
-    text: 'Accept only work that fits qualification, access, schedule, insurance and one-person capacity.'
+    text: 'Build products and accept future work only when the scope fits real capability, capacity and support obligations.'
   },
   {
     src: valueInnovation,
     alt: 'Luminous modular technology cube',
-    strong: 'Demand-gated capability',
-    text: 'Add technology to solve measured problems, not to fill a speculative equipment catalogue.'
+    strong: 'Product-led technology',
+    text: 'Develop software and technical capability around measured problems rather than speculative scale.'
   },
   {
     src: valueSustainability,
     alt: 'Geometric green and blue leaf',
     strong: 'Subsistence before surplus',
-    text: 'Secure household food, preservation and propagation needs before agricultural sales.'
+    text: 'In the future homestead phase, secure household food, preservation and propagation needs before agricultural sales.'
   },
   {
     src: valueIntegrity,
     alt: 'Handshake set in a protective shield',
-    strong: 'Clear separation',
-    text: 'Keep employment, corporate revenue, personal costs and each operating line explicitly documented.'
+    strong: 'Clear legal identity',
+    text: 'Keep Fluxology, Inc. identified as the legal entity behind software publishing and every future operating line.'
   }
 ];
 ---
@@ -47,39 +43,37 @@ const valueImages = [
     <div class="container">
       <header class="section-header observe-fade">
         <p class="about-eyebrow">Company structure</p>
-        <h2 class="section-title">One corporation. Four staged operating lines.</h2>
-        <p class="section-subtitle">A trade-led, one-owner micro-enterprise designed to integrate with a future homestead.</p>
+        <h2 class="section-title">One corporation. Software publishing now; staged operating lines later.</h2>
+        <p class="section-subtitle">Fluxology, Inc. is the legal entity behind its current software products and its longer-term operating plan.</p>
       </header>
 
-      {/* Keep a closing inline tag and the word after it on ONE line: Astro's
-          compressHTML collapses a newline+indent between a closing inline tag
-          and the next text node to nothing ("...Ontario.The four..."). */}
       <div class="legal-status observe-fade">
         <span class="status-dot" aria-hidden="true"></span>
         <p>
-          <strong>Fluxology, Inc. is federally incorporated and registered to operate in Ontario.</strong> The
-          four operating names presented on this site are proposed and have not yet been registered.
+          <strong>Fluxology, Inc. is federally incorporated and registered to operate in Ontario.</strong> Software
+          development and publishing are direct corporate activities. The four trade and homestead operating names
+          presented elsewhere on this site are proposed future names and have not yet been registered.
         </p>
       </div>
 
       <div class="about-content observe-slide-up">
         <div class="about-text">
           <p class="about-paragraph">
-            Fluxology is not a holding company, staffing plan or collection of separate corporations. It is one
-            Canadian-controlled private corporation with internal cost centres for repair and fabrication, digital
-            production support, protected growing, and perennial food systems.
+            Fluxology currently develops its own software products, including iOS applications and supporting web
+            tools. The company is acting as the developer and publisher of those products; it is not advertising
+            contract app-development services for clients.
           </p>
 
           <p class="about-paragraph">
-            The plan begins with mobile/local welding no earlier than 2029, while the owner continues separate T4
-            trade employment. The 3D Lab starts as a compact internal capability and becomes a public service only
-            after demand is proven. The greenhouse and orchard begin after a compatible homestead is acquired and
-            prioritize household food, preservation and propagation before any sale.
+            The longer-term plan adds four staged operating lines under the same corporation: repair and fabrication,
+            digital production support, protected growing, and perennial food systems. Mobile/local welding is not
+            planned to begin before 2029. The greenhouse and orchard begin only after a compatible homestead is
+            acquired and prioritize household food before sales.
           </p>
 
           <p class="about-paragraph about-paragraph--accent">
-            Growth is allowed to move later. It is not allowed to become larger, more leveraged or more labour-heavy
-            merely to preserve a date or forecast.
+            The corporate structure is deliberately simple: Fluxology, Inc. owns and publishes its software and will
+            also be the legal contracting entity behind any future operating names.
           </p>
         </div>
 
@@ -112,16 +106,16 @@ const valueImages = [
           <span class="stat-label">Owner + legal entity</span>
         </div>
         <div class="stat-card">
+          <span class="stat-number">Now</span>
+          <span class="stat-label">Software development</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">iOS</span>
+          <span class="stat-label">Apps in active development</span>
+        </div>
+        <div class="stat-card">
           <span class="stat-number">4</span>
-          <span class="stat-label">Proposed operating names</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">2029</span>
-          <span class="stat-label">Earliest customer launch</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-number">24 mo</span>
-          <span class="stat-label">Base-case equipment payback gate</span>
+          <span class="stat-label">Proposed future operating names</span>
         </div>
       </div>
     </div>
@@ -129,10 +123,6 @@ const valueImages = [
 </section>
 
 <style>
-  /* .value-item is a two-column grid and base.css sizes the img itself; the
-     <picture> that <Picture> adds would otherwise become the grid item.
-     display:contents removes the wrapper from layout so the icons keep their
-     exact 76px/64px box — and the route keeps CLS 0. */
   picture {
     display: contents;
   }
