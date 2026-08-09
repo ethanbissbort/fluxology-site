@@ -5,7 +5,7 @@ const isHomepage = Astro.url.pathname === '/';
 const homeSection = (id: string) => isHomepage ? `#${id}` : `/#${id}`;
 const divisionLink = (id: string) => isHomepage ? `#${id}` : `/${id}/`;
 const isCurrentDivision = (id: string) => Astro.url.pathname === `/${id}/`;
-const isAppsPage = Astro.url.pathname === '/apps/';
+const isAppsPage = Astro.url.pathname === '/apps/' || Astro.url.pathname.startsWith('/apps/');
 ---
 
 <a href="#main-content" class="skip-link">Skip to main content</a>

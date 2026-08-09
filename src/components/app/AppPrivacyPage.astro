@@ -1,0 +1,138 @@
+---
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import type { AppPageConfig } from '../../data/appPages';
+
+interface Props {
+  app: AppPageConfig;
+}
+
+const { app } = Astro.props;
+const supportHref = `/apps/${app.slug}/support/`;
+---
+
+<ContentLayout
+  title={`${app.name} Privacy Policy | Fluxology, Inc.`}
+  description={`Privacy policy for ${app.name}, published by Fluxology, Inc.`}
+  eyebrow={`${app.name} · Privacy`}
+  heading={`${app.name} Privacy Policy`}
+  intro={app.privacy.summary}
+>
+  <p class="content-meta">
+    <strong>Effective date:</strong> {app.privacy.effectiveDate}<br />
+    <strong>Last updated:</strong> {app.privacy.lastUpdated}<br />
+    <strong>App version:</strong> {app.version} · {app.platform}
+  </p>
+
+  <section>
+    <h2>1. Scope</h2>
+    <p>
+      This policy applies to <strong>{app.name}</strong>, an application developed and published by Fluxology, Inc.
+      It describes the data practices of the app identified above. The general Fluxology corporate privacy policy is
+      available at <a href="/privacy/">fluxology.ca/privacy/</a>.
+    </p>
+  </section>
+
+  <section>
+    <h2>2. Data the app collects</h2>
+    <ul>
+      {app.privacy.dataCollected.map((item) => <li>{item}</li>)}
+    </ul>
+
+    {app.privacy.dataNotCollected && app.privacy.dataNotCollected.length > 0 && (
+      <>
+        <h3>Data the app does not collect</h3>
+        <ul>
+          {app.privacy.dataNotCollected.map((item) => <li>{item}</li>)}
+        </ul>
+      </>
+    )}
+  </section>
+
+  <section>
+    <h2>3. How data is used</h2>
+    <ul>
+      {app.privacy.uses.map((item) => <li>{item}</li>)}
+    </ul>
+  </section>
+
+  <section>
+    <h2>4. Sharing and disclosure</h2>
+    <ul>
+      {app.privacy.sharing.map((item) => <li>{item}</li>)}
+    </ul>
+
+    <h3>Third-party services and SDKs</h3>
+    {app.privacy.thirdPartyServices.length > 0 ? (
+      <ul>
+        {app.privacy.thirdPartyServices.map((service) => (
+          <li>
+            <strong>{service.name}:</strong> {service.purpose}
+            {service.privacyUrl && (
+              <> — <a href={service.privacyUrl} rel="noopener noreferrer">privacy information</a></>
+            )}
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>The app does not use third-party services or SDKs that receive user data.</p>
+    )}
+  </section>
+
+  <section>
+    <h2>5. Device permissions</h2>
+    {app.privacy.permissions.length > 0 ? (
+      <ul>
+        {app.privacy.permissions.map((permission) => (
+          <li><strong>{permission.name}:</strong> {permission.purpose}</li>
+        ))}
+      </ul>
+    ) : (
+      <p>The app does not request privacy-sensitive device permissions.</p>
+    )}
+  </section>
+
+  <section>
+    <h2>6. Retention</h2>
+    <ul>
+      {app.privacy.retention.map((item) => <li>{item}</li>)}
+    </ul>
+  </section>
+
+  <section>
+    <h2>7. Deletion and user requests</h2>
+    <ul>
+      {app.privacy.deletion.map((item) => <li>{item}</li>)}
+    </ul>
+    <p>
+      Privacy or deletion requests can be sent to
+      <a href={`mailto:${app.supportEmail}`}>{app.supportEmail}</a>. Product support information is available at
+      <a href={supportHref}>{supportHref}</a>.
+    </p>
+  </section>
+
+  <section>
+    <h2>8. Security</h2>
+    <p>{app.privacy.security}</p>
+  </section>
+
+  <section>
+    <h2>9. Children</h2>
+    <p>{app.privacy.children}</p>
+  </section>
+
+  <section>
+    <h2>10. Changes to this policy</h2>
+    <p>{app.privacy.changes}</p>
+  </section>
+
+  <section>
+    <h2>11. Contact</h2>
+    <div class="content-callout">
+      <strong>Fluxology, Inc.</strong><br />
+      Publisher of {app.name}<br />
+      Ontario, Canada<br />
+      <a href={`mailto:${app.supportEmail}`}>{app.supportEmail}</a><br />
+      <a href={supportHref}>{supportHref}</a>
+    </div>
+  </section>
+</ContentLayout>
