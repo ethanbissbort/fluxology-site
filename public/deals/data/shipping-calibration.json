@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-12T17:05:00-04:00",
+  "destinationPostalCode": "M6H 2W9",
+  "purpose": "Empirical eBay shipping observations retained separately from canonical deal records.",
+  "observations": [
+    {"title":"LEGO 21 lb Bulk Lot - Minifigs, Pieces Of Sets, Guides, Star Wars Potter Etc","weightLb":21,"shippingCurrency":"USD","shippingAmount":76.80},
+    {"title":"lego vintage bulk 15.6 LB All Sets No Mini Figures What U See What You Get Rare 1s #6","weightLb":15.6,"shippingCurrency":"USD","shippingAmount":26.88,"itemId":"206468265940"},
+    {"title":"LEGO 18 lbs Random Bulk Lot Parts Pieces Building Plates Blocks Red Bin","weightLb":18,"shippingCurrency":"USD","shippingAmount":46.25,"itemId":"307102441219"},
+    {"title":"LOT OF LEGO 20+ Pounds Bulk Pieces Parts Brick Vintage? & Modern","weightLb":20,"shippingCurrency":"USD","shippingAmount":57.27,"itemId":"377400078997"},
+    {"title":"Lego Lot 10 Pounds lbs Random Mixed Pieces Bulk W/Blue Lego Bin","weightLb":10,"shippingCurrency":"CAD","shippingAmount":33.22},
+    {"title":"LEGO Bulk Lot 9.8 LBS Mixed Bricks Pieces Parts Random Assorted Blocks Toys E","weightLb":9.8,"shippingCurrency":"USD","shippingAmount":35.13},
+    {"title":"LEGO Bulk Lot (10.5 LBS) All Genuine Lego Pieces. Figures. Plates. Wheels","weightLb":10.5,"shippingCurrency":"USD","shippingAmount":33.16},
+    {"title":"LEGO 1 Pound BUY 9 LBS GET 3 LBS FREE Bulk Pieces Lot Bricks tires. Authentic","seller":"authenticlegoshop","weightLb":12,"paidQuantityLb":9,"itemSubtotalUsd":114.75,"shippingCurrency":"USD","shippingAmount":42.40,"notes":"eBay International Shipping; UPS Standard alternative US$105; single-unit screen showed US$39.67."},
+    {"title":"1 to 1000 POUNDS LB LEGO LEGOS mix PIECES FROM HUGE BULK LOT PARTS","seller":"Brick & Figs Beach Shack","quantitySeries":[{"weightLb":1,"itemSubtotalUsd":34.99,"shippingUsd":10.85},{"weightLb":9,"itemSubtotalUsd":314.91,"shippingUsd":47.77},{"weightLb":15,"itemSubtotalUsd":524.85,"shippingUsd":64.06}]},
+    {"title":"LEGO ~10 Pounds~ THE TEN POUND PACK Bricks Parts Pieces Bulk Lot!","seller":"The_Brick_World","weightLb":10,"itemPriceUsd":101.95,"shippingCurrency":"USD","shippingAmount":34.95},
+    {"title":"LOT OF LEGO 12+ Pounds Bulk Pieces Parts Brick Vintage & Modern","seller":"raiseyourgamecollectible","weightLb":12,"itemId":"377400083750","shippingCurrency":"USD","shippingAmount":44.47},
+    {"title":"Bulk LEGO LOT 14 pound box of Bricks, parts, Pieces, Tires accessories","seller":"AllThingsFind3","weightLb":14,"itemId":"168595193343","itemPriceUsd":49.99,"shippingCurrency":"USD","shippingAmount":21.95},
+    {"title":"LEGO 5 bags unsorted Bulk Lot Bricks 10 Pounds Mixed Parts and Pieces people lbs","seller":"4-the-dogs","weightLb":10,"currentBidUsd":29.97,"shippingCurrency":"USD","shippingAmount":49.15},
+    {"title":"LEGO 20 lbs Pounds Random Parts Pieces Building Plates Blocks Washed","seller":"Building Brick","weightLb":20,"itemPriceUsd":139.99,"shippingCurrency":"USD","shippingAmount":36.55,"destinationResolved":false},
+    {"title":"LEGO 20 lbs Pounds Random Parts Pieces Building Plates Blocks Washed Bulk Lot.","seller":"RelicRoom","weightLb":20,"itemPriceUsd":142.00,"shippingCurrency":"USD","shippingAmount":35.60,"destinationResolved":false},
+    {"title":"1-1000 POUNDS GIRL COLORS BRAND NEW LB LEGO LEGOS PIECES","seller":"Brick & Figs Beach Shack","quantitySeries":[{"weightLb":1,"itemSubtotalUsd":39.99,"shippingUsd":14.74},{"weightLb":5,"itemSubtotalUsd":199.95,"shippingUsd":44.69},{"weightLb":10,"itemSubtotalUsd":399.90,"shippingUsd":65.77},{"weightLb":15,"itemSubtotalUsd":599.85,"shippingUsd":84.26}]}
+  ]
+}
