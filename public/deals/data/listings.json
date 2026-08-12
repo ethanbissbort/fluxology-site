@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "appVersion": "3.1",
-  "generatedAt": "2026-08-12T17:05:00-04:00",
+  "generatedAt": "2026-08-12T17:37:44-04:00",
   "searchName": "Fluxology curated shopping deals",
   "currency": "CAD",
   "formatNotes": "Pretty-printed intentionally so connector line-range reads are reliable. The complete pre-rebuild snapshot is preserved at public/deals/data/archive/listings-2026-08-12-pre-rebuild.json.",
@@ -97,6 +97,27 @@
       "seller": "Bluebird Brick Designs",
       "shippingResolved": false,
       "notes": "Priority-1 diverse printed-tile assortment; quantity tiers 10/25/50/100; seller states larger lots increase variety and combines shipping."
+    },
+    {
+      "id": "ebay-126477737031",
+      "itemId": "126477737031",
+      "category": "LEGO Specialty Parts",
+      "searchName": "LEGO Specialty & Minifig Watch",
+      "title": "LEGO Printed Tiles & Slopes 2x2 - 1x2 - 1x1 Decorations Minifigure Accessory NEW",
+      "marketplace": "eBay",
+      "url": "https://www.ebay.ca/itm/126477737031",
+      "listingType": "buy_it_now",
+      "status": "tracked",
+      "active": true,
+      "seller": "Dumbosmother",
+      "priceUsd": 1.19,
+      "shippingResolved": false,
+      "bestOffer": false,
+      "firstSeen": "2026-08-12T17:37:44-04:00",
+      "lastSeen": "2026-08-12T17:37:44-04:00",
+      "lastChanged": "2026-08-11T18:49:09-04:00",
+      "validationStatus": "live_canonical_verified",
+      "notes": "Priority-1 pick-your-own genuine printed/decorated tile listing. Current selectable inventory includes maps, clocks, computer screens/keyboards/keypads, gauges, newspapers, money, food/drink, phones, hazard stripes, wanted poster, guest book, paintings and other scene graphics. Public page shipping is a U.S.-destination proxy and is not treated as M6H 2W9 shipping. Seller advertises automatic combined-shipping discounts in-cart."
     },
     {
       "id": "ebay-295918613949",
