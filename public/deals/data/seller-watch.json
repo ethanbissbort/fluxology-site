@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-12T17:05:00-04:00",
+  "generatedAt": "2026-08-12T17:32:00-04:00",
   "searchName": "LEGO seller watch",
   "sellers": [
     {"seller":"tweedsidesales","displayName":"Jeremy Doherty","status":"watch","notes":"Canadian seller; repeated promising genuine LEGO inventory; negotiate package purchases."},
@@ -15,6 +15,7 @@
     {"seller":"novanut74","displayName":"Scott's Toy Emporium","status":"watch"},
     {"seller":"audi2005store","status":"watch","notes":"Hair, headgear, accessories and body-part inventory."},
     {"seller":"saveourfaith","status":"watch","notes":"Track price evolution; seller has shown substantial markdowns and offers."},
+    {"seller":"stonemountainmarket","displayName":"The Stone Mountain Market","status":"watch","notes":"Broad resale seller in Belle Plaine, Minnesota with recurring genuine LEGO inventory, active combined-shipping support on eligible items, seller-initiated offers, and strong communication ratings. Deep-dive new LEGO inventory; prioritize bulk specialty-rich lots, minifigure/component lots, and negotiation/combined-shipping opportunities."},
     {"seller":"Boutique Charlie Pooh","status":"provisional","notes":"Do not promote to permanent watch until repeated good inventory is confirmed."},
     {"seller":"Mimi's 4 Munchkins","status":"provisional","notes":"Broad thrift/collectibles seller. Deep-dive whenever LEGO inventory looks promising; combined shipping is advertised on some listings."},
     {"seller":"theLEGOlady","status":"exclude","notes":"Exclude unless a future listing explicitly and verifiably ships to M6H 2W9."}
