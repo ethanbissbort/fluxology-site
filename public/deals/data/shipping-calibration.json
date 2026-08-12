@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-12T17:05:00-04:00",
+  "generatedAt": "2026-08-12T18:40:48-04:00",
   "destinationPostalCode": "M6H 2W9",
   "purpose": "Empirical eBay shipping observations retained separately from canonical deal records.",
   "observations": [
@@ -19,6 +19,7 @@
     {"title":"LEGO 5 bags unsorted Bulk Lot Bricks 10 Pounds Mixed Parts and Pieces people lbs","seller":"4-the-dogs","weightLb":10,"currentBidUsd":29.97,"shippingCurrency":"USD","shippingAmount":49.15},
     {"title":"LEGO 20 lbs Pounds Random Parts Pieces Building Plates Blocks Washed","seller":"Building Brick","weightLb":20,"itemPriceUsd":139.99,"shippingCurrency":"USD","shippingAmount":36.55,"destinationResolved":false},
     {"title":"LEGO 20 lbs Pounds Random Parts Pieces Building Plates Blocks Washed Bulk Lot.","seller":"RelicRoom","weightLb":20,"itemPriceUsd":142.00,"shippingCurrency":"USD","shippingAmount":35.60,"destinationResolved":false},
-    {"title":"1-1000 POUNDS GIRL COLORS BRAND NEW LB LEGO LEGOS PIECES","seller":"Brick & Figs Beach Shack","quantitySeries":[{"weightLb":1,"itemSubtotalUsd":39.99,"shippingUsd":14.74},{"weightLb":5,"itemSubtotalUsd":199.95,"shippingUsd":44.69},{"weightLb":10,"itemSubtotalUsd":399.90,"shippingUsd":65.77},{"weightLb":15,"itemSubtotalUsd":599.85,"shippingUsd":84.26}]}
+    {"title":"1-1000 POUNDS GIRL COLORS BRAND NEW LB LEGO LEGOS PIECES","seller":"Brick & Figs Beach Shack","quantitySeries":[{"weightLb":1,"itemSubtotalUsd":39.99,"shippingUsd":14.74},{"weightLb":5,"itemSubtotalUsd":199.95,"shippingUsd":44.69},{"weightLb":10,"itemSubtotalUsd":399.90,"shippingUsd":65.77},{"weightLb":15,"itemSubtotalUsd":599.85,"shippingUsd":84.26}]},
+    {"title":"LEGO Printed Tiles & Slopes 2x2 - 1x2 - 1x1 Decorations Minifigure Accessory NEW","seller":"Dumbosmother","itemId":"126477737031","destinationResolved":true,"cartQuantity":24,"itemSubtotalUsd":36.34,"shippingCurrency":"USD","shippingAmount":48.10,"orderTotalUsd":84.44,"lineItemShippingExamples":[{"selection":"Computer Screen 2x2 45 Slope","quantity":3,"itemSubtotalUsd":4.35,"shippingUsd":5.04},{"selection":"Danger Stripes Hazard 1x2 Tile","quantity":3,"itemSubtotalUsd":5.97,"shippingUsd":5.05},{"selection":"Dart Board Dejarik Hologameboard Pattern","quantity":1,"itemSubtotalUsd":1.25,"shippingUsd":1.78},{"selection":"Pizza Pepperoni 2x2 round tile","quantity":3,"itemSubtotalUsd":4.77,"shippingUsd":5.04},{"selection":"100 Bill Money Currency 1x2 Tile","quantity":6,"itemSubtotalUsd":7.50,"shippingUsd":17.75},{"selection":"Keypad Computer Red Green 1x2 Slope","quantity":2,"itemSubtotalUsd":2.78,"shippingUsd":3.36},{"selection":"Red 82, Yellow and White Gauges Pattern 1x2 Tile","quantity":3,"itemSubtotalUsd":3.75,"shippingUsd":5.03}],"notes":"Checkout to M6H 2W9 showed that eBay's advertised combined-shipping behavior did not consolidate these same-listing variations into a rational single-parcel rate; manual seller bundle/custom listing may be required for economical larger orders."}
   ]
 }
