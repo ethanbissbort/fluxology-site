@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-12T18:06:00-04:00",
+  "generatedAt": "2026-08-13T08:37:00-04:00",
   "searchName": "LEGO seller watch",
   "sellers": [
     {"seller":"tweedsidesales","displayName":"Jeremy Doherty","status":"watch","notes":"Canadian seller; repeated promising genuine LEGO inventory; negotiate package purchases."},
@@ -18,6 +18,7 @@
     {"seller":"stonemountainmarket","displayName":"The Stone Mountain Market","status":"watch","notes":"Broad resale seller in Belle Plaine, Minnesota with recurring genuine LEGO inventory, active combined-shipping support on eligible items, seller-initiated offers, and strong communication ratings. Deep-dive new LEGO inventory; prioritize bulk specialty-rich lots, minifigure/component lots, and negotiation/combined-shipping opportunities."},
     {"seller":"Dumbosmother","status":"watch","notes":"High-priority specialist source for genuine printed/decorated tiles and specialty architectural/detail parts. Store advertises automatic combined-shipping discounts; prioritize printed tiles, maps, clocks, screens, gauges, signs, windows/glazing and scene-detail parts. Initial deep dive completed 2026-08-12; M6H 2W9 shipping must still be resolved per listing/cart before landed-cost ranking."},
     {"seller":"luserena","status":"watch","notes":"Canadian seller in Hannon, Ontario with recurring genuine LEGO inventory across partial Star Wars sets, incomplete identified sets, minifigures, and small complete sets. Best Offer appears frequently. Initial deep dive completed 2026-08-12; prioritize incomplete identified sets, Star Wars donor lots, licensed minifigures, and package/combined-shipping negotiation."},
+    {"seller":"little_brick_big_ideas","status":"watch","notes":"Canadian seller in Ottawa. Added after a live 1.25 lb genuine LEGO minifigure/accessories auction surfaced at a very low opening bid. Same-run deep dive completed 2026-08-13; search surfaced no additional current specialty-component deals strong enough to notify. Prior feedback shows genuine LEGO sets/minifigures history. Prioritize future mixed minifigure/accessory lots and licensed/vintage figures."},
     {"seller":"Boutique Charlie Pooh","status":"provisional","notes":"Do not promote to permanent watch until repeated good inventory is confirmed."},
     {"seller":"Mimi's 4 Munchkins","status":"provisional","notes":"Broad thrift/collectibles seller. Deep-dive whenever LEGO inventory looks promising; combined shipping is advertised on some listings."},
     {"seller":"theLEGOlady","status":"exclude","notes":"Exclude unless a future listing explicitly and verifiably ships to M6H 2W9."}
