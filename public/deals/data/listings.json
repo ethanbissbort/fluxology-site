@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "appVersion": "3.1",
-  "generatedAt": "2026-08-12T17:37:44-04:00",
+  "generatedAt": "2026-08-13T08:37:00-04:00",
   "searchName": "Fluxology curated shopping deals",
   "currency": "CAD",
   "formatNotes": "Pretty-printed intentionally so connector line-range reads are reliable. The complete pre-rebuild snapshot is preserved at public/deals/data/archive/listings-2026-08-12-pre-rebuild.json.",
@@ -279,6 +279,29 @@
       "shippingResolved": false,
       "validationStatus": "failed",
       "notes": "Canonical page returned 404; historical only."
+    },
+    {
+      "id": "ebay-287179517068",
+      "itemId": "287179517068",
+      "category": "LEGO Minifigures",
+      "searchName": "LEGO Specialty & Minifig Watch",
+      "title": "Lego Minifigure and Accessories Lot (1.25lbs)",
+      "marketplace": "eBay",
+      "url": "https://www.ebay.ca/itm/287179517068",
+      "listingType": "auction",
+      "status": "watching",
+      "active": true,
+      "seller": "little_brick_big_ideas",
+      "weightLb": 1.25,
+      "currentBidCad": 0.99,
+      "bidCount": 1,
+      "shippingResolved": false,
+      "bestOffer": false,
+      "firstSeen": "2026-08-13T08:37:00-04:00",
+      "lastSeen": "2026-08-13T08:37:00-04:00",
+      "lastChanged": "2026-08-13T08:37:00-04:00",
+      "validationStatus": "live_canonical_verified",
+      "notes": "Live Canadian auction in Ottawa for 1.25 lb of genuine LEGO minifigures/accessories. Search result showed 13 watchers, 4 watched today, 1 bid, and about 4d23h remaining at discovery. M6H 2W9 shipping is unresolved; do not use foreign-destination proxy shipping. Conservative provisional target is to keep total pre-tax landed cost at or below roughly C$50-60 until checkout shipping and photo-level component density are resolved."
     },
     {
       "id": "ebay-206468265940",
