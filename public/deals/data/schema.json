@@ -44,6 +44,7 @@
           "allInCad": {"type": ["number", "null"]},
           "allInUsd": {"type": ["number", "null"]},
           "shippingResolved": {"type": ["boolean", "null"]},
+          "shippingObservationAvailable": {"type": ["boolean", "null"]},
           "shippingQuoteOriginalCurrency": {"type": ["string", "null"]},
           "shippingQuoteOriginalAmount": {"type": ["number", "null"]},
           "proxyShippingCad": {"type": ["number", "null"]},
