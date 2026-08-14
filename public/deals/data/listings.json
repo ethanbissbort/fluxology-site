@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "appVersion": "3.1",
-  "generatedAt": "2026-08-13T22:08:00-04:00",
+  "generatedAt": "2026-08-14T04:32:44-04:00",
   "searchName": "Fluxology curated shopping deals",
   "currency": "CAD",
   "formatNotes": "Pretty-printed intentionally so connector line-range reads are reliable. Historical/inactive calibration-only records belong in historical-listings.json and shipping-calibration.json; unresolved short-link/screenshot records belong in unresolved-listings.json. Only currently direct-validated records may have active=true.",
@@ -277,6 +277,46 @@
       "shippingResolved": false,
       "validationStatus": "needs_revalidation",
       "notes": "Genuine LEGO keychains; not loose scene-use minifigures, so low priority unless heavily discounted. Direct canonical fetch failed during the 2026-08-13 audit."
+    },
+    {
+      "id": "ebay-286591817537",
+      "itemId": "286591817537",
+      "category": "LEGO Minifigures",
+      "searchName": "LEGO Specialty & Minifig Watch",
+      "title": "LEGO Bulk Lot Of Minifigure Parts! Legs, Heads, Torsos, Hair, Hats - You Choose!",
+      "marketplace": "eBay",
+      "url": "https://www.ebay.ca/itm/286591817537",
+      "listingType": "buy_it_now",
+      "status": "tracked",
+      "active": true,
+      "seller": "The_Brick_World",
+      "priceUsd": 3.95,
+      "shippingResolved": false,
+      "validationStatus": "live_canonical_verified",
+      "firstSeen": "2026-08-14T04:32:44-04:00",
+      "lastSeen": "2026-08-14T04:32:44-04:00",
+      "lastChanged": "2026-08-14T04:32:44-04:00",
+      "notes": "Fresh direct canonical verification showed more than 10 available and 4,197 sold. Genuine LEGO per seller. Selectable categories: heads, yellow-only heads, torsos, legs, hair, headgear/hats/helmets, and holdable accessories; quantity tiers 10/20/25/50/100. Base displayed price is US$3.95 before selecting category/count. M6H 2W9 shipping unresolved; the direct page displayed a U.S.-destination rate only. High-priority supplier candidate because the listing directly matches current component priorities."
+    },
+    {
+      "id": "ebay-232530670639",
+      "itemId": "232530670639",
+      "category": "LEGO Specialty Parts",
+      "searchName": "LEGO Specialty & Minifig Watch",
+      "title": "LEGO - Printed Tiles - PICK YOUR DESIGN - 2x2 Round Square Decorated Smooth Flat",
+      "marketplace": "eBay",
+      "url": "https://www.ebay.ca/itm/232530670639",
+      "listingType": "buy_it_now",
+      "status": "tracked",
+      "active": true,
+      "seller": "Bluebird Brick Designs",
+      "priceUsd": 0.99,
+      "shippingResolved": false,
+      "validationStatus": "live_canonical_verified",
+      "firstSeen": "2026-08-14T04:32:44-04:00",
+      "lastSeen": "2026-08-14T04:32:44-04:00",
+      "lastChanged": "2026-08-14T04:32:44-04:00",
+      "notes": "Fresh direct canonical verification showed 8 available and 1,003 sold. Seller says buy 4 or more tiles and get 50% off. Extremely high-priority diverse printed/design inventory including maps, computer monitor, gauges, newspaper, clock, pizza, vinyl record, warning triangle, symbols/logos and multiple sci-fi/fantasy graphics. The page showed US$25.80 international shipping to a non-M6H destination, so M6H shipping remains unresolved; use checkout or manual bundle before purchase."
     }
   ]
 }
