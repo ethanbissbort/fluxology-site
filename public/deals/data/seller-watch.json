@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-13T20:17:00-05:00",
+  "generatedAt": "2026-08-13T22:02:00-04:00",
   "searchName": "LEGO seller watch",
   "sellers": [
     {"seller":"tweedsidesales","displayName":"Jeremy Doherty","status":"watch","notes":"Canadian seller; repeated promising genuine LEGO inventory; negotiate package purchases."},
     {"seller":"Neekoushop","status":"watch"},
     {"seller":"Brick & Figs Beach Shack","status":"watch","notes":"High-volume category lots; prioritize quantity-tier and combined-shipping analysis."},
-    {"seller":"DASHBRICK","status":"watch","notes":"Shipping is listing-specific; only use checkout-confirmed combined shipping."},
+    {"seller":"DASHBRICK","status":"watch","notes":"Shipping is listing-specific; only use destination-resolved checkout-confirmed combined shipping. Strong candidate for manual/custom bundle negotiation across many small lots."},
     {"seller":"thegoldenbookmark","status":"watch"},
     {"seller":"dkbooksandtreasures","displayName":"DK Books and Treasures","status":"watch"},
     {"seller":"Double Duncan Treasures","status":"watch"},
@@ -15,21 +15,25 @@
     {"seller":"novanut74","displayName":"Scott's Toy Emporium","status":"watch"},
     {"seller":"audi2005store","status":"watch","notes":"Hair, headgear, accessories and body-part inventory."},
     {"seller":"saveourfaith","status":"watch","notes":"Track price evolution; seller has shown substantial markdowns and offers."},
-    {"seller":"stonemountainmarket","displayName":"The Stone Mountain Market","status":"watch","notes":"Broad resale seller in Belle Plaine, Minnesota with recurring genuine LEGO inventory, active combined-shipping support on eligible items, seller-initiated offers, and strong communication ratings. Deep-dive new LEGO inventory; prioritize bulk specialty-rich lots, minifigure/component lots, and negotiation/combined-shipping opportunities."},
-    {"seller":"Dumbosmother","status":"watch","notes":"High-priority specialist source for genuine printed/decorated tiles and specialty architectural/detail parts. Store advertises automatic combined-shipping discounts; prioritize printed tiles, maps, clocks, screens, gauges, signs, windows/glazing and scene-detail parts. Initial deep dive completed 2026-08-12; M6H 2W9 shipping must still be resolved per listing/cart before landed-cost ranking."},
-    {"seller":"luserena","status":"watch","notes":"Canadian seller in Hannon, Ontario with recurring genuine LEGO inventory across partial Star Wars sets, incomplete identified sets, minifigures, and small complete sets. Best Offer appears frequently. Initial deep dive completed 2026-08-12; prioritize incomplete identified sets, Star Wars donor lots, licensed minifigures, and package/combined-shipping negotiation."},
-    {"seller":"Building Brick","status":"watch","notes":"High-volume genuine LEGO specialist in Denver. Initial seller deep dive completed 2026-08-13 after the 2 lb translucent assortment offer. Strong recurring inventory in translucent/clear architectural parts, foliage, minifigure accessories, trap doors/frames, windshields and specialty-part lots. eBay International Shipping to M6H can erase value; prioritize seller offers, custom bundles/manual combined-shipping negotiation, and destination-resolved checkout."},
+    {"seller":"stonemountainmarket","displayName":"The Stone Mountain Market","status":"watch","notes":"Broad resale seller with recurring genuine LEGO inventory, seller-initiated offers, and combined-shipping support on eligible items. Deep-dive new LEGO inventory; prioritize specialty-rich bulk, minifigure/component lots, incomplete sets, and negotiation opportunities."},
+    {"seller":"Dumbosmother","status":"watch","notes":"High-priority specialist for genuine printed/decorated tiles and specialty architectural/detail parts. Initial deep dive completed 2026-08-12. M6H checkout test on 24 printed-tile variations produced US$48.10 shipping on US$36.34 merchandise, so advertised automatic combined shipping is not economically reliable for the Canadian cart; favor manual/custom bundle negotiation."},
+    {"seller":"luserena","status":"watch","notes":"Canadian seller in Hannon, Ontario with recurring genuine LEGO inventory across partial Star Wars sets, incomplete identified sets, minifigures, and small complete sets. Best Offer appears frequently. Prioritize incomplete identified sets, donor lots, licensed minifigures, and package negotiation."},
+    {"seller":"Building Brick","status":"watch","notes":"High-volume genuine LEGO specialist in Denver with recurring translucent/clear architectural parts, small-detail bulk, minifigure inventory and other specialty lots. Initial deep dive completed 2026-08-13. M6H eBay International Shipping can erase value; prioritize seller offers and custom/manual combined bundles. Important correction: the current 2 lb translucent seller-offer screenshot was US$37.99 + US$20.42 shipping; old item 297749025173 is ended and must not be reused as the current relist ID."},
+    {"seller":"The_Brick_World","status":"watch","notes":"High-volume LEGO specialist with 2,500+ lot catalog and repeated configurable minifigure-part/bulk listings. Audit deep dive completed 2026-08-13 after the user supplied the current multi-option listing. Strong categories include accessories, headgear, hair, torsos, heads, legs, random minifigures, animals, Castle/Star Wars/Ninjago selections, and bulk small-sort parts. Seller advertises free/additional-item shipping, but M6H checkout behavior must be tested; custom bundle/manual combined shipping is preferred when eBay scales badly."},
     {"seller":"Boutique Charlie Pooh","status":"provisional","notes":"Do not promote to permanent watch until repeated good inventory is confirmed."},
-    {"seller":"Mimi's 4 Munchkins","status":"provisional","notes":"Broad thrift/collectibles seller. Deep-dive whenever LEGO inventory looks promising; combined shipping is advertised on some listings."},
+    {"seller":"Mimi's 4 Munchkins","status":"provisional","notes":"Broad thrift/collectibles seller. Deep-dive whenever LEGO inventory looks promising; combined shipping is advertised on some listings but must be verified at M6H checkout."},
     {"seller":"theLEGOlady","status":"exclude","notes":"Exclude unless a future listing explicitly and verifiably ships to M6H 2W9."}
   ],
   "workflowRules": [
     "MANDATORY IMMEDIATE SELLER DEEP DIVE: whenever any seller is added to any watchlist status (permanent, watch, provisional, negotiation target, seller of interest, or equivalent), immediately in that same run search that seller's active LEGO inventory across all current purchase-priority categories. Do not defer the sweep, suggest that the user browse the store, or merely state that a future deep dive should occur.",
     "A seller may be added to a watchlist because of a user-supplied listing or an assistant-discovered listing; the same immediate deep-dive requirement applies in both cases.",
     "Deep dives must cover at minimum printed/decorated tiles, minifigure components/accessories, windows/doors/glazing, transparent/translucent parts, scene/interior/detail parts, incomplete identified sets, and seller-specific combined-shipping/quantity opportunities when relevant.",
-    "Only surface seller-deep-dive candidates after canonical live item validation and Canada-shipping validation. Mark M6H shipping unresolved if destination-resolved checkout shipping cannot be obtained.",
-    "Preserve historical and purchased records.",
-    "Canonical item validation is required before surfacing a live deal.",
+    "DISCOVERY IS NOT VALIDATION: search-result pages, stale/indexed pages, caches, category pages and snippets may identify a candidate/item ID but can never establish that a listing is live.",
+    "LIVE CANONICAL VERIFICATION: a live deal notification requires a current direct canonical item fetch that shows the exact item ID and present availability. Canonical URL existence alone is insufficient. If the direct fetch fails, is stale, shows ended/out-of-stock, redirects to an ended page, or cannot prove current availability, mark the record needs_revalidation/failed and do not notify.",
+    "CANADA SHIPPING HARD FILTER: only surface seller-deep-dive candidates that verifiably ship to Canada. Mark M6H shipping unresolved if destination-resolved checkout shipping cannot be obtained.",
+    "COMBINED SHIPPING IS UNTRUSTED UNTIL CHECKOUT: never infer a rational single-parcel rate merely because eBay or a seller says 'Save on combined shipping'. Test the actual M6H cart. If shipping scales irrationally, move to seller messaging for a manual invoice or custom/bundled listing.",
+    "RANDOM DIVERSITY HAS POSITIVE VALUE: do not penalize a genuine random assortment merely because it contains pieces outside the explicit purchase-priority list. Favor high variety, low duplication and imagination/inspiration value when the underlying price is reasonable.",
+    "Preserve purchased, expired, inactive and historical records in the appropriate operational/historical/calibration files.",
     "Use M6H 2W9 destination-resolved shipping when available; never substitute a U.S. proxy as Toronto shipping."
   ]
 }
