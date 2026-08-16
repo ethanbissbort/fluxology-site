@@ -1,6 +1,6 @@
-# Fluxology, Inc. Website
+# Fluxology Inc. Website
 
-Self-hosted corporate website and research-dashboard stack for Fluxology, Inc.
+Self-hosted corporate website and research-dashboard stack for Fluxology Inc.
 
 The public corporate site is a static Astro + Svelte build. A small contact API handles inquiries, and a separate dashboard API provides persistent live data for office-search, shopping/deal, and job-search dashboards.
 
