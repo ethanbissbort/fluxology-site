@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Fluxology Deals Feed v3.1",
+  "title": "Fluxology Deals Feed v3.2",
   "type": "object",
   "required": ["schemaVersion", "appVersion", "generatedAt", "listings"],
   "properties": {
@@ -17,14 +17,16 @@
         "required": ["id", "category", "title", "listingType"],
         "properties": {
           "id": {"type": "string"},
+          "recordType": {"enum": ["listing", "search_run", null]},
           "itemId": {"type": ["string", "null"]},
+          "marketplaceListingId": {"type": ["string", "null"]},
           "category": {"type": "string"},
           "searchName": {"type": ["string", "null"]},
           "title": {"type": "string"},
           "marketplace": {"type": ["string", "null"]},
           "url": {"type": ["string", "null"]},
           "imageUrl": {"type": ["string", "null"]},
-          "listingType": {"enum": ["auction", "buy_it_now"]},
+          "listingType": {"enum": ["auction", "buy_it_now", "classified", "search_run"]},
           "status": {"type": ["string", "null"]},
           "active": {"type": ["boolean", "null"]},
           "seller": {"type": ["string", "null"]},
@@ -51,6 +53,8 @@
           "proxyDestination": {"type": ["string", "null"]},
           "landedCadPerLb": {"type": ["number", "null"]},
           "allInCadPerLb": {"type": ["number", "null"]},
+          "priceCadPerLb": {"type": ["number", "null"]},
+          "effectiveCadPerLb": {"type": ["number", "null"]},
           "landedCadAtOffer": {"type": ["number", "null"]},
           "maxShippingCad": {"type": ["number", "null"]},
           "maxBidCad": {"type": ["number", "null"]},
@@ -64,6 +68,106 @@
           "firstSeen": {"type": ["string", "null"]},
           "lastSeen": {"type": ["string", "null"]},
           "lastChanged": {"type": ["string", "null"]},
+
+          "pickupOnly": {"type": ["boolean", "null"]},
+          "pickupArea": {"type": ["string", "null"]},
+          "distanceKm": {"type": ["number", "null"]},
+          "originPostalCode": {"type": ["string", "null"]},
+          "seenInRadiiKm": {
+            "type": ["array", "null"],
+            "items": {"type": "number"},
+            "uniqueItems": true
+          },
+          "searchProfileIds": {
+            "type": ["array", "null"],
+            "items": {"type": "string"},
+            "uniqueItems": true
+          },
+          "matchedQueries": {
+            "type": ["array", "null"],
+            "items": {"type": "string"},
+            "uniqueItems": true
+          },
+          "estimatedTripMinutes": {"type": ["number", "null"]},
+          "zipcarIncrementCad": {"type": ["number", "null"]},
+          "tollParkingCad": {"type": ["number", "null"]},
+          "pickupCostCad": {"type": ["number", "null"]},
+          "effectiveAcquisitionCad": {"type": ["number", "null"]},
+          "pickupCluster": {"type": ["string", "null"]},
+          "batchPickupCandidate": {"type": ["boolean", "null"]},
+
+          "photoCount": {"type": ["integer", "null"]},
+          "photoAssessment": {
+            "enum": ["sufficient", "promising_needs_1_2_photos", "impossible_to_evaluate", null]
+          },
+          "exactLotPhotos": {"type": ["boolean", "null"]},
+          "sellerPhotosRequested": {"type": ["boolean", "null"]},
+          "diversityGrade": {"enum": ["exceptional", "high", "medium", "low", "unknown", null]},
+          "decisionBasis": {
+            "enum": ["exceptional_commodity_price", "exceptional_compositional_diversity", "both", "ordinary", null]
+          },
+          "cleanoutSignalScore": {"type": ["integer", "null"], "minimum": 0, "maximum": 8},
+          "cleanoutSignals": {
+            "type": ["array", "null"],
+            "items": {"type": "string"},
+            "uniqueItems": true
+          },
+          "estimatedGenuinePct": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+          "contaminationStatus": {"type": ["string", "null"]},
+          "sellerContactStatus": {"type": ["string", "null"]},
+          "sellerContactedAt": {"type": ["string", "null"]},
+          "nextAction": {"type": ["string", "null"]},
+
+          "rejectionClass": {"enum": ["temporary_value", "hard_exclusion", null]},
+          "rejectionReason": {"type": ["string", "null"]},
+          "recheckAfter": {"type": ["string", "null"]},
+
+          "observationHistory": {
+            "type": ["array", "null"],
+            "items": {
+              "type": "object",
+              "required": ["observedAt"],
+              "properties": {
+                "observedAt": {"type": "string"},
+                "priceCad": {"type": ["number", "null"]},
+                "sellerOfferCad": {"type": ["number", "null"]},
+                "priceCadPerLb": {"type": ["number", "null"]},
+                "effectiveCadPerLb": {"type": ["number", "null"]},
+                "distanceKm": {"type": ["number", "null"]},
+                "seenInRadiiKm": {"type": ["array", "null"], "items": {"type": "number"}},
+                "photoAssessment": {"type": ["string", "null"]},
+                "diversityGrade": {"type": ["string", "null"]},
+                "status": {"type": ["string", "null"]},
+                "active": {"type": ["boolean", "null"]},
+                "note": {"type": ["string", "null"]}
+              },
+              "additionalProperties": true
+            }
+          },
+
+          "searchAudit": {
+            "type": ["object", "null"],
+            "properties": {
+              "profileId": {"type": ["string", "null"]},
+              "originPostalCode": {"type": ["string", "null"]},
+              "radiusKm": {"type": ["number", "null"]},
+              "startedAt": {"type": ["string", "null"]},
+              "completedAt": {"type": ["string", "null"]},
+              "resultRecordsInspected": {"type": ["integer", "null"], "minimum": 0},
+              "listingPagesOpened": {"type": ["integer", "null"], "minimum": 0},
+              "duplicates": {"type": ["integer", "null"], "minimum": 0},
+              "staleOrRemoved": {"type": ["integer", "null"], "minimum": 0},
+              "counterfeitOrCompatible": {"type": ["integer", "null"], "minimum": 0},
+              "outsidePracticalPickupArea": {"type": ["integer", "null"], "minimum": 0},
+              "detailedEvaluations": {"type": ["integer", "null"], "minimum": 0},
+              "surfacedCandidates": {"type": ["integer", "null"], "minimum": 0},
+              "toolCap": {"type": ["integer", "null"], "minimum": 0},
+              "truncated": {"type": ["boolean", "null"]},
+              "limitations": {"type": ["string", "null"]}
+            },
+            "additionalProperties": true
+          },
+
           "summary": {"type": ["string", "null"]},
           "notes": {"type": ["string", "null"]},
           "calculation": {"type": ["string", "null"]}
