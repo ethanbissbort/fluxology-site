@@ -19,24 +19,24 @@
 
   <main>
     <section class="hero">
-      <div><p class="eyebrow accent">CURATED SHOPPING SEARCHES</p><h2>High-signal deals, normalized into <span>one buying queue.</span></h2><p class="lede">LEGO bulk lots, minifigure lots, and future shopping searches share one feed. Shipping uncertainty stays explicit, auction ceilings are calculated, and local workflow notes survive feed refreshes.</p></div>
-      <div class="target"><small>Bulk LEGO target</small><strong>≤ $10 <span>CAD/LB</span></strong><small>Priority territory: ≤ $8/lb landed before tax</small></div>
+      <div><p class="eyebrow accent">CURATED SHOPPING SEARCHES</p><h2>High-signal deals, normalized into <span>one buying queue.</span></h2><p class="lede">eBay and Toronto/GTA Kijiji listings share one feed. Shipping uncertainty stays explicit, local-pickup economics include incremental Zipcar time rather than imaginary “free pickup,” and every 45 km / 65 km Kijiji pass carries auditable search coverage.</p></div>
+      <div class="target"><small>Bulk LEGO local trigger</small><strong>≤ $7 <span>CAD/LB</span></strong><small>Higher prices can qualify on exceptional compositional diversity.</small></div>
     </section>
 
     <section class="stats">
-      <article class="stat"><span class="eyebrow">ACTIVE</span><b id="sActive">—</b><small>curated listings</small></article>
-      <article class="stat"><span class="eyebrow">≤ $8/LB</span><b id="sKiller">—</b><small>high-priority resolved deals</small></article>
-      <article class="stat"><span class="eyebrow">≤ $10/LB</span><b id="sGood">—</b><small>resolved qualifying deals</small></article>
-      <article class="stat"><span class="eyebrow">UNRESOLVED</span><b id="sUnknown">—</b><small>shipping needs confirmation</small></article>
+      <article class="stat"><span class="eyebrow">ACTIVE</span><b id="sActive">—</b><small>curated listing records</small></article>
+      <article class="stat"><span class="eyebrow">HIGH PRIORITY</span><b id="sKiller">—</b><small>price and/or diversity qualifiers</small></article>
+      <article class="stat"><span class="eyebrow">LOCAL PICKUP</span><b id="sGood">—</b><small>active classified listings</small></article>
+      <article class="stat"><span class="eyebrow">45 / 65 KM AUDIT</span><b id="sUnknown">—</b><small>latest records inspected by pass</small></article>
     </section>
 
     <section class="controls" aria-label="Listing filters">
-      <label class="search">⌕ <input id="q" type="search" aria-label="Search listings" placeholder="Search title, seller, notes, category…"></label>
+      <label class="search">⌕ <input id="q" type="search" aria-label="Search listings" placeholder="Search title, seller, notes, area, category…"></label>
       <select id="category" aria-label="Shopping search"><option value="">All searches</option></select>
-      <select id="type" aria-label="Listing type"><option value="">All listing types</option><option value="auction">Auctions</option><option value="buy_it_now">Buy It Now</option></select>
-      <select id="deal" aria-label="Deal status"><option value="">All deal statuses</option><option value="8">≤ $8/lb</option><option value="10">≤ $10/lb</option><option value="unresolved">Shipping unresolved</option></select>
+      <select id="type" aria-label="Listing type"><option value="">All listing types</option><option value="auction">Auctions</option><option value="buy_it_now">Buy It Now</option><option value="classified">Local classified</option></select>
+      <select id="deal" aria-label="Deal status"><option value="">All deal statuses</option><option value="high">High priority</option><option value="7">≤ $7/lb local</option><option value="photos">Needs seller photos</option><option value="temporary">Temporary value rejects</option><option value="unresolved">Shipping unresolved</option></select>
       <select id="workflow" aria-label="Workflow status"><option value="">All workflow states</option><option value="unreviewed">Unreviewed</option><option value="watch">Watch</option><option value="saved">Saved</option><option value="purchased">Purchased</option><option value="rejected">Rejected</option></select>
-      <select id="sort" aria-label="Sort listings"><option value="newest">Newest</option><option value="price">Best landed C$/lb</option><option value="ending">Ending soon</option><option value="weight">Largest lots</option></select>
+      <select id="sort" aria-label="Sort listings"><option value="newest">Newest</option><option value="price">Best effective C$/lb</option><option value="distance">Nearest pickup</option><option value="ending">Ending soon</option><option value="weight">Largest lots</option></select>
       <label class="check" for="activeOnly"><input id="activeOnly" type="checkbox" checked> Active only</label>
     </section>
 
@@ -45,7 +45,7 @@
     <section id="empty" class="empty" hidden><h3>No matching listings</h3><p>Change the filters or wait for the next curated search run.</p></section>
   </main>
 
-  <footer><span>Fluxology Deals v3</span><span>Feed refreshes every hour while this tab is open.</span></footer>
+  <footer><span>Fluxology Deals v3.2</span><span>Feed refreshes every hour while this tab is open.</span></footer>
 </div>
 
 <dialog id="dialog"><div class="ds"><button class="close" id="close" aria-label="Close listing details" autofocus>×</button><div id="detail"></div></div></dialog>

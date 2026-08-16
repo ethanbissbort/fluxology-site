@@ -20,7 +20,14 @@ export const BASE_ENV = Object.freeze({
 });
 
 export function testConfig(overrides = {}) {
-  return loadConfig({ ...BASE_ENV, ...overrides });
+  const env = { ...BASE_ENV, ...overrides };
+  // Contract fixtures intentionally use fixed historical timestamps. Keep that
+  // deterministic data valid in NODE_ENV=test without weakening the real
+  // connector's seven-day default or 30-day non-test hard ceiling.
+  if (String(env.NODE_ENV || '').toLowerCase() === 'test' && env.MCP_MAX_OBSERVED_AGE_MS == null) {
+    env.MCP_MAX_OBSERVED_AGE_MS = '31536000000000';
+  }
+  return loadConfig(env);
 }
 
 export const EMPTY_FEEDS = Object.freeze({

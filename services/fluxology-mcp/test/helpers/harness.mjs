@@ -142,6 +142,10 @@ export async function startHarness({ portBase = 8200, mcpEnv = {}, tokens = TOKE
       JOBS_INGEST_TOKEN: tokens.jobs ?? '',
       // Reads must always hit the live feed in tests.
       DASHBOARD_FEED_CACHE_TTL_MS: '0',
+      // Integration fixtures use fixed observedAt values. This test-only
+      // override avoids calendar rot; production keeps the normal seven-day
+      // default and 30-day hard ceiling.
+      MCP_MAX_OBSERVED_AGE_MS: '31536000000000',
       LOG_LEVEL: 'debug',
       ...mcpEnv,
     },
