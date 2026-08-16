@@ -146,6 +146,7 @@ export const deals = {
     ];
     const warnings = [];
     const isSearchRun = merged.recordType === 'search_run' || merged.listingType === 'search_run';
+    const market = marketplacePrefix(merged.marketplace);
 
     if (isNew) {
       for (const field of ['category', 'searchName', 'title']) {
@@ -155,6 +156,16 @@ export const deals = {
       if (!LISTING_TYPES.has(merged.listingType)) {
         errors.push('listingType: a new deals record requires "auction", "buy_it_now", "classified", or "search_run"');
       }
+    }
+
+    // `classified` is a first-class listing type, but it is not a generic escape
+    // hatch for shipped marketplaces. Keep marketplace semantics coherent so an
+    // existing eBay record cannot be re-labelled as a Kijiji-style local ad.
+    if (market === 'ebay' && merged.listingType === 'classified') {
+      errors.push('listingType: eBay records cannot use "classified"');
+    }
+    if (market === 'kijiji' && !isSearchRun && merged.listingType && merged.listingType !== 'classified') {
+      errors.push('listingType: Kijiji listing records must use "classified"');
     }
 
     if (isSearchRun) {
