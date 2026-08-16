@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-16T04:39:00-05:00",
+  "origin": {
+    "postalCode": "M6H 2W9",
+    "city": "Toronto",
+    "province": "ON",
+    "country": "CA"
+  },
+  "profiles": [
+    {
+      "id": "kijiji-lego-m6h2w9-45km",
+      "marketplace": "Kijiji",
+      "searchName": "Kijiji LEGO Local Watch — 45 km",
+      "enabled": true,
+      "requiredPass": true,
+      "radiusKm": 45,
+      "originPostalCode": "M6H 2W9"
+    },
+    {
+      "id": "kijiji-lego-m6h2w9-65km",
+      "marketplace": "Kijiji",
+      "searchName": "Kijiji LEGO Local Watch — 65 km",
+      "enabled": true,
+      "requiredPass": true,
+      "radiusKm": 65,
+      "originPostalCode": "M6H 2W9"
+    }
+  ],
+  "executionRules": {
+    "runProfilesIndependently": true,
+    "deduplicateOnlyAfterBothPasses": true,
+    "preservePassMembership": true,
+    "distanceBandsKm": [45, 65],
+    "queries": [
+      "lego",
+      "lego lot",
+      "lego bulk",
+      "lego bin",
+      "lego box",
+      "lego tote",
+      "lego bricks",
+      "lego pieces",
+      "mixed lego",
+      "kids lego",
+      "old lego",
+      "lego collection",
+      "lego toys",
+      "legos"
+    ],
+    "audit": {
+      "required": true,
+      "recordType": "search_run",
+      "reportResultRecordsInspected": true,
+      "reportListingPagesOpened": true,
+      "reportDuplicates": true,
+      "reportStaleOrRemoved": true,
+      "reportCounterfeitOrCompatible": true,
+      "reportOutsidePracticalPickupArea": true,
+      "reportDetailedEvaluations": true,
+      "reportSurfacedCandidates": true,
+      "reportToolCapsAndTruncation": true,
+      "neverClaimUninspectedCoverage": true
+    }
+  },
+  "evaluationRules": {
+    "ordinaryBulkPriority": "low",
+    "bulkQualificationDoors": [
+      "exceptional_commodity_price",
+      "exceptional_compositional_diversity"
+    ],
+    "closeInspectionTriggerCadPerLb": 7,
+    "specialtyHeavyLotsMayExceedPriceTrigger": true,
+    "specialtyPriorities": [
+      "printed_or_decorated_tiles",
+      "minifigure_accessories_and_headgear",
+      "windows_and_doors",
+      "transparent_or_translucent_architectural_parts",
+      "scene_detail_and_interior_parts",
+      "greenery_and_foliage",
+      "incomplete_identified_sets"
+    ],
+    "poorMerchandisingRaisesInvestigationPriority": true,
+    "cleanoutSignals": [
+      "pickup_only",
+      "suburban_location",
+      "vague_title",
+      "one_or_two_ordinary_phone_photos",
+      "large_tote_or_bin_visible",
+      "low_round_number_price",
+      "seller_clearing_childrens_items_or_household_goods",
+      "no_attempt_to_individually_value_lego"
+    ],
+    "photoAssessmentStates": [
+      "sufficient",
+      "promising_needs_1_2_photos",
+      "impossible_to_evaluate"
+    ],
+    "preferredFollowUpPhotos": [
+      "entire_lot_or_all_containers",
+      "close_up_below_top_layer"
+    ],
+    "askApproximateWeightOnlyWhenUseful": true,
+    "exactLotPhotoPreferredOverStockPhoto": true,
+    "checkSellerOtherListings": true,
+    "considerWholeSellerBundle": true,
+    "preserveTemporaryValueRejects": true
+  },
+  "pickupEconomics": {
+    "transportMode": "Zipcar",
+    "fuelIncrementCad": 0,
+    "fuelIncludedInMembership": true,
+    "effectiveAcquisitionFormula": "purchase price + incremental Zipcar time cost + tolls + parking",
+    "doNotAssumePickupIsFree": true,
+    "clusterNearbyPickups": true,
+    "unknownZipcarRateMustRemainNull": true
+  }
+}
