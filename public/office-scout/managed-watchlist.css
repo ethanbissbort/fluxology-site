@@ -1,0 +1,17 @@
+.managed-watchlist{padding:18px;margin-bottom:14px;background:linear-gradient(135deg,#f6fbfc,#fff)}
+.managed-watchlist-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:12px}
+.managed-watchlist-head h3{margin:3px 0 0;font-size:19px}
+.managed-watchlist-meta{font-size:11px;color:var(--muted);text-align:right}
+.managed-provider-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.managed-provider{border:1px solid #cce4e9;background:#fbfeff;border-radius:12px;padding:13px 14px;min-width:0}
+.managed-provider-head{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.managed-name{font-weight:900;font-size:14px;line-height:1.25}
+.managed-meta{font-size:10px;color:var(--accent);font-weight:800;margin-top:3px;letter-spacing:.04em}
+.managed-link{font-size:10px;color:var(--accent);font-weight:850;text-decoration:none;white-space:nowrap}
+.managed-link:hover{text-decoration:underline}
+.managed-price{font-size:12px;line-height:1.45;margin-top:10px;font-weight:750}
+.managed-detail,.managed-outreach{font-size:10.5px;color:var(--muted);line-height:1.45;margin-top:6px}
+.managed-detail b,.managed-outreach b{color:var(--ink)}
+.managed-muted{opacity:.62;background:#f5f6f7;border-style:dashed}
+@media(max-width:1000px){.managed-provider-items{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.managed-watchlist-head{align-items:start;flex-direction:column}.managed-watchlist-meta{text-align:left}.managed-provider-items{grid-template-columns:1fr}}
