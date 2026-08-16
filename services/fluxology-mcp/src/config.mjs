@@ -128,6 +128,7 @@ const RELAXED_ENVIRONMENTS = Object.freeze(['development', 'test', 'local']);
 export function loadConfig(env = process.env) {
   const nodeEnv = str(env, 'NODE_ENV', 'development');
   const production = !RELAXED_ENVIRONMENTS.includes(nodeEnv.toLowerCase());
+  const testMode = nodeEnv.toLowerCase() === 'test';
 
   const publicUrlRaw = str(env, 'MCP_PUBLIC_URL', 'http://127.0.0.1:8083/mcp');
   const parsedPublic = normalizeBaseUrl(publicUrlRaw, 'MCP_PUBLIC_URL');
@@ -296,8 +297,19 @@ export function loadConfig(env = process.env) {
       stampObservedAt: bool(env, 'MCP_STAMP_OBSERVED_AT', true),
       /** Reject observedAt further in the future than this. */
       maxClockSkewMs: num(env, 'MCP_MAX_OBSERVED_SKEW_MS', 300_000, 0, 3_600_000),
-      /** Reject observedAt older than this. */
-      maxObservedAgeMs: num(env, 'MCP_MAX_OBSERVED_AGE_MS', 604_800_000, 60_000, 2_592_000_000),
+      /**
+       * Reject observedAt older than this. Production/local development retain
+       * the 30-day hard ceiling. Test mode may deliberately use a much larger
+       * ceiling so fixed historical fixtures do not begin failing solely as the
+       * calendar advances; this does not change the seven-day default.
+       */
+      maxObservedAgeMs: num(
+        env,
+        'MCP_MAX_OBSERVED_AGE_MS',
+        604_800_000,
+        60_000,
+        testMode ? 31_536_000_000_000 : 2_592_000_000,
+      ),
     },
 
     /**
