@@ -10,6 +10,7 @@
   <title>Fluxology Office Scout v2.5</title>
   <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./managed-watchlist.css">
 </head>
 <body>
   <div class="shell">
@@ -19,7 +20,7 @@
       <a class="brand" href="./" aria-label="Fluxology Office Scout home">
         <img src="/favicon.svg" alt="">
         <div>
-          <div class="eyebrow">FLUXOLOGY, INC.</div>
+          <div class="eyebrow">FLUXOLOGY INC.</div>
           <h1>Office Scout <span class="version">v2.5</span></h1>
         </div>
       </a>
@@ -39,10 +40,10 @@
         <div>
           <p class="eyebrow accent">PRIVATE OFFICE SEARCH · GTA</p>
           <h2>Office acquisition <span>command centre.</span></h2>
-          <p class="lede">Curated Toronto-area private offices under a hard CAD $850 all-in ceiling. Mandatory costs stay unresolved until verified; your workflow state and notes remain local to this browser.</p>
+          <p class="lede">Curated Toronto-area private offices. Non-managed space uses a hard CAD $850 all-in ceiling; managed-office companies are evaluated on service-adjusted value, operational certainty, network access, and included amenities. Mandatory costs stay unresolved until verified; your workflow state and notes remain local to this browser.</p>
         </div>
         <div class="budget">
-          <small>Hard monthly ceiling</small>
+          <small>Non-managed hard monthly ceiling</small>
           <strong>$850 <span>CAD</span></strong>
           <small>HST · TMI · utilities · internet · cleaning · mandatory fees</small>
         </div>
@@ -54,6 +55,17 @@
         <article class="stat"><span class="eyebrow">NEEDS VERIFICATION</span><b id="sUnknown">—</b><small>unknown recurring costs</small></article>
         <article class="stat"><span class="eyebrow">PIPELINE</span><b id="sPipeline">—</b><small>saved · contacted · tour booked</small></article>
         <article class="stat"><span class="eyebrow">NEW / CHANGED</span><b id="sChanged">—</b><small>within 7 days</small></article>
+      </section>
+
+      <section class="panel managed-watchlist" id="managedProviderWatchlist" aria-labelledby="managedProviderTitle">
+        <div class="managed-watchlist-head">
+          <div>
+            <span class="eyebrow accent">MANAGED-OFFICE RESEARCH</span>
+            <h3 id="managedProviderTitle">Managed-office watchlist · loading</h3>
+          </div>
+          <div class="managed-watchlist-meta" id="managedProviderMeta">Loading provider research feed…</div>
+        </div>
+        <div id="managedProviderItems" class="managed-provider-items"></div>
       </section>
 
       <section class="queue panel" id="verificationQueue" aria-labelledby="verificationTitle">
@@ -114,7 +126,7 @@
 
     <footer>
       <span>Fluxology Office Scout v2.5</span>
-      <span>Feed refreshes hourly · personal workflow data is stored in this browser.</span>
+      <span>Listing feed and managed-provider research refresh independently · personal workflow data is stored in this browser.</span>
     </footer>
   </div>
 
@@ -129,6 +141,7 @@
     <svg class="spark" viewBox="0 0 180 46" preserveAspectRatio="none" role="img" aria-label="Price history"></svg>
   </template>
 
+  <script src="./managed-watchlist.js" defer></script>
   <script src="./app.js" defer></script>
 </body>
 </html>
