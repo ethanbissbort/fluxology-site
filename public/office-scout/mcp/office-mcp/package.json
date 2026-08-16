@@ -1,0 +1,19 @@
+{
+  "name": "fluxology-office-mcp",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Fluxology Office MCP — evidence-first office-space research, scoring, outreach preparation and dashboard sync. Zero runtime dependencies.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "fluxology-office-mcp": "bin/office-mcp.mjs"
+  },
+  "scripts": {
+    "start": "node bin/office-mcp.mjs",
+    "start:http": "node bin/office-mcp-http.mjs",
+    "approve": "node bin/approve.mjs",
+    "test": "node --test test/"
+  }
+}
