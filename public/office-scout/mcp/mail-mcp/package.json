@@ -1,0 +1,18 @@
+{
+  "name": "fluxology-mail-mcp",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Fluxology Mail MCP — freeze, human-approve, send-exactly-once email with thread tracking. Zero runtime dependencies.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "fluxology-mail-mcp": "bin/mail-mcp.mjs"
+  },
+  "scripts": {
+    "start": "node bin/mail-mcp.mjs",
+    "approve": "node bin/approve.mjs",
+    "test": "node --test \"test/**/*.test.mjs\""
+  }
+}
