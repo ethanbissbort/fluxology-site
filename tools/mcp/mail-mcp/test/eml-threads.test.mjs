@@ -98,7 +98,16 @@ function mockSmtp({ rejectRcpt = false, dieAfterData = false } = {}) {
       for (const line of text.split('\r\n').filter(Boolean)) {
         received.commands.push(line);
         if (line.startsWith('EHLO')) socket.write('250-mock\r\n250 AUTH PLAIN\r\n');
-        else if (line.startsWith('AUTH PLAIN')) socket.write('235 ok\r\n');
+        else if (line.startsWith('AUTH PLAIN')) {
+          // Verify the SASL PLAIN payload like a real server (RFC 4616:
+          // authzid NUL authcid NUL passwd). This mock used to accept any
+          // payload, which meant a wrong separator in the client could never
+          // fail the suite.
+          const decoded = Buffer.from(line.slice('AUTH PLAIN '.length), 'base64').toString('utf8');
+          const parts = decoded.split('\u0000');
+          if (parts.length === 3 && parts[1] && parts[2]) socket.write('235 ok\r\n');
+          else socket.write('535 malformed PLAIN payload\r\n');
+        }
         else if (line.startsWith('MAIL FROM')) socket.write('250 ok\r\n');
         else if (line.startsWith('RCPT TO')) socket.write(rejectRcpt ? '550 no such user\r\n' : '250 ok\r\n');
         else if (line === 'DATA') {

@@ -6,15 +6,16 @@ For first deployment and operations, use [`docs/DEPLOYMENT-VPS.md`](./docs/DEPLO
 
 ## Runtime architecture
 
-`docker-compose.yml` defines three containers:
+`docker-compose.yml` defines four containers:
 
 | Service | Container | Internal port | Host port |
 |---|---|---:|---|
 | `apache` | `fluxology-apache` | 6080 | none |
 | `contact-api` | `fluxology-contact-api` | 8081 | none |
 | `dashboard-api` | `fluxology-dashboard-api` | 8082 | none |
+| `mcp` | `fluxology-mcp` | 8083 | none |
 
-All three join the external Docker network `fluxology-edge`. The VPS-wide Caddy container also joins that network and is the only component that publishes ports 80/443.
+All four join the external Docker network `fluxology-edge`. The VPS-wide Caddy container also joins that network and is the only component that publishes ports 80/443.
 
 ## Apache image
 

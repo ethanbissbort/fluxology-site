@@ -47,11 +47,22 @@ export function formatAddress({ name, email }) {
   return `${safe} <${email}>`;
 }
 
+/**
+ * Header-injection guard. From/To/Cc are the only headers built from raw
+ * caller strings (Subject goes through headerValue(), which base64-encodes
+ * anything containing CR/LF; In-Reply-To/References come from parsed headers
+ * whose unfolding already collapsed CRLF). A recipient like
+ * "a@b.c\r\nBcc: attacker@evil" must never start a new physical header line.
+ */
+function stripHeaderCtl(value) {
+  return String(value).replace(/[\u0000-\u001f\u007f]+/g, ' ').trim();
+}
+
 export function renderEml({ from, to = [], cc = [], subject = '', messageId, inReplyTo = null, references = [], date = new Date(), bodyText = '' }) {
   const headers = [];
-  headers.push(foldHeader('From', from));
-  if (to.length) headers.push(foldHeader('To', to.join(', ')));
-  if (cc.length) headers.push(foldHeader('Cc', cc.join(', ')));
+  headers.push(foldHeader('From', stripHeaderCtl(from)));
+  if (to.length) headers.push(foldHeader('To', to.map(stripHeaderCtl).join(', ')));
+  if (cc.length) headers.push(foldHeader('Cc', cc.map(stripHeaderCtl).join(', ')));
   headers.push(foldHeader('Subject', headerValue(subject)));
   headers.push(`Date: ${date.toUTCString().replace('GMT', '+0000')}`);
   headers.push(`Message-ID: ${messageId}`);

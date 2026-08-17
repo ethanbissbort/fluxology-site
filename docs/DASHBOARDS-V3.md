@@ -105,9 +105,10 @@ The Fluxology Compose project contains:
 
 - `fluxology-apache` — static Astro site and dashboard shells, internal port 6080;
 - `fluxology-contact-api` — contact form API, internal port 8081;
-- `fluxology-dashboard-api` — dashboard feed/read/write service, internal port 8082.
+- `fluxology-dashboard-api` — dashboard feed/read/write service, internal port 8082;
+- `fluxology-mcp` — authenticated MCP write bridge for model clients, internal port 8083.
 
-All three join the external `fluxology-edge` Docker network and publish no host ports. The VPS-wide Caddy container is managed separately from this repository and joins the same network.
+All four join the external `fluxology-edge` Docker network and publish no host ports. The VPS-wide Caddy container is managed separately from this repository and joins the same network.
 
 See:
 

@@ -7,7 +7,7 @@
 | Legal entity | Fluxology Inc. |
 | Primary operator | Single-user / owner-operated workflow |
 | Protocol basis | MCP 2026-07-28 (modern) with legacy `initialize` compatibility (2025-11-25 … 2024-11-05); stdio primary, minimal Streamable HTTP optional |
-| Deliverables | Two MCP servers: `fluxology-office-mcp` (Part A) and `fluxology-mail-mcp` (Part B), delivered under `fluxology-site/public/office-scout/mcp/` |
+| Deliverables | Two MCP servers: `fluxology-office-mcp` (Part A) and `fluxology-mail-mcp` (Part B), delivered under `fluxology-site/tools/mcp/` (relocated from `public/office-scout/mcp/` on 2026-08-17) |
 
 **Core operating rule (unchanged from v1):**
 Research broadly. Preserve evidence. Distinguish product types exactly. Prepare outreach deliberately. Require human authorization for external side effects.
@@ -86,16 +86,15 @@ Why Mail stays separate (unchanged rationale): Office MCP never holds mail crede
 ### 0.5 Runtime, dependencies, and repository layout (new in v2)
 
 - **Runtime:** Node.js ≥ 22, ESM (`.mjs`). Matches the host repository (`engines.node >= 22.12`, existing services).
-- **Dependencies:** none at runtime. The MCP protocol core, JSON Schema checking (subset), fetching, hashing, `.eml` composition, and persistence use the Node standard library. Rationale: the delivery directory is web-served and copied into the site image, so a `node_modules` tree is both an image-bloat and supply-chain hazard; and `node --test` runs with no install step.
-- **Delivery layout** (all paths relative to `fluxology-site/public/office-scout/mcp/`):
+- **Dependencies:** none at runtime. The MCP protocol core, JSON Schema checking (subset), fetching, hashing, `.eml` composition, and persistence use the Node standard library. (Historical rationale: the original delivery directory under `public/` was web-served and copied into the site image. The August 17, 2026 audit moved the packages to `tools/mcp/`, outside the web-served tree, so the zero-dependency constraint is now a simplicity choice rather than a security requirement.)
+- **Delivery layout** (all paths relative to `fluxology-site/tools/mcp/`; relocated from `public/office-scout/mcp/` on 2026-08-17):
 
 ```text
 mcp/
 ├── README.md                  # quickstart + client configuration
 ├── docs/
 │   ├── DESIGN-AUDIT-v1.md     # audit of v1 (input to this document)
-│   ├── SDD-v2.md              # this document
-│   └── Fluxology_Office_MCP_SDD_v2.docx
+│   └── SDD-v2.md              # this document
 ├── mcp-core/                  # shared, dependency-free library (not a server)
 │   ├── jsonrpc.mjs            # framing, dispatch, dual-era protocol server
 │   ├── schema.mjs             # JSON Schema subset validator (inputs)

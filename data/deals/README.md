@@ -1,8 +1,17 @@
 # Fluxology Deals data layout
 
-## Files
+This directory holds agent working state for the Deals search workflows.
+It lives at the repo root — deliberately **outside `public/`** — so none of
+these files are copied into the built site or served on the web. Only the
+operational snapshot and its schema stay web-served, because the dashboard
+and the feed sync need them:
 
-- `listings.json` — current operational Fluxology Deals schema-v3 bootstrap snapshot. It is intentionally pretty-printed so connector reads can retrieve bounded line ranges instead of one giant line. Keep current tracked records and purchased records here; do not use it as a dumping ground for stale/calibration-only leads.
+- `public/deals/data/listings.json` — the served bootstrap snapshot
+- `public/deals/data/schema.json` — the canonical v3.2 schema
+
+## Files (this directory)
+
+- `../../public/deals/data/listings.json` — current operational Fluxology Deals schema-v3 bootstrap snapshot (web-served; see above). It is intentionally pretty-printed so connector reads can retrieve bounded line ranges instead of one giant line. Keep current tracked records and purchased records there; do not use it as a dumping ground for stale/calibration-only leads.
 - `historical-listings.json` — readable inactive, stale, failed-validation and legacy records that are no longer part of the operational snapshot or require historical preservation.
 - `unresolved-listings.json` — quarantine for valuable user-supplied live screenshots/short-link observations whose exact current canonical marketplace listing ID cannot yet be safely verified. These records are not eligible for live-deal notifications or active dashboard status until canonicalized.
 - `archive/listings-2026-08-12-pre-rebuild.json` — exact blob-level backup of the pre-rebuild `listings.json`.

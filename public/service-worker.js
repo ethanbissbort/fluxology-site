@@ -268,6 +268,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Dashboard data feeds are network-only, structurally. The dashboards
+  // already bypass this worker by fetching with a ?v= cache-buster (query
+  // strings fall out below), but that is a convention spread across four
+  // fetch call sites in three apps — if any of them ever drops the query
+  // string, or a crawler/user hits a feed URL directly, the feed would land
+  // in the stale-while-revalidate cache and be served stale until the next
+  // CACHE_VERSION bump. Decision-support data must never be cached here.
+  if (url.pathname.includes('/data/')) {
+    return;
+  }
+
   // Navigation / HTML requests: network-first so content and security fixes
   // reach already-visited clients, falling back to cache only when offline.
   const isNavigation =

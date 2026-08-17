@@ -14,7 +14,10 @@ Files:
 - `data/listings.json` — checked-in bootstrap/local-development listing snapshot
 - `data/schema.json` — listing feed contract
 - `data/managed-providers.json` — managed-office provider watchlist, preliminary value scores and outreach priorities
-- `mcp/` — the Fluxology Office & Mail MCP servers (research/scoring/outreach + human-approved email), their design audit and SDD v2; see `mcp/README.md`. Zero-dependency Node ≥ 22 packages; their runtime data lives outside this web-served tree by design.
+The Fluxology Office & Mail MCP servers (research/scoring/outreach +
+human-approved email) live at `tools/mcp/` at the repo root — deliberately
+**outside this web-served tree**, so their source, tests and internal design
+docs are never copied into the built site. See `tools/mcp/README.md`.
 
 ## Production feed
 

@@ -41,6 +41,46 @@ jobs:
         working-directory: services/contact-api
         run: npm test
 
+  dashboard-api-tests:
+    name: dashboard-api test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # No `cache: npm` — this service has zero dependencies and no
+          # package-lock.json for the cache key to hash.
+
+      # The service that owns the dashboard_data volume's write path. Its
+      # 40-case suite (seeding, corrupt-feed quarantine, CAS conflicts, audit
+      # rotation, shutdown draining) existed since mid-August but was run by
+      # nothing: mcp-connector-tests.yml *triggers* on this path yet only runs
+      # the connector's own tests.
+      - name: Run tests
+        working-directory: services/dashboard-api
+        run: npm test
+
+  office-mail-mcp-tests:
+    name: Office & Mail MCP test suites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # Zero-dependency packages (tools/mcp): no lockfiles, nothing to cache.
+
+      - name: office-mcp tests
+        working-directory: tools/mcp/office-mcp
+        run: npm test
+
+      - name: mail-mcp tests
+        working-directory: tools/mcp/mail-mcp
+        run: npm test
+
   build:
     name: Site build
     runs-on: ubuntu-latest
@@ -67,10 +107,49 @@ jobs:
           for f in dist/index.html dist/404.html dist/robots.txt \
                    dist/apps/index.html dist/support/index.html \
                    dist/privacy/index.html dist/terms/index.html \
+                   dist/fabrication/index.html dist/3d-lab/index.html \
+                   dist/greenhouse/index.html dist/orchard/index.html \
+                   dist/contact-received/index.html \
                    dist/office-scout/index.html dist/deals/index.html dist/jobs/index.html; do
             test -s "$f" || { echo "missing or empty: $f" >&2; exit 1; }
           done
           echo "build output looks complete"
+
+      # Everything in dist/ is served on the public internet. Until 2026-08-17
+      # the build shipped two MCP servers' source, their internal design docs
+      # (including a .docx SDD), and the deals agent-state JSON — the operator's
+      # postal code, a third party's name, and negotiation records — because
+      # nothing asserted what dist/ may contain. Apache now denies .mjs/.docx
+      # as a second layer (docker/apache/httpd.conf), but the build failing
+      # here is the layer that catches the mistake at PR time.
+      - name: Assert the build contains no server source or agent-state files
+        run: |
+          set -euo pipefail
+          bad=0
+          hits="$(find dist -name '*.mjs' -o -name '*.docx' -o -name 'package.json' \
+                    -o -name 'seller-watch.json' -o -name 'search-profiles.json' \
+                    -o -name 'unresolved-listings.json' -o -name 'shipping-calibration.json' \
+                    -o -name 'historical-listings.json' | head -20)"
+          if [ -n "$hits" ]; then
+            echo '::error::dist/ contains files that must never be published:' >&2
+            echo "$hits" >&2
+            bad=1
+          fi
+          if [ -d dist/office-scout/mcp ]; then
+            echo '::error::dist/office-scout/mcp exists — the MCP tree leaked back into public/' >&2
+            bad=1
+          fi
+          if [ -d dist/deals/data/archive ]; then
+            echo '::error::dist/deals/data/archive exists — archived snapshots leaked back into public/' >&2
+            bad=1
+          fi
+          exit "$bad"
+
+      # `astro build` does not type-check. tsc covers the .ts data modules
+      # (dbaPlans, appPages, softwareProducts); it needs the build to have run
+      # first so .astro/types.d.ts exists.
+      - name: Type-check
+        run: npx tsc --noEmit
 
   edge-config:
     name: Edge and origin configuration
@@ -120,8 +199,8 @@ jobs:
       - name: Syntax-check the feed-sync helper
         run: bash -n .github/scripts/post-feed.sh
 
-# Not wired up yet: services/fluxology-mcp has a `npm test` suite of its own.
-# It was red at the time this workflow was written, so adding it here would
-# have shipped a permanently-failing pipeline. Add a job identical to
-# contact-api-tests, pointing at services/fluxology-mcp, once that suite is
-# green — a test suite nothing runs is the problem this file exists to fix.
+# services/fluxology-mcp's suite is NOT run here — it runs in its own
+# workflow, .github/workflows/mcp-connector-tests.yml, together with the
+# connector's packaging/deployment invariants. Every other suite in the
+# repository runs above; if a new package gains tests, its job belongs in
+# this file unless it needs the connector workflow's Docker assertions.

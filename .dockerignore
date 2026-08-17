@@ -71,12 +71,29 @@ ASTRO-MIGRATION.md
 claude.md
 docs
 
-# Tests (if any)
-tests
-__tests__
-*.test.js
-*.spec.js
+# Tests. `**/`-anchored (see the node_modules note above) and matching the
+# naming this repo actually uses: every suite lives in a `test/` directory
+# (singular) with `*.test.mjs` files. The previous patterns (`tests`,
+# `*.test.js`) matched nothing, which is how the office-scout MCP test files
+# ended up inside the published site image until 2026-08-17.
+**/test
+**/tests
+**/__tests__
+**/*.test.js
+**/*.test.mjs
+**/*.spec.js
 coverage
+
+# Operator-local tooling and agent working state: never needed in any image.
+tools
+data
+
+# Credential material must never enter a build context (docker-compose.yml
+# documents a ./secrets/ migration; mirror of the .gitignore entries).
+secrets
+**/secrets
+**/*.pem
+**/*.key
 
 # CI/CD
 .github
