@@ -3,14 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0b1a2c">
+  <meta name="theme-color" content="#0B1520">
   <meta name="description" content="Fluxology Office Scout — curated GTA private-office acquisition dashboard.">
   <!-- Internal research tool: never index it, including at the fluxology.ca/office-scout/ shadow path. -->
   <meta name="robots" content="noindex">
   <title>Fluxology Office Scout v2.5</title>
   <link rel="icon" href="/favicon.svg">
+
+  <!-- Fluxology corporate theme: Outfit headings, Open Sans body, JetBrains Mono
+       for technical/numeric data. The main site self-hosts these through
+       astro:fonts; these dashboards are plain static files under public/, so they
+       load the same families from the Google Fonts CDN. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Open+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+  <link rel="stylesheet" href="./ds-tokens.css">
+  <link rel="stylesheet" href="./ds-dashboard.css">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./managed-watchlist.css">
+  <!-- In <head>, before first paint, so the stored colour mode never flashes. -->
+  <script src="./ds-mode.js"></script>
 </head>
 <body>
   <div class="shell">
@@ -26,10 +39,16 @@
       </a>
       <div class="actions">
         <span class="live"><span class="dot"></span><span id="live" role="status" aria-live="polite">Loading feed…</span></span>
+        <button class="mode-toggle" type="button" aria-pressed="false" title="Switch to light theme">
+          <span class="mode-light"><i data-lucide="sun"></i></span>
+          <span class="mode-dark"><i data-lucide="moon"></i></span>
+          <span class="mode-toggle-label" aria-hidden="true">Theme</span>
+          <span class="visually-hidden">Toggle colour theme</span>
+        </button>
         <button class="btn ghost" id="exportWorkspace" type="button">Export workspace</button>
         <label class="btn ghost import-label" for="importWorkspace">Import</label>
         <input id="importWorkspace" type="file" accept="application/json" hidden>
-        <button class="btn" id="refresh" type="button">Refresh now</button>
+        <button class="btn" id="refresh" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i> Refresh now</button>
       </div>
     </header>
 
@@ -80,7 +99,7 @@
       </section>
 
       <section class="controls panel" aria-label="Listing filters">
-        <label class="search" for="q"><span aria-hidden="true">⌕</span> <input id="q" type="search" aria-label="Search listings" placeholder="Search address, operator, notes, transit…"></label>
+        <label class="search" for="q"><i data-lucide="search" aria-hidden="true"></i> <input id="q" type="search" aria-label="Search listings" placeholder="Search address, operator, notes, transit…"></label>
         <select id="city" aria-label="Municipality"><option value="">All municipalities</option></select>
         <select id="status" aria-label="Cost status">
           <option value="">All cost statuses</option>
@@ -141,6 +160,7 @@
     <svg class="spark" viewBox="0 0 180 46" preserveAspectRatio="none" role="img" aria-label="Price history"></svg>
   </template>
 
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
   <script src="./managed-watchlist.js" defer></script>
   <script src="./app.js" defer></script>
 </body>

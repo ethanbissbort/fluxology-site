@@ -3,24 +3,63 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0b1a2c">
+  <meta name="theme-color" content="#0B1520">
   <!-- Internal research tool: never index it, including at the fluxology.ca/deals/ shadow path. -->
   <meta name="robots" content="noindex">
   <title>Fluxology Deals</title>
   <link rel="icon" href="./favicon.svg">
+
+  <!-- Fluxology corporate theme: Outfit headings, Open Sans body, JetBrains Mono
+       for technical/numeric data. The main site self-hosts these through
+       astro:fonts; these dashboards are plain static files under public/, so they
+       load the same families from the Google Fonts CDN. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Open+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+  <link rel="stylesheet" href="./ds-tokens.css">
+  <link rel="stylesheet" href="./ds-dashboard.css">
   <link rel="stylesheet" href="./styles.css">
+  <!-- In <head>, before first paint, so the stored colour mode never flashes. -->
+  <script src="./ds-mode.js"></script>
 </head>
 <body>
 <div class="shell">
   <header class="top">
-    <div class="brand"><img src="./favicon.svg" alt=""><div><div class="eyebrow">FLUXOLOGY, INC.</div><h1>Deals</h1></div></div>
-    <div class="actions"><span class="live"><span class="dot"></span><span id="live" role="status" aria-live="polite">Loading feed…</span></span><button class="btn" id="refresh">Refresh now</button></div>
+    <div class="brand">
+      <img src="./favicon.svg" alt="">
+      <div>
+        <div class="eyebrow">FLUXOLOGY, INC.</div>
+        <h1>Deals</h1>
+      </div>
+    </div>
+    <div class="actions">
+      <span class="live">
+        <span class="dot"></span>
+        <span id="live" role="status" aria-live="polite">Loading feed…</span>
+      </span>
+      <button class="mode-toggle" type="button" aria-pressed="false" title="Switch to light theme">
+        <span class="mode-light"><i data-lucide="sun"></i></span>
+        <span class="mode-dark"><i data-lucide="moon"></i></span>
+        <span class="mode-toggle-label" aria-hidden="true">Theme</span>
+        <span class="visually-hidden">Toggle colour theme</span>
+      </button>
+      <button class="btn" id="refresh"><i data-lucide="refresh-cw" aria-hidden="true"></i> Refresh now</button>
+    </div>
   </header>
 
   <main>
     <section class="hero">
-      <div><p class="eyebrow accent">CURATED SHOPPING SEARCHES</p><h2>High-signal deals, normalized into <span>one buying queue.</span></h2><p class="lede">eBay and Toronto/GTA Kijiji listings share one feed. Shipping uncertainty stays explicit, local-pickup economics include incremental Zipcar time rather than imaginary “free pickup,” and every 45 km / 65 km Kijiji pass carries auditable search coverage.</p></div>
-      <div class="target"><small>Bulk LEGO local trigger</small><strong>≤ $7 <span>CAD/LB</span></strong><small>Higher prices can qualify on exceptional compositional diversity.</small></div>
+      <div>
+        <p class="eyebrow accent">CURATED SHOPPING SEARCHES</p>
+        <h2>High-signal deals, normalized into <span>one buying queue.</span></h2>
+        <p class="lede">eBay and Toronto/GTA Kijiji listings share one feed. Shipping uncertainty stays explicit, local-pickup economics include incremental Zipcar time rather than imaginary “free pickup,” and every 45 km / 65 km Kijiji pass carries auditable search coverage.</p>
+      </div>
+      <div class="target">
+        <small>Bulk LEGO local trigger</small>
+        <strong>≤ $7 <span>CAD/LB</span></strong>
+        <small>Higher prices can qualify on exceptional compositional diversity.</small>
+      </div>
     </section>
 
     <section class="stats">
@@ -31,7 +70,7 @@
     </section>
 
     <section class="controls" aria-label="Listing filters">
-      <label class="search">⌕ <input id="q" type="search" aria-label="Search listings" placeholder="Search title, seller, notes, area, category…"></label>
+      <label class="search" for="q"><i data-lucide="search" aria-hidden="true"></i> <input id="q" type="search" aria-label="Search listings" placeholder="Search title, seller, notes, area, category…"></label>
       <select id="category" aria-label="Shopping search"><option value="">All searches</option></select>
       <select id="type" aria-label="Listing type"><option value="">All listing types</option><option value="auction">Auctions</option><option value="buy_it_now">Buy It Now</option><option value="classified">Local classified</option></select>
       <select id="deal" aria-label="Deal status"><option value="">All deal statuses</option><option value="high">High priority</option><option value="7">≤ $7/lb local</option><option value="photos">Needs seller photos</option><option value="temporary">Temporary value rejects</option><option value="unresolved">Shipping unresolved</option></select>
@@ -40,15 +79,28 @@
       <label class="check" for="activeOnly"><input id="activeOnly" type="checkbox" checked> Active only</label>
     </section>
 
-    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant listings</h3></div><div class="meta"><span id="resultCount" role="status" aria-live="polite" aria-atomic="true">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
+    <section class="feedhead">
+      <div>
+        <span class="eyebrow">RESULT FEED</span>
+        <h3>Relevant listings</h3>
+      </div>
+      <div class="meta"><span id="resultCount" role="status" aria-live="polite" aria-atomic="true">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div>
+    </section>
+
     <section id="grid" class="grid" tabindex="-1"></section>
-    <section id="empty" class="empty" hidden><h3>No matching listings</h3><p>Change the filters or wait for the next curated search run.</p></section>
+
+    <section id="empty" class="empty panel" hidden>
+      <h3>No matching listings</h3>
+      <p>Change the filters or wait for the next curated search run.</p>
+    </section>
   </main>
 
   <footer><span>Fluxology Deals v3.2</span><span>Feed refreshes every hour while this tab is open.</span></footer>
 </div>
 
 <dialog id="dialog"><div class="ds"><button class="close" id="close" aria-label="Close listing details" autofocus>×</button><div id="detail"></div></div></dialog>
+
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
 <script src="./app.js"></script>
 </body>
 </html>

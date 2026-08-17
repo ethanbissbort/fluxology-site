@@ -1,0 +1,991 @@
+/* =============================================================================
+   Fluxology dashboard shell — shared component layer
+   -----------------------------------------------------------------------------
+   SYNCED COPY, byte-identical across public/jobs, public/deals and
+   public/office-scout. Verify with:
+
+       node tools/check-dashboard-ds.mjs
+
+   This file styles the vocabulary the three dashboards share (shell, header,
+   hero, stats, controls, result cards, badges, detail dialog, forms, footer).
+   Anything specific to one dashboard lives in that app's own styles.css.
+
+   Everything here is expressed in design-system tokens from ds-tokens.css and
+   mirrors the system's own primitives:
+     Card          surface-card + hairline, --radius-md, lift on hover
+     Badge         outlined pill, technical mono, uppercase, --radius-full
+     Button        uppercase Outfit, --radius-sm, accent / bordered / ghost
+     Input         surface-card, --radius-sm, cyan focus ring
+     SectionHeading eyebrow preceded by a 28x1 accent rule
+     MeasureRule   hairline with every-4th-tick accent marks
+   ============================================================================= */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+/* Label text that must reach assistive technology but not the layout. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+html {
+  background: var(--dash-page);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--current-font-body);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  color: var(--dash-body);
+  background:
+    linear-gradient(180deg, var(--dash-page-top) 0, var(--dash-page) 420px) no-repeat,
+    var(--dash-page);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+h1, h2, h3, h4 {
+  font-family: var(--current-font-heading);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+  color: var(--dash-heading);
+  text-wrap: pretty;
+}
+
+a { color: var(--dash-accent-text); }
+
+/* Focus: one ring everywhere, in the brand's cyan focus token. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--dash-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.shell {
+  max-width: var(--container-max-width);
+  margin-inline: auto;
+  padding: 0 var(--spacing-xl) var(--spacing-2xl);
+}
+
+/* --- Header ---------------------------------------------------------------- */
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  min-height: 88px;
+  padding-block: var(--spacing-md);
+  border-bottom: var(--border-width-hairline) solid var(--dash-border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand img { width: 44px; height: 44px; }
+
+.brand h1 {
+  margin: var(--spacing-xs) 0 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Technical eyebrow — the system sets these in mono, uppercase, wide-tracked. */
+.eyebrow {
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+/* SectionHeading's accent rule: a 28x1 tick ahead of the label. */
+.eyebrow.accent {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--dash-accent-text);
+}
+
+.eyebrow.accent::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--dash-accent);
+  flex: none;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  color: var(--dash-muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--dash-success);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dash-success) 18%, transparent);
+  flex: none;
+}
+
+/* --- Buttons (system Button primitive) ------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: 0.5rem 1rem;
+  font-family: var(--current-font-heading);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  border: var(--border-width-hairline) solid var(--dash-accent);
+  background: var(--dash-accent);
+  color: var(--dash-on-accent);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-base) var(--ease-out-cubic),
+              border-color var(--transition-base) var(--ease-out-cubic),
+              box-shadow var(--transition-base) var(--ease-out-cubic),
+              color var(--transition-base) var(--ease-out-cubic);
+}
+
+.btn:hover { box-shadow: var(--glow-accent); }
+
+.btn.ghost,
+.smallbtn,
+.text-btn {
+  background: transparent;
+  color: var(--dash-heading);
+  border-color: var(--dash-border);
+  box-shadow: none;
+}
+
+.btn.ghost:hover,
+.smallbtn:hover {
+  background: var(--dash-surface-hover);
+  border-color: var(--dash-border-strong);
+  box-shadow: none;
+}
+
+.smallbtn {
+  padding: 0.5rem 0.875rem;
+  font-family: var(--current-font-heading);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+/* Ghost text action — no chrome until hovered. */
+.text-btn {
+  border-color: transparent;
+  padding: 0.375rem 0.5rem;
+  font-family: var(--current-font-heading);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--dash-body);
+  cursor: pointer;
+}
+
+.text-btn:hover { color: var(--dash-accent-text); }
+
+.import-label { cursor: pointer; }
+
+/* Theme toggle sits with the other header actions. */
+.mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0.5rem 0.75rem;
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--dash-body);
+  cursor: pointer;
+  transition: border-color var(--transition-fast) var(--ease-out-cubic),
+              color var(--transition-fast) var(--ease-out-cubic);
+}
+
+.mode-toggle:hover {
+  border-color: var(--dash-border-strong);
+  color: var(--dash-heading);
+}
+
+.mode-toggle svg { width: 18px; height: 18px; stroke-width: 1.5; }
+
+/* The icon is an enhancement only. The label always renders, so the control is
+   never an empty button if the icon CDN is blocked or slow. */
+.mode-toggle-label {
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+.mode-toggle .mode-dark { display: none; }
+.mode-toggle .mode-light { display: inline-flex; align-items: center; }
+[data-mode='light'] .mode-toggle .mode-dark { display: inline-flex; align-items: center; }
+[data-mode='light'] .mode-toggle .mode-light { display: none; }
+
+/* --- Hero ------------------------------------------------------------------ */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--spacing-2xl);
+  align-items: end;
+  padding: var(--spacing-2xl) 0 var(--spacing-lg);
+}
+
+.hero h2 {
+  margin: var(--spacing-sm) 0 var(--spacing-md);
+  font-size: clamp(var(--font-size-xl), 4vw, var(--font-size-2xl));
+  max-width: 22ch;
+}
+
+/* The highlighted clause in each hero headline. */
+.hero h2 span { color: var(--dash-accent-text); }
+
+.lede {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--dash-muted);
+  line-height: var(--line-height-normal);
+}
+
+/* Hero side panel: the target/budget figure. Measurement-mark rule on top. */
+.target,
+.budget {
+  position: relative;
+  padding: var(--spacing-lg);
+  background: var(--dash-surface);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-md);
+}
+
+.target::before,
+.budget::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background:
+    repeating-linear-gradient(90deg,
+      var(--dash-accent) 0 1px,
+      transparent 1px 12px);
+  opacity: 0.7;
+}
+
+.target small,
+.budget small {
+  display: block;
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--dash-muted);
+  line-height: var(--line-height-normal);
+}
+
+.target strong,
+.budget strong {
+  display: block;
+  margin: var(--spacing-xs) 0;
+  font-family: var(--current-font-heading);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--dash-heading);
+}
+
+.target strong span,
+.budget strong span {
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--dash-accent-text);
+}
+
+/* --- Stats ----------------------------------------------------------------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+  margin: var(--spacing-sm) 0 var(--spacing-lg);
+}
+
+.stat {
+  padding: var(--spacing-md);
+  background: var(--dash-surface);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-md);
+}
+
+.stat b {
+  display: block;
+  margin: var(--spacing-xs) 0;
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--dash-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat small {
+  font-size: var(--font-size-xs);
+  color: var(--dash-muted);
+}
+
+/* --- Panels ---------------------------------------------------------------- */
+
+.panel {
+  background: var(--dash-panel);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-md);
+}
+
+/* --- Controls -------------------------------------------------------------- */
+
+.controls {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) repeat(4, minmax(150px, 190px)) auto;
+  gap: var(--spacing-sm);
+  align-items: stretch;
+  padding: var(--spacing-sm);
+  background: var(--dash-panel);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-md);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-md);
+  background: var(--dash-surface);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-sm);
+  color: var(--dash-muted);
+  transition: border-color var(--transition-fast) var(--ease-out-cubic);
+}
+
+.search input {
+  width: 100%;
+  padding: 0.6875rem 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--dash-heading);
+}
+
+.search input::placeholder { color: var(--dash-muted); }
+
+.search:focus-within { border-color: var(--dash-focus); }
+
+select,
+.workspace select,
+.workspace textarea {
+  min-height: 44px;
+  padding: 0 var(--spacing-sm);
+  background: var(--dash-surface);
+  color: var(--dash-heading);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast) var(--ease-out-cubic);
+}
+
+select:hover { border-color: var(--dash-border-strong); }
+select:focus-visible,
+textarea:focus-visible { border-color: var(--dash-focus); }
+
+/* Native dropdown lists paint with the UA palette; color-scheme on :root keeps
+   the popup readable in both modes. */
+select option { background: var(--dash-page); color: var(--dash-heading); }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-sm);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--dash-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.check input { accent-color: var(--dash-accent); width: 16px; height: 16px; }
+
+/* --- Feed heading — carries the MeasureRule motif -------------------------- */
+
+.feedhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--spacing-md);
+  margin: var(--spacing-xl) 0 var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: var(--border-width-hairline) solid var(--dash-border);
+}
+
+.feedhead h3 {
+  margin: var(--spacing-xs) 0 0;
+  font-size: var(--font-size-lg);
+}
+
+.meta {
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  color: var(--dash-muted);
+  text-align: right;
+}
+
+/* --- Result grid ----------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-md);
+}
+
+/* System Card: surface + hairline, --radius-md, lift and strengthen on hover. */
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--dash-surface);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-base) var(--ease-out-cubic),
+              border-color var(--transition-base) var(--ease-out-cubic),
+              transform var(--transition-base) var(--ease-out-cubic),
+              box-shadow var(--transition-base) var(--ease-out-cubic);
+}
+
+.card:hover {
+  background: var(--dash-surface-hover);
+  border-color: var(--dash-border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--dash-shadow);
+}
+
+.ct { padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md); }
+.cb { padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg); }
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.company,
+.operator {
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--dash-accent-text);
+}
+
+.title {
+  margin: var(--spacing-xs) 0 var(--spacing-xs);
+  font-family: var(--current-font-heading);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
+  color: var(--dash-heading);
+}
+
+.location,
+.address {
+  font-size: var(--font-size-xs);
+  color: var(--dash-muted);
+}
+
+/* --- Badges (system Badge primitive: outlined pill, mono, uppercase) -------- */
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-xs);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 0.25rem 0.625rem;
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  border-radius: var(--radius-full);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  color: var(--dash-body);
+  background: transparent;
+}
+
+/* Tone modifiers. Filled tints stay very low alpha so the outline still reads. */
+.badge.high,
+.badge.verified,
+.badge.offer {
+  color: var(--dash-success-text);
+  border-color: var(--dash-success);
+  background: var(--dash-success-soft);
+}
+
+.badge.mid,
+.badge.plausible,
+.badge.warn,
+.badge.interview {
+  color: var(--dash-warn-text);
+  border-color: var(--dash-warn);
+  background: var(--dash-warn-soft);
+}
+
+.badge.bad,
+.badge.over,
+.badge.rejected,
+.badge.inactive {
+  color: var(--dash-danger-text);
+  border-color: var(--dash-danger);
+  background: var(--dash-danger-soft);
+}
+
+.badge.track,
+.badge.applied,
+.badge.saved,
+.badge.info {
+  color: var(--dash-accent-text);
+  border-color: var(--dash-accent);
+  background: var(--dash-accent-soft);
+}
+
+.badge.muted-badge {
+  color: var(--dash-muted);
+  border-color: var(--dash-border);
+  background: transparent;
+}
+
+/* --- Numeric emphasis ------------------------------------------------------ */
+
+.pay,
+.price,
+.asking {
+  margin-top: var(--spacing-md);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--dash-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.pay span,
+.price span,
+.asking span {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: var(--letter-spacing-normal);
+  color: var(--dash-muted);
+}
+
+.score {
+  font-family: var(--current-font-technical);
+  font-weight: var(--font-weight-bold);
+  color: var(--dash-accent-text);
+}
+
+/* --- Fact strip — modular grid with hairline dividers ---------------------- */
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* Two named rows so each .fact can align its label and value to the same
+     baselines as its neighbours — wide labels like "TRAINING VALUE" wrap to two
+     lines and would otherwise push their value out of step across the strip. */
+  grid-template-rows: auto auto;
+  margin-top: var(--spacing-md);
+  border-top: var(--border-width-hairline) solid var(--dash-border);
+  border-bottom: var(--border-width-hairline) solid var(--dash-border);
+}
+
+.fact {
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  align-content: start;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-sm);
+  border-right: var(--border-width-hairline) solid var(--dash-border);
+}
+
+/* Where subgrid is unavailable, reserve two label lines instead so the values
+   still line up. */
+@supports not (grid-template-rows: subgrid) {
+  .fact { display: block; }
+  .fact small { min-height: 2.4em; }
+  .fact div { margin-top: var(--spacing-xs); }
+}
+
+.fact:last-child { border-right: 0; }
+
+.fact small {
+  display: block;
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+.fact div {
+  align-self: start;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--dash-body);
+}
+
+.note {
+  margin: var(--spacing-sm) 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+  color: var(--dash-muted);
+}
+
+.date {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  color: var(--dash-muted);
+}
+
+/* --- Empty state ----------------------------------------------------------- */
+
+.empty {
+  padding: var(--spacing-3xl) var(--spacing-xl);
+  text-align: center;
+  color: var(--dash-muted);
+}
+
+/* The feed-error state is injected inside #grid, so it has to span the whole
+   track set rather than sit in the first column. */
+.grid .empty { grid-column: 1 / -1; }
+
+.empty p {
+  max-width: 60ch;
+  margin: var(--spacing-sm) auto 0;
+  line-height: var(--line-height-normal);
+}
+
+/* --- Detail dialog --------------------------------------------------------- */
+
+dialog {
+  width: min(900px, calc(100vw - 2rem));
+  max-height: 90vh;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dash-body);
+}
+
+dialog::backdrop {
+  background: var(--dash-scrim);
+  backdrop-filter: blur(6px);
+}
+
+.ds,
+.dialog-shell {
+  position: relative;
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--dash-page);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--dash-shadow);
+}
+
+.close {
+  position: absolute;
+  right: var(--spacing-md);
+  top: var(--spacing-md);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-md);
+  line-height: 1;
+  background: var(--dash-surface);
+  color: var(--dash-heading);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  z-index: var(--z-navigation);
+  transition: border-color var(--transition-fast) var(--ease-out-cubic);
+}
+
+.close:hover { border-color: var(--dash-border-strong); }
+
+/* Dialog header — tick rule beneath, echoing MeasureRule. */
+.dh {
+  position: relative;
+  padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
+  background: var(--dash-panel);
+  border-bottom: var(--border-width-hairline) solid var(--dash-border);
+}
+
+.dh::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: repeating-linear-gradient(90deg,
+    var(--dash-accent) 0 1px,
+    transparent 1px 16px);
+  opacity: 0.55;
+}
+
+.dh h2 {
+  margin: var(--spacing-sm) var(--spacing-4xl) var(--spacing-xs) 0;
+  font-size: var(--font-size-xl);
+}
+
+.dh p { margin: 0; color: var(--dash-muted); }
+
+.dp {
+  margin: var(--spacing-md) 0 var(--spacing-xs);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--dash-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+.db { padding: var(--spacing-lg) var(--spacing-xl) var(--spacing-xl); }
+
+.dg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.sec {
+  padding: var(--spacing-md);
+  background: var(--dash-surface);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-md);
+}
+
+.sec h4 {
+  margin: 0 0 var(--spacing-sm);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--dash-accent-text);
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin: var(--spacing-sm) 0;
+  font-size: var(--font-size-xs);
+}
+
+.line span:first-child { color: var(--dash-muted); }
+
+.line span:last-child {
+  text-align: right;
+  font-weight: var(--font-weight-semibold);
+  color: var(--dash-body);
+}
+
+.notes {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--dash-sunken);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+  color: var(--dash-body);
+}
+
+.notes strong { color: var(--dash-heading); }
+
+/* --- Workspace (browser-local personal state) ------------------------------ */
+
+.workspace {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: var(--border-width-hairline) solid var(--dash-border);
+}
+
+.workspace strong {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+.workspace select,
+.workspace textarea {
+  width: 100%;
+  padding: 0.625rem var(--spacing-sm);
+}
+
+.workspace textarea {
+  min-height: 96px;
+  margin-top: var(--spacing-sm);
+  resize: vertical;
+  line-height: var(--line-height-normal);
+}
+
+/* Outbound source link — primary action weight. */
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding: 0.625rem var(--spacing-md);
+  font-family: var(--current-font-heading);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  background: var(--dash-accent);
+  color: var(--dash-on-accent);
+  border-radius: var(--radius-sm);
+  transition: box-shadow var(--transition-base) var(--ease-out-cubic);
+}
+
+.source:hover { box-shadow: var(--glow-accent); }
+
+/* --- Toast ----------------------------------------------------------------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: var(--spacing-lg);
+  z-index: var(--z-tooltip);
+  max-width: min(92vw, 420px);
+  padding: 0.6875rem var(--spacing-md);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+  text-align: center;
+  background: var(--dash-page);
+  color: var(--dash-heading);
+  border: var(--border-width-hairline) solid var(--dash-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--dash-shadow);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(12px);
+  transition: opacity var(--transition-base) var(--ease-out-cubic),
+              transform var(--transition-base) var(--ease-out-cubic);
+}
+
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* --- Footer ---------------------------------------------------------------- */
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-2xl);
+  padding-top: var(--spacing-md);
+  border-top: var(--border-width-hairline) solid var(--dash-border);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  color: var(--dash-muted);
+}
+
+/* --- Responsive ------------------------------------------------------------ */
+
+@media (max-width: 1180px) {
+  .controls { grid-template-columns: repeat(3, 1fr); }
+  .search { grid-column: 1 / -1; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 670px) {
+  .shell { padding: 0 var(--spacing-md) var(--spacing-xl); }
+  .top { min-height: 0; flex-wrap: wrap; }
+  .grid { grid-template-columns: 1fr; }
+  .controls { grid-template-columns: 1fr; }
+  .search { grid-column: auto; }
+  .feedhead { display: block; }
+  .meta { margin-top: var(--spacing-sm); text-align: left; }
+  .dg { grid-template-columns: 1fr; }
+  .dh, .db { padding-inline: var(--spacing-md); }
+  footer { display: block; line-height: var(--line-height-loose); }
+}
