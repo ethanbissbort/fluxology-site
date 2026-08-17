@@ -467,4 +467,11 @@ if (invokedDirectly) {
   };
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
+  // Node 22 terminates on an unhandled rejection by default. An escaped async
+  // error in one request must degrade to a logged error, not take down an
+  // internet-facing service that `restart: unless-stopped` then silently
+  // restart-loops. Same policy as contact-api and dashboard-api.
+  process.on('unhandledRejection', err => {
+    log.error('unhandled_rejection', { error: err instanceof Error ? `${err.name}: ${err.message}` : String(err) });
+  });
 }

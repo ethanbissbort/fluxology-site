@@ -1246,6 +1246,38 @@ describe('a second writer on the same volume', () => {
     );
     assert.deepEqual(await tempFiles(dirs.dataDir), [], 'the refused write must clean up its temp file');
   });
+
+  // PUT /feed used to skip the guard entirely: replaceFeed called commitFeed
+  // with no signature, so `assertUnchanged` returned immediately and a
+  // restore silently renamed over anything a second process had written in
+  // the meantime. The asymmetry was invisible to this suite in either
+  // direction until this test.
+  it('a full-feed replace also refuses to overwrite a feed that changed under it', async () => {
+    const listings = Array.from({ length: 30_000 }, (_, i) => ({
+      id: `restore-${i}`,
+      title: `Restored listing number ${i} with enough text to make the write take a while`,
+    }));
+    const slow = write(PORT, '/v1/deals/feed', { schemaVersion: 3, listings }, { method: 'PUT' });
+
+    await waitForTempFile(dirs.dataDir);
+    const sentinel = {
+      schemaVersion: 3,
+      generatedAt: '2026-02-03T00:00:00.000Z',
+      listings: [{ id: 'upserted-during-the-restore' }],
+    };
+    await writeFile(path.join(dirs.dataDir, 'deals.json'), `${JSON.stringify(sentinel, null, 2)}\n`, 'utf8');
+
+    const res = await slow;
+    const text = await res.text();
+    assert.equal(res.status, 409, `expected 409, got ${res.status} ${text.slice(0, 200)}`);
+    assert.equal(text, JSON.stringify({ error: 'feed_changed_concurrently' }));
+    assert.deepEqual(
+      await idsOnDisk(dirs.dataDir, 'deals'),
+      ['upserted-during-the-restore'],
+      "the interleaved writer's data must survive the refused restore",
+    );
+    assert.deepEqual(await tempFiles(dirs.dataDir), [], 'the refused restore must clean up its temp file');
+  });
 });
 
 /* ================================================================== *

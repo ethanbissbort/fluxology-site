@@ -556,10 +556,19 @@ describe('unwritable inquiry log', () => {
     assert.equal(res.headers.get('location'), '/contact-received/?error=1');
   });
 
-  it('keeps serving health checks', async () => {
+  // This test used to assert the opposite — a 200 — codifying the one failure
+  // mode the endpoint exists to catch: an unwritable volume made every
+  // submission 500 while the container HEALTHCHECK and the edge's active
+  // check both stayed green. Health now probes the real persistence path.
+  it('reports degraded health while inquiries cannot be persisted', async () => {
     const res = await fetch(`${BASE}/api/health`);
-    assert.equal(res.status, 200);
-    await res.text();
+    assert.equal(res.status, 503);
+    const body = await res.json();
+    assert.equal(body.status, 'degraded');
+    assert.equal(body.degradedReason, 'inquiry_log_unwritable');
+    // Still a real health payload, not an error page: uptime and mail mode
+    // must stay readable so the operator can see what is and is not broken.
+    assert.equal(typeof body.uptimeSeconds, 'number');
   });
 });
 

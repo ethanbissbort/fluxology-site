@@ -145,11 +145,14 @@ jobs:
           fi
           exit "$bad"
 
-      # `astro build` does not type-check. tsc covers the .ts data modules
-      # (dbaPlans, appPages, softwareProducts); it needs the build to have run
-      # first so .astro/types.d.ts exists.
+      # `astro build` does not type-check. `astro check` covers the .astro
+      # components (it caught a real Font-variable type error when first
+      # enabled); tsc covers the plain .ts data modules. Both need the build
+      # to have run first so .astro/types.d.ts exists.
       - name: Type-check
-        run: npx tsc --noEmit
+        run: |
+          npx astro check
+          npx tsc --noEmit
 
   edge-config:
     name: Edge and origin configuration

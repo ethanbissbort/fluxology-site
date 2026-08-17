@@ -59,6 +59,14 @@ Used by the container `HEALTHCHECK` and by the edge's active health check
 (`health_uri /api/health` in `docs/CADDY-INTEGRATION.md`), which takes a wedged
 or still-booting container out of rotation.
 
+The endpoint probes the real persistence path (the same mkdir + open-for-append
+a submission uses, cached ~5 s). While the inquiry log is not writable it
+answers **503** with `"status": "degraded"` and
+`"degradedReason": "inquiry_log_unwritable"` — so an instance that would fail
+every submission is marked unhealthy and taken out of rotation instead of
+staying green. It previously answered 200 unconditionally, which was exactly
+the green-while-broken failure the endpoint exists to catch.
+
 `inquiryLog` exists because in log-only mode — the shipping default, with
 `SMTP_HOST` unset — the JSONL file is the *only* record that a submission
 arrived, and nothing else surfaces it. `lastInquiryAt` makes "did anything come
