@@ -4,10 +4,17 @@
 // mentions. Runs from the postbuild hook, after terser.
 import { readdirSync, readFileSync, statSync, unlinkSync } from 'node:fs';
 import { join, extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Default target is dist/; an explicit path lets the same script be verified
 // against a throwaway build without touching dist/.
-const DIST = process.argv[2] ?? new URL('../dist/', import.meta.url).pathname;
+//
+// fileURLToPath, not URL.pathname: pathname on a file: URL is percent-encoded
+// and keeps the leading slash before the drive letter on Windows, so
+// file:///C:/repos/... became "/C:/repos/...", path.join prepended the drive
+// again, and every Windows build died in postbuild with
+// ENOENT scandir 'C:\C:\repos\...\dist\'.
+const DIST = process.argv[2] ?? fileURLToPath(new URL('../dist/', import.meta.url));
 const ASSETS = join(DIST, '_assets');
 
 // This script DELETES build output, so the reference scan must be
