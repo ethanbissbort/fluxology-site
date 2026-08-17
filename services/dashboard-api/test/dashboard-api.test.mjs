@@ -41,10 +41,17 @@ const HAS_STRACE = existsSync(STRACE);
 async function canPtraceAttach() {
   if (!HAS_STRACE) return false;
   const target = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 5000)'], { stdio: 'ignore' });
+  // Subscribe to 'exit' BEFORE any await: a child that exits while we are
+  // waiting elsewhere (exactly what happens when the attach is denied and
+  // strace bails out immediately) emits 'exit' once, and a later
+  // once(child, 'exit') would wait forever on an event that already fired —
+  // which left this very probe as an unsettled top-level await in CI.
+  const targetExited = once(target, 'exit').catch(() => {});
   try {
     const tracer = spawn(STRACE, ['-p', String(target.pid), '-e', 'trace=exit_group', '-o', '/dev/null'], {
       stdio: ['ignore', 'ignore', 'pipe'],
     });
+    const tracerExited = once(tracer, 'exit').catch(() => {});
     let stderr = '';
     tracer.stderr.setEncoding('utf8');
     tracer.stderr.on('data', (d) => (stderr += d));
@@ -54,11 +61,11 @@ async function canPtraceAttach() {
     }
     const attached = /attached/.test(stderr);
     tracer.kill(attached ? 'SIGINT' : 'SIGKILL');
-    await once(tracer, 'exit').catch(() => {});
+    await tracerExited;
     return attached;
   } finally {
     target.kill('SIGKILL');
-    await once(target, 'exit').catch(() => {});
+    await targetExited;
   }
 }
 
