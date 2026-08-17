@@ -60,6 +60,10 @@ const themeHeadingPreload: Record<Theme, { cssVariable: string; preload: Preload
   natural: { cssVariable: '--font-sora', preload: true },
 };
 
+// `as const`: <Font cssVariable> accepts only the literal union of the
+// variables configured in astro.config.mjs, not `string` — this list must
+// stay in lockstep with that config, and the narrow type is what lets
+// `astro check` catch a rename in one place but not the other.
 const fontVariables = [
   '--font-outfit',
   '--font-open-sans',
@@ -70,7 +74,7 @@ const fontVariables = [
   '--font-sora',
   '--font-nunito',
   '--font-quicksand',
-];
+] as const;
 
 const headingFont = themeHeadingPreload[resolvedTheme];
 const fontPreload = (cssVariable: string): PreloadFilter =>

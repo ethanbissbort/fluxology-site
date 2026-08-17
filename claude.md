@@ -255,20 +255,24 @@ fluxology-site/
 ├── astro.config.mjs
 ├── package.json
 ├── docker/apache/
+├── data/
+│   └── deals/            # Deals agent working state — NOT web-served
 ├── services/
 │   ├── contact-api/
 │   ├── dashboard-api/
 │   └── fluxology-mcp/
+├── tools/
+│   └── mcp/              # Office & Mail MCP servers (operator-local, stdio;
+│                         #   NOT deployed containers, NOT web-served)
 ├── docs/
 │   ├── DEPLOYMENT-VPS.md
 │   ├── CADDY-INTEGRATION.md
 │   ├── MCP-CONNECTOR.md
 │   └── DASHBOARDS-V3.md
-├── public/
+├── public/               # everything here is served on the public internet
 │   ├── office-scout/
 │   ├── deals/
-│   ├── jobs/
-│   └── images/
+│   └── jobs/
 ├── src/
 │   ├── assets/
 │   ├── components/
@@ -278,6 +282,13 @@ fluxology-site/
 │   └── styles/
 └── scripts/
 ```
+
+**Rule: `public/` holds only what the internet should see.** Astro copies it
+verbatim into `dist/`, Apache serves all of it, and the dashboard hostnames
+re-expose their subdirectories. Server source, design docs, agent working
+state, and archives belong in `tools/`, `data/`, or `docs/` — never in
+`public/`. CI asserts the built site contains no `.mjs`/`.docx` files, and
+`docker/apache/httpd.conf` denies them as a second layer.
 
 ## Main site architecture
 

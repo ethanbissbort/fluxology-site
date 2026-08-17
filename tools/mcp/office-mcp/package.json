@@ -14,6 +14,6 @@
     "start": "node bin/office-mcp.mjs",
     "start:http": "node bin/office-mcp-http.mjs",
     "approve": "node bin/approve.mjs",
-    "test": "node --test test/"
+    "test": "node --test \"test/*.test.mjs\""
   }
 }

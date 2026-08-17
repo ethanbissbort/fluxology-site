@@ -123,6 +123,7 @@ This repository's Compose project contains only application services:
 fluxology-apache:6080
 fluxology-contact-api:8081
 fluxology-dashboard-api:8082
+fluxology-mcp:8083
 ```
 
 All join the external Docker network `fluxology-edge` and publish no host ports. The VPS-wide edge container is managed separately and joins the same network.

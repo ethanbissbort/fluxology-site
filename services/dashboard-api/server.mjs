@@ -843,6 +843,15 @@ async function replaceFeed(scope, body, req) {
   });
 
   return queued(scope, async () => {
+    // The same compare-and-swap guard upsert uses. A replace deliberately
+    // does not read the stored feed, but it must still refuse to rename over
+    // bytes another process wrote between this point and the commit — a
+    // restore racing the GitHub feed-sync (or any direct writer on the same
+    // volume) would otherwise silently discard an acknowledged upsert.
+    // `null` is a legitimate signature: restoring over a missing or
+    // quarantined feed file must succeed, and assertUnchanged computes the
+    // current signature the same way.
+    const signature = await stat(dataPath(scope)).then(signatureOf).catch(() => null);
     const next = { ...body, listings, generatedAt: new Date().toISOString() };
     const listingIds = listings.slice(0, AUDIT_ID_SAMPLE).map(row => row.id);
     await commitFeed(scope, next, {
@@ -854,7 +863,7 @@ async function replaceFeed(scope, body, req) {
       listingIds,
       listingIdsTruncated: listings.length > AUDIT_ID_SAMPLE,
       totalListings: listings.length,
-    });
+    }, signature);
     feedState.set(scope, { ok: true, error: null });
     return { changed: true, count: listings.length, generatedAt: next.generatedAt };
   });
@@ -1114,3 +1123,12 @@ async function shutdown(signal) {
 
 process.on('SIGTERM', () => { shutdown('SIGTERM'); });
 process.on('SIGINT', () => { shutdown('SIGINT'); });
+
+// Node 22 terminates on an unhandled rejection by default. This process owns
+// the authoritative feed store; one escaped async error (e.g. sendJson
+// throwing ERR_HTTP_HEADERS_SENT after a response body write failed
+// mid-stream) must degrade to a logged error, not a restart loop that
+// `restart: unless-stopped` then hides. Same policy as contact-api.
+process.on('unhandledRejection', (err) => {
+  console.error('[dashboard-api] unhandled promise rejection:', err);
+});

@@ -27,6 +27,15 @@ build/
 logs/
 *.log
 
+# Credential material. docker-compose.yml documents a Docker-secrets
+# migration that has the operator create ./secrets/office_ingest_token etc.
+# on the VPS — without these entries, following that documented procedure in
+# a working copy plus one `git add -A` would commit three live production
+# write tokens to public git history.
+secrets/
+*.pem
+*.key
+
 # Runtime data written by the services when run locally.
 # services/contact-api/README.md documents
 #   INQUIRY_LOG_PATH=./data/inquiries.jsonl PORT=8081 npm start

@@ -29,6 +29,48 @@ const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const STRACE = '/usr/bin/strace';
 const HAS_STRACE = existsSync(STRACE);
 
+/**
+ * Binary presence is not capability: GitHub-hosted runners ship strace but
+ * forbid attaching to a non-child process (`ptrace(PTRACE_SEIZE): Operation
+ * not permitted` under the default Yama/seccomp policy), which failed the
+ * durability test in CI while it passed everywhere ptrace is allowed. Probe
+ * an actual attach against a throwaway child so the skip reflects what this
+ * environment can really do — the assertion stays live locally and on any
+ * runner with ptrace enabled.
+ */
+async function canPtraceAttach() {
+  if (!HAS_STRACE) return false;
+  const target = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 5000)'], { stdio: 'ignore' });
+  // Subscribe to 'exit' BEFORE any await: a child that exits while we are
+  // waiting elsewhere (exactly what happens when the attach is denied and
+  // strace bails out immediately) emits 'exit' once, and a later
+  // once(child, 'exit') would wait forever on an event that already fired —
+  // which left this very probe as an unsettled top-level await in CI.
+  const targetExited = once(target, 'exit').catch(() => {});
+  try {
+    const tracer = spawn(STRACE, ['-p', String(target.pid), '-e', 'trace=exit_group', '-o', '/dev/null'], {
+      stdio: ['ignore', 'ignore', 'pipe'],
+    });
+    const tracerExited = once(tracer, 'exit').catch(() => {});
+    let stderr = '';
+    tracer.stderr.setEncoding('utf8');
+    tracer.stderr.on('data', (d) => (stderr += d));
+    const deadline = Date.now() + 3_000;
+    while (!/attached/.test(stderr) && tracer.exitCode === null && Date.now() < deadline) {
+      await delay(25);
+    }
+    const attached = /attached/.test(stderr);
+    tracer.kill(attached ? 'SIGINT' : 'SIGKILL');
+    await tracerExited;
+    return attached;
+  } finally {
+    target.kill('SIGKILL');
+    await targetExited;
+  }
+}
+
+const CAN_TRACE = await canPtraceAttach();
+
 /** Long enough not to trip the weak-token startup warning. */
 const TOKEN = 'f0'.repeat(32);
 
@@ -1090,7 +1132,7 @@ describe('durability of an acknowledged write', () => {
   let tracePath;
 
   before(async () => {
-    if (!HAS_STRACE) return;
+    if (!CAN_TRACE) return;
     dirs = await prepareDirs('durability');
     tracePath = path.join(dirs.root, 'fsync-trace.txt');
     server = await startServer({
@@ -1105,7 +1147,7 @@ describe('durability of an acknowledged write', () => {
     if (server) assert.equal((await server.stop()).code, 0);
   });
 
-  it('fsyncs the feed and the audit line before answering 200', { skip: HAS_STRACE ? false : 'strace is unavailable' }, async () => {
+  it('fsyncs the feed and the audit line before answering 200', { skip: CAN_TRACE ? false : 'strace cannot attach here (missing binary or ptrace not permitted)' }, async () => {
     let status = 0;
     const syncs = await traceSyncs(server.child.pid, tracePath, async () => {
       const res = await write(PORT, '/v1/deals/upsert', { listings: [{ id: 'ebay-durable' }] });
@@ -1245,6 +1287,38 @@ describe('a second writer on the same volume', () => {
       "the other writer's data must survive",
     );
     assert.deepEqual(await tempFiles(dirs.dataDir), [], 'the refused write must clean up its temp file');
+  });
+
+  // PUT /feed used to skip the guard entirely: replaceFeed called commitFeed
+  // with no signature, so `assertUnchanged` returned immediately and a
+  // restore silently renamed over anything a second process had written in
+  // the meantime. The asymmetry was invisible to this suite in either
+  // direction until this test.
+  it('a full-feed replace also refuses to overwrite a feed that changed under it', async () => {
+    const listings = Array.from({ length: 30_000 }, (_, i) => ({
+      id: `restore-${i}`,
+      title: `Restored listing number ${i} with enough text to make the write take a while`,
+    }));
+    const slow = write(PORT, '/v1/deals/feed', { schemaVersion: 3, listings }, { method: 'PUT' });
+
+    await waitForTempFile(dirs.dataDir);
+    const sentinel = {
+      schemaVersion: 3,
+      generatedAt: '2026-02-03T00:00:00.000Z',
+      listings: [{ id: 'upserted-during-the-restore' }],
+    };
+    await writeFile(path.join(dirs.dataDir, 'deals.json'), `${JSON.stringify(sentinel, null, 2)}\n`, 'utf8');
+
+    const res = await slow;
+    const text = await res.text();
+    assert.equal(res.status, 409, `expected 409, got ${res.status} ${text.slice(0, 200)}`);
+    assert.equal(text, JSON.stringify({ error: 'feed_changed_concurrently' }));
+    assert.deepEqual(
+      await idsOnDisk(dirs.dataDir, 'deals'),
+      ['upserted-during-the-restore'],
+      "the interleaved writer's data must survive the refused restore",
+    );
+    assert.deepEqual(await tempFiles(dirs.dataDir), [], 'the refused restore must clean up its temp file');
   });
 });
 

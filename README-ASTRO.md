@@ -136,7 +136,8 @@ This repository's Compose project contains only:
 
 - `fluxology-apache` — internal port 6080;
 - `fluxology-contact-api` — internal port 8081;
-- `fluxology-dashboard-api` — internal port 8082.
+- `fluxology-dashboard-api` — internal port 8082;
+- `fluxology-mcp` — internal port 8083.
 
 They publish no host ports. All join the external Docker network `fluxology-edge`, shared with the VPS-wide edge proxy managed outside this repository.
 

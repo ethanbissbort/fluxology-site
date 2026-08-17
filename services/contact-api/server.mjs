@@ -260,6 +260,33 @@ export function createHandler({ config, store, mailer, limiter, logError = conso
   /** @type {Set<Promise<unknown>>} in-flight best-effort email sends */
   const pendingMail = new Set();
 
+  /**
+   * Health must not assert what it has not tested. An unwritable volume makes
+   * every submission fail with 500 while this endpoint kept answering 200 —
+   * and both the container HEALTHCHECK and the edge's active check read it,
+   * so the broken instance stayed green and in rotation. The probe is
+   * store.check(): the same mkdir + open-for-append path a real submission
+   * takes (a failed attempt is not memoised, so recovery is picked up).
+   * Cached briefly, like dashboard-api's write probe, so edge checks cannot
+   * hammer the filesystem.
+   */
+  const PERSISTENCE_PROBE_CACHE_MS = 5_000;
+  let persistenceProbe = { at: 0, ok: true };
+  let persistenceLogged = null;
+  async function probePersistence() {
+    if (Date.now() - persistenceProbe.at < PERSISTENCE_PROBE_CACHE_MS) return persistenceProbe;
+    try {
+      await store.check();
+      persistenceProbe = { at: Date.now(), ok: true };
+    } catch (err) {
+      persistenceProbe = { at: Date.now(), ok: false };
+      if (persistenceLogged !== false) logError('[contact-api] inquiry log is NOT writable; reporting degraded health:', err.code ?? err.message);
+    }
+    if (persistenceLogged === false && persistenceProbe.ok) console.log('[contact-api] inquiry log is writable again');
+    persistenceLogged = persistenceProbe.ok;
+    return persistenceProbe;
+  }
+
   const handler = async (req, res) => {
     let url;
     try {
@@ -284,10 +311,12 @@ export function createHandler({ config, store, mailer, limiter, logError = conso
       try {
         inquiryLog = await store.stats();
       } catch {
-        inquiryLog = null; // never fail a health check over a status field
+        inquiryLog = null; // the status field must not fail the whole check
       }
-      sendJson(res, 200, {
-        status: 'ok',
+      const persistence = await probePersistence();
+      sendJson(res, persistence.ok ? 200 : 503, {
+        status: persistence.ok ? 'ok' : 'degraded',
+        ...(persistence.ok ? {} : { degradedReason: 'inquiry_log_unwritable' }),
         emailEnabled: mailer.enabled,
         uptimeSeconds: Math.round((Date.now() - startedAt) / 1000),
         inquiryLog,

@@ -3,7 +3,7 @@
   "generatedAt": "2026-08-13T22:02:00-04:00",
   "searchName": "LEGO seller watch",
   "sellers": [
-    {"seller":"tweedsidesales","displayName":"Jeremy Doherty","status":"watch","notes":"Canadian seller; repeated promising genuine LEGO inventory; negotiate package purchases."},
+    {"seller":"tweedsidesales","status":"watch","notes":"Canadian seller; repeated promising genuine LEGO inventory; negotiate package purchases."},
     {"seller":"Neekoushop","status":"watch"},
     {"seller":"Brick & Figs Beach Shack","status":"watch","notes":"High-volume category lots; prioritize quantity-tier and combined-shipping analysis."},
     {"seller":"DASHBRICK","status":"watch","notes":"Shipping is listing-specific; only use destination-resolved checkout-confirmed combined shipping. Strong candidate for manual/custom bundle negotiation across many small lots."},

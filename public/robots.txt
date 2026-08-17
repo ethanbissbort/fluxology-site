@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
+# The dashboards are personal decision-support tools, deliberately unlinked
+# from the marketing site. Keep them and their JSON feeds out of search
+# indexes on this origin; the dashboard subdomains additionally send
+# X-Robots-Tag (see docker/apache/httpd.conf).
+Disallow: /deals/
+Disallow: /jobs/
+Disallow: /office-scout/
 
 Sitemap: https://fluxology.ca/sitemap-index.xml

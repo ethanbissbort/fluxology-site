@@ -38,7 +38,10 @@ Kijiji bulk can qualify through either `exceptional_commodity_price` or `excepti
 
 ## Kijiji geographic search contract
 
-`data/search-profiles.json` is the machine-readable search policy. Two independent passes are mandatory around postal code `M6H 2W9`:
+`data/deals/search-profiles.json` (repo root — deliberately outside this
+web-served folder) is the machine-readable search policy. Two independent
+passes are mandatory around the configured Toronto origin postal code
+defined there:
 
 1. 45 km radius;
 2. 65 km radius.

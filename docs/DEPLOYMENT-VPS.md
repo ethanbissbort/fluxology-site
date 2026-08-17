@@ -391,7 +391,7 @@ Verify all containers share `fluxology-edge`:
 docker network inspect fluxology-edge
 ```
 
-The inspection output must include the external Caddy container and the three Fluxology application containers.
+The inspection output must include the external Caddy container and the four Fluxology application containers.
 
 ### Dashboard reads work but writes return 401
 

@@ -34,7 +34,7 @@ The four planned operating lines remain:
 
 The VPS has one independently managed Caddy container that owns ports 80/443 and TLS for all hosted services. It is **not** part of this repository's Compose project.
 
-This repository runs three internal-only containers:
+This repository runs four internal-only containers:
 
 ```text
 existing VPS Caddy

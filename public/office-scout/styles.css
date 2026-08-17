@@ -30,7 +30,7 @@ body{
 button,input,select,textarea{font:inherit}
 button,a,label[for]{-webkit-tap-highlight-color:transparent}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
-  outline:3px solid #2cc4de55;outline-offset:2px
+  outline:3px solid var(--accent);outline-offset:2px
 }
 .shell{max-width:1540px;margin:auto;padding:0 28px 38px}
 .top{
@@ -115,7 +115,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .search input{width:100%;border:0;outline:0;padding:11px 0;background:transparent;color:var(--ink)}
 /* The input kills its own outline, so the wrapper carries the focus indicator:
    without this the primary control of the dashboard had none at all. */
-.search:focus-within{border-color:var(--accent);outline:3px solid #2cc4de55;outline-offset:1px}
+.search:focus-within{border-color:var(--accent);outline:3px solid var(--accent);outline-offset:1px}
 select{
   min-height:42px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:#fff;color:var(--ink)
 }
@@ -133,7 +133,7 @@ select{
   box-shadow:0 6px 20px #0b1a2c09;cursor:pointer;transition:.18s ease;position:relative
 }
 .card:hover{transform:translateY(-3px);box-shadow:0 12px 35px #0b1a2c15}
-.card:focus-visible{outline:3px solid #2cc4de55;outline-offset:2px}
+.card:focus-visible,.queue-item:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .card.inactive{opacity:.67}
 .card.workflow-rejected{box-shadow:inset 4px 0 0 #a44343,0 6px 20px #0b1a2c09}
 .card.workflow-leased{box-shadow:inset 4px 0 0 var(--good),0 6px 20px #0b1a2c09}

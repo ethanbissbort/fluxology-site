@@ -7,7 +7,10 @@ Two zero-dependency MCP servers implementing [SDD v2](./docs/SDD-v2.md) (which s
 | [`office-mcp/`](./office-mcp/) — **fluxology-office-mcp** | Evidence-first office-space research: taxonomy-strict normalization, conventional + managed scoring, quote/negotiation ledger, outreach preparation/validation, website-form broker, Office Scout dashboard sync, auditable coverage counters. |
 | [`mail-mcp/`](./mail-mcp/) — **fluxology-mail-mcp** | The only email side-effect surface: freeze exact messages → out-of-band human approval → send exactly once (default transport writes `.eml` files; SMTP optional) → thread tracking with reply ingestion. |
 
-`mcp-core/` is the shared dependency-free library (protocol, storage, approvals). `docs/` holds the audit, the SDD, and its `.docx` render.
+`mcp-core/` is the shared dependency-free library (protocol, storage, approvals). `docs/` holds the audit and the SDD.
+
+This package lives at `tools/mcp/` at the repo root — deliberately outside
+`public/`, so nothing here is ever copied into the built website.
 
 ## Requirements
 
@@ -21,7 +24,7 @@ Two zero-dependency MCP servers implementing [SDD v2](./docs/SDD-v2.md) (which s
   "mcpServers": {
     "fluxology-office": {
       "command": "node",
-      "args": ["<repo>/public/office-scout/mcp/office-mcp/bin/office-mcp.mjs"],
+      "args": ["<repo>/tools/mcp/office-mcp/bin/office-mcp.mjs"],
       "env": {
         // all optional — see office-mcp/README.md
         "FLUXOLOGY_OFFICE_BUDGET_CAD": "850"
@@ -29,7 +32,7 @@ Two zero-dependency MCP servers implementing [SDD v2](./docs/SDD-v2.md) (which s
     },
     "fluxology-mail": {
       "command": "node",
-      "args": ["<repo>/public/office-scout/mcp/mail-mcp/bin/mail-mcp.mjs"],
+      "args": ["<repo>/tools/mcp/mail-mcp/bin/mail-mcp.mjs"],
       "env": {
         "FLUXOLOGY_MAIL_FROM": "Your Name <you@fluxology.ca>"
       }
@@ -50,7 +53,7 @@ External side effects (submitting a provider's quote form; sending an email) **c
 
 ## Data location
 
-Runtime data lives **outside** this directory (default `~/.fluxology/office-mcp` and `~/.fluxology/mail-mcp`) because everything under `public/` is copied verbatim into the deployed website. Both servers refuse to start with a data root inside their own package.
+Runtime data lives **outside** this directory (default `~/.fluxology/office-mcp` and `~/.fluxology/mail-mcp`). Both servers refuse to start with a data root inside their own package.
 
 ## Tests
 

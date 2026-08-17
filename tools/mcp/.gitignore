@@ -1,0 +1,6 @@
+# These packages are zero-dependency by design (SDD v2 §0.5). They now live
+# at tools/mcp/ (outside public/), so nothing here is copied into the built
+# site — but keep node_modules impossible anyway.
+node_modules/
+*.tmp-*
+.DS_Store
