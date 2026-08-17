@@ -29,6 +29,41 @@ const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 const STRACE = '/usr/bin/strace';
 const HAS_STRACE = existsSync(STRACE);
 
+/**
+ * Binary presence is not capability: GitHub-hosted runners ship strace but
+ * forbid attaching to a non-child process (`ptrace(PTRACE_SEIZE): Operation
+ * not permitted` under the default Yama/seccomp policy), which failed the
+ * durability test in CI while it passed everywhere ptrace is allowed. Probe
+ * an actual attach against a throwaway child so the skip reflects what this
+ * environment can really do — the assertion stays live locally and on any
+ * runner with ptrace enabled.
+ */
+async function canPtraceAttach() {
+  if (!HAS_STRACE) return false;
+  const target = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 5000)'], { stdio: 'ignore' });
+  try {
+    const tracer = spawn(STRACE, ['-p', String(target.pid), '-e', 'trace=exit_group', '-o', '/dev/null'], {
+      stdio: ['ignore', 'ignore', 'pipe'],
+    });
+    let stderr = '';
+    tracer.stderr.setEncoding('utf8');
+    tracer.stderr.on('data', (d) => (stderr += d));
+    const deadline = Date.now() + 3_000;
+    while (!/attached/.test(stderr) && tracer.exitCode === null && Date.now() < deadline) {
+      await delay(25);
+    }
+    const attached = /attached/.test(stderr);
+    tracer.kill(attached ? 'SIGINT' : 'SIGKILL');
+    await once(tracer, 'exit').catch(() => {});
+    return attached;
+  } finally {
+    target.kill('SIGKILL');
+    await once(target, 'exit').catch(() => {});
+  }
+}
+
+const CAN_TRACE = await canPtraceAttach();
+
 /** Long enough not to trip the weak-token startup warning. */
 const TOKEN = 'f0'.repeat(32);
 
@@ -1090,7 +1125,7 @@ describe('durability of an acknowledged write', () => {
   let tracePath;
 
   before(async () => {
-    if (!HAS_STRACE) return;
+    if (!CAN_TRACE) return;
     dirs = await prepareDirs('durability');
     tracePath = path.join(dirs.root, 'fsync-trace.txt');
     server = await startServer({
@@ -1105,7 +1140,7 @@ describe('durability of an acknowledged write', () => {
     if (server) assert.equal((await server.stop()).code, 0);
   });
 
-  it('fsyncs the feed and the audit line before answering 200', { skip: HAS_STRACE ? false : 'strace is unavailable' }, async () => {
+  it('fsyncs the feed and the audit line before answering 200', { skip: CAN_TRACE ? false : 'strace cannot attach here (missing binary or ptrace not permitted)' }, async () => {
     let status = 0;
     const syncs = await traceSyncs(server.child.pid, tracePath, async () => {
       const res = await write(PORT, '/v1/deals/upsert', { listings: [{ id: 'ebay-durable' }] });
