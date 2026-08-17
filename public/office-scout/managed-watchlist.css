@@ -1,17 +1,117 @@
-.managed-watchlist{padding:18px;margin-bottom:14px;background:linear-gradient(135deg,#f6fbfc,#fff)}
-.managed-watchlist-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:12px}
-.managed-watchlist-head h3{margin:3px 0 0;font-size:19px}
-.managed-watchlist-meta{font-size:11px;color:var(--muted);text-align:right}
-.managed-provider-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.managed-provider{border:1px solid #cce4e9;background:#fbfeff;border-radius:12px;padding:13px 14px;min-width:0}
-.managed-provider-head{display:flex;justify-content:space-between;gap:12px;align-items:start}
-.managed-name{font-weight:900;font-size:14px;line-height:1.25}
-.managed-meta{font-size:10px;color:var(--accent);font-weight:800;margin-top:3px;letter-spacing:.04em}
-.managed-link{font-size:10px;color:var(--accent);font-weight:850;text-decoration:none;white-space:nowrap}
-.managed-link:hover{text-decoration:underline}
-.managed-price{font-size:12px;line-height:1.45;margin-top:10px;font-weight:750}
-.managed-detail,.managed-outreach{font-size:10.5px;color:var(--muted);line-height:1.45;margin-top:6px}
-.managed-detail b,.managed-outreach b{color:var(--ink)}
-.managed-muted{opacity:.62;background:#f5f6f7;border-style:dashed}
-@media(max-width:1000px){.managed-provider-items{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:650px){.managed-watchlist-head{align-items:start;flex-direction:column}.managed-watchlist-meta{text-align:left}.managed-provider-items{grid-template-columns:1fr}}
+/* =============================================================================
+   Office Scout — managed-office watchlist
+   -----------------------------------------------------------------------------
+   Provider research panel above the listing feed. Tokens and primitives come
+   from ds-tokens.css / ds-dashboard.css; this file only shapes the watchlist.
+   ============================================================================= */
+
+.managed-watchlist {
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.managed-watchlist-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.managed-watchlist-head h3 {
+  margin: var(--spacing-xs) 0 0;
+  font-size: var(--font-size-md);
+}
+
+.managed-watchlist-meta {
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  color: var(--dash-muted);
+  text-align: right;
+}
+
+.managed-provider-items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.managed-provider {
+  min-width: 0;
+  padding: var(--spacing-md);
+  background: var(--dash-surface);
+  border: var(--border-width-hairline) solid var(--dash-border);
+  border-radius: var(--radius-md);
+}
+
+.managed-provider-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.managed-name {
+  font-family: var(--current-font-heading);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--dash-heading);
+}
+
+.managed-meta {
+  margin-top: var(--spacing-xs);
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  color: var(--dash-accent-text);
+}
+
+.managed-link {
+  font-family: var(--current-font-technical);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--dash-accent-text);
+}
+
+.managed-link:hover { text-decoration: underline; }
+
+/* Prose, not tabular data — this stays in the body face. Only the short
+   status/score line above it is monospaced. */
+.managed-price {
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  color: var(--dash-body);
+}
+
+.managed-detail,
+.managed-outreach {
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+  color: var(--dash-muted);
+}
+
+.managed-detail b,
+.managed-outreach b { color: var(--dash-body); }
+
+/* Providers with no current offer stay listed but visibly parked. */
+.managed-muted {
+  opacity: 0.62;
+  background: transparent;
+  border-style: dashed;
+}
+
+@media (max-width: 1000px) {
+  .managed-provider-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 650px) {
+  .managed-watchlist-head { align-items: flex-start; flex-direction: column; }
+  .managed-watchlist-meta { text-align: left; }
+  .managed-provider-items { grid-template-columns: 1fr; }
+}

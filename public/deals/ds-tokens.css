@@ -1,0 +1,255 @@
+/* =============================================================================
+   Fluxology design-system tokens — dashboard build
+   -----------------------------------------------------------------------------
+   SYNCED COPY. The upstream source of truth is the Fluxology Design System
+   (tokens/colors.css, typography.css, spacing.css, radii-shadows.css,
+   motion.css, layout.css). Do not hand-edit one dashboard's copy: the three
+   dashboards ship byte-identical files so drift is detectable with
+
+       node tools/check-dashboard-ds.mjs
+
+   Each dashboard is served at its own subdomain root (jobs./deals./office.
+   fluxology.ca) as well as a shadow path under fluxology.ca, so every asset
+   reference stays relative and every app carries its own copy rather than
+   sharing one absolute /ds/ path that would 404 on the subdomains.
+
+   The dashboards run the CORPORATE theme of the system: Outfit headings,
+   Open Sans body, JetBrains Mono for technical/numeric data, blue accent.
+   ============================================================================= */
+
+:root {
+  /* --- Umbrella brand ----------------------------------------------------- */
+  --brand-ivory: #F2E9D6;
+  --brand-cyan: #00E5FF;
+  --brand-navy-deep: #0B1520;
+
+  /* --- Corporate ---------------------------------------------------------- */
+  --corporate-primary-navy: #1B3A4B;
+  --corporate-primary-slate: #2E5266;
+  --corporate-primary-steel: #476072;
+  --corporate-accent-blue: #3A86FF;
+  --corporate-accent-silver: #A8DADC;
+  --corporate-neutral-white: #FFFFFF;
+  --corporate-neutral-gray: #E9ECEF;
+
+  /* --- Industrial (Fabrication & Welding) --------------------------------- */
+  --industrial-primary-charcoal: #2C3440;
+  --industrial-primary-steel: #4A5F7F;
+  --industrial-primary-gunmetal: #3D4451;
+  --industrial-accent-orange: #FF6B35;
+  --industrial-accent-amber: #FFA559;
+  --industrial-accent-red: #E63946;
+  --industrial-neutral-white: #F8F9FA;
+  --industrial-neutral-silver: #C9CDD1;
+
+  /* --- Tech (3D Lab) ------------------------------------------------------ */
+  --tech-primary-black: #0A0E27;
+  --tech-primary-navy: #1B2845;
+  --tech-accent-cyan: #00D9FF;
+  --tech-accent-purple: #8338EC;
+
+  /* --- Natural (Greenhouse & Orchard) ------------------------------------- */
+  --natural-primary-forest: #2D4A2B;
+  --natural-primary-sage: #6B8E6B;
+  --natural-accent-gold: #D4A574;
+  --natural-neutral-cream: #F5F1E8;
+
+  /* --- Type scale — major third (1.250) ----------------------------------- */
+  --font-size-xs: 0.8rem;
+  --font-size-sm: 1rem;
+  --font-size-md: 1.25rem;
+  --font-size-lg: 1.563rem;
+  --font-size-xl: 1.953rem;
+  --font-size-2xl: 2.441rem;
+  --font-size-3xl: 3.052rem;
+  --font-size-4xl: 3.815rem;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.6;
+  --line-height-loose: 1.8;
+
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --font-outfit: 'Outfit';
+  --font-open-sans: 'Open Sans';
+
+  --font-corporate-heading: var(--font-outfit), sans-serif;
+  --font-corporate-body: var(--font-open-sans), sans-serif;
+
+  /* Dashboards run the corporate theme; technical numerics stay monospaced so
+     figures align in the dense stat/fact grids. */
+  --current-font-heading: var(--font-corporate-heading);
+  --current-font-body: var(--font-corporate-body);
+  --current-font-technical: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* --- Spacing — 4px base ------------------------------------------------- */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  --spacing-4xl: 6rem;
+  --spacing-5xl: 8rem;
+
+  /* --- Radii & shadows ---------------------------------------------------- */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --border-width-hairline: 1px;
+
+  /* --- Motion ------------------------------------------------------------- */
+  --transition-fast: 150ms;
+  --transition-base: 300ms;
+  --transition-slow: 600ms;
+  --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  /* --- Layout ------------------------------------------------------------- */
+  --container-max-width: 1480px;
+  --z-content: 1;
+  --z-navigation: 100;
+  --z-tooltip: 300;
+}
+
+/* =============================================================================
+   Dashboard semantic layer
+   -----------------------------------------------------------------------------
+   Dark is the brand default (the system specifies dark solarized backgrounds).
+   Light is a first-class alternate for long working sessions on dense feeds and
+   is derived from the umbrella brand — ivory paper over navy ink — rather than
+   the generic greys the dashboards used before.
+
+   Every text colour below is contrast-checked against the exact surface it is
+   painted on; see tools/check-dashboard-contrast.mjs, which parses THIS file.
+   Accent and danger deliberately split into a fill value and a text value: the
+   system's --accent (#3A86FF) is only 3.42:1 on light card, and --danger
+   (#E63946) only 4.03:1 on dark card, so neither is safe as body-weight text on
+   both surfaces.
+   ============================================================================= */
+
+:root,
+[data-mode='dark'] {
+  color-scheme: dark;
+
+  --dash-page: var(--brand-navy-deep);
+  --dash-page-top: #0E1B28;
+  --dash-surface: rgba(255, 255, 255, 0.04);
+  --dash-surface-hover: rgba(255, 255, 255, 0.07);
+  --dash-panel: rgba(255, 255, 255, 0.02);
+  --dash-sunken: rgba(0, 0, 0, 0.24);
+  --dash-inset: rgba(255, 255, 255, 0.06);
+
+  --dash-border: rgba(242, 233, 214, 0.18);
+  --dash-border-strong: rgba(242, 233, 214, 0.32);
+
+  --dash-heading: var(--corporate-neutral-white);
+  --dash-body: var(--corporate-neutral-gray);
+  --dash-muted: rgba(233, 236, 239, 0.62);
+
+  --dash-accent: var(--corporate-accent-blue);
+  --dash-accent-text: #7FB2FF;
+  --dash-accent-soft: rgba(58, 134, 255, 0.16);
+  --dash-on-accent: var(--brand-navy-deep);
+
+  --dash-success: #5BD6A0;
+  --dash-success-text: #5BD6A0;
+  --dash-success-soft: rgba(91, 214, 160, 0.14);
+
+  --dash-warn: var(--industrial-accent-amber);
+  --dash-warn-text: var(--industrial-accent-amber);
+  --dash-warn-soft: rgba(255, 165, 89, 0.14);
+
+  --dash-danger: var(--industrial-accent-red);
+  --dash-danger-text: #FF6B6B;
+  --dash-danger-soft: rgba(230, 57, 70, 0.16);
+
+  --dash-focus: var(--brand-cyan);
+  --dash-scrim: rgba(4, 10, 16, 0.72);
+  --dash-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.8);
+  --dash-spark-line: var(--brand-cyan);
+}
+
+[data-mode='light'] {
+  color-scheme: light;
+
+  --dash-page: #F7F3E9;
+  --dash-page-top: #EFE9DA;
+  --dash-surface: #FFFDF8;
+  --dash-surface-hover: #FFFFFF;
+  --dash-panel: #FBF8F0;
+  --dash-sunken: #F1EDE2;
+  --dash-inset: #FFFFFF;
+
+  --dash-border: rgba(11, 21, 32, 0.16);
+  --dash-border-strong: rgba(11, 21, 32, 0.34);
+
+  --dash-heading: var(--brand-navy-deep);
+  --dash-body: #243444;
+  --dash-muted: #5A6675;
+
+  --dash-accent: var(--corporate-accent-blue);
+  --dash-accent-text: #1B5BC4;
+  --dash-accent-soft: #E4EDFB;
+  /* The system's own --text-on-accent: navy on the bright accent, not white,
+     which would land at 3.48:1. Keeps both colour modes identical here. */
+  --dash-on-accent: var(--brand-navy-deep);
+
+  --dash-success: #1F7A57;
+  --dash-success-text: #1F7A57;
+  --dash-success-soft: #E3F3EB;
+
+  --dash-warn: #8A5D00;
+  --dash-warn-text: #8A5D00;
+  --dash-warn-soft: #FBF0D5;
+
+  --dash-danger: #A83A42;
+  --dash-danger-text: #A83A42;
+  --dash-danger-soft: #F8E7E8;
+
+  --dash-focus: #0F6C7D;
+  --dash-scrim: rgba(11, 21, 32, 0.48);
+  --dash-shadow: 0 18px 40px -20px rgba(11, 21, 32, 0.34);
+  --dash-spark-line: #0F6C7D;
+}
+
+/* The system's own aliases, retargeted onto the dashboard channel so the
+   design-system component rules read exactly as they do upstream. */
+:root {
+  --surface-card: var(--dash-surface);
+  --surface-card-hover: var(--dash-surface-hover);
+  --border-hairline: var(--dash-border);
+  --border-strong: var(--dash-border-strong);
+  --text-heading: var(--dash-heading);
+  --text-body: var(--dash-body);
+  --text-muted: var(--dash-muted);
+  --text-on-accent: var(--dash-on-accent);
+  --accent: var(--dash-accent);
+  --focus-ring: var(--dash-focus);
+  --danger: var(--dash-danger);
+  --glow-accent: 0 0 0 1px var(--accent), 0 0 24px -6px var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-slow: 0ms;
+  }
+}

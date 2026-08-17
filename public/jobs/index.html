@@ -3,24 +3,63 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#0b1a2c">
+  <meta name="theme-color" content="#0B1520">
   <!-- Internal research tool: never index it, including at the fluxology.ca/jobs/ shadow path. -->
   <meta name="robots" content="noindex">
   <title>Fluxology Jobs</title>
   <link rel="icon" href="./favicon.svg">
+
+  <!-- Fluxology corporate theme: Outfit headings, Open Sans body, JetBrains Mono
+       for technical/numeric data. The main site self-hosts these through
+       astro:fonts; these dashboards are plain static files under public/, so they
+       load the same families from the Google Fonts CDN. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Open+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+
+  <link rel="stylesheet" href="./ds-tokens.css">
+  <link rel="stylesheet" href="./ds-dashboard.css">
   <link rel="stylesheet" href="./styles.css">
+  <!-- In <head>, before first paint, so the stored colour mode never flashes. -->
+  <script src="./ds-mode.js"></script>
 </head>
 <body>
 <div class="shell">
   <header class="top">
-    <div class="brand"><img src="./favicon.svg" alt=""><div><div class="eyebrow">FLUXOLOGY, INC.</div><h1>Jobs</h1></div></div>
-    <div class="actions"><span class="live"><span class="dot"></span><span id="live" role="status" aria-live="polite" aria-atomic="true">Loading feed…</span></span><button class="btn" id="refresh">Refresh now</button></div>
+    <div class="brand">
+      <img src="./favicon.svg" alt="">
+      <div>
+        <div class="eyebrow">FLUXOLOGY, INC.</div>
+        <h1>Jobs</h1>
+      </div>
+    </div>
+    <div class="actions">
+      <span class="live">
+        <span class="dot"></span>
+        <span id="live" role="status" aria-live="polite" aria-atomic="true">Loading feed…</span>
+      </span>
+      <button class="mode-toggle" type="button" aria-pressed="false" title="Switch to light theme">
+        <span class="mode-light"><i data-lucide="sun"></i></span>
+        <span class="mode-dark"><i data-lucide="moon"></i></span>
+        <span class="mode-toggle-label" aria-hidden="true">Theme</span>
+        <span class="visually-hidden">Toggle colour theme</span>
+      </button>
+      <button class="btn" id="refresh"><i data-lucide="refresh-cw" aria-hidden="true"></i> Refresh now</button>
+    </div>
   </header>
 
   <main>
     <section class="hero">
-      <div><p class="eyebrow accent">CAREER SEARCH · T176 / TRADES</p><h2>Jobs ranked by <span>career value, not keyword noise.</span></h2><p class="lede">Trade-aligned roles from multiple job sources are normalized into one queue, with fit, training value, transit practicality, and your application workflow kept distinct from the research feed.</p></div>
-      <div class="target"><small>Priority profile</small><strong>T176 <span>TRADES</span></strong><small>Welding · plumbing · millwright · electromechanical · sheet metal</small></div>
+      <div>
+        <p class="eyebrow accent">CAREER SEARCH · T176 / TRADES</p>
+        <h2>Jobs ranked by <span>career value, not keyword noise.</span></h2>
+        <p class="lede">Trade-aligned roles from multiple job sources are normalized into one queue, with fit, training value, transit practicality, and your application workflow kept distinct from the research feed.</p>
+      </div>
+      <div class="target">
+        <small>Priority profile</small>
+        <strong>T176 <span>TRADES</span></strong>
+        <small>Welding · plumbing · millwright · electromechanical · sheet metal</small>
+      </div>
     </section>
 
     <section class="stats">
@@ -30,8 +69,8 @@
       <article class="stat"><span class="eyebrow">APPLIED</span><b id="sApplied">—</b><small>local workflow count</small></article>
     </section>
 
-    <section class="controls">
-      <label class="search"><span aria-hidden="true">⌕</span> <input id="q" type="search" aria-label="Search jobs" placeholder="Search title, company, notes, skills…"></label>
+    <section class="controls" aria-label="Job filters">
+      <label class="search" for="q"><i data-lucide="search" aria-hidden="true"></i> <input id="q" type="search" aria-label="Search jobs" placeholder="Search title, company, notes, skills…"></label>
       <select id="track" aria-label="Trade track"><option value="">All tracks</option></select>
       <select id="source" aria-label="Job source"><option value="">All sources</option></select>
       <select id="workflow" aria-label="Application workflow state"><option value="">All workflow states</option><option value="unreviewed">Unreviewed</option><option value="saved">Saved</option><option value="applied">Applied</option><option value="interview">Interview</option><option value="rejected">Rejected</option><option value="offer">Offer</option></select>
@@ -39,14 +78,29 @@
       <label class="check" for="activeOnly"><input type="checkbox" id="activeOnly" checked> Active only</label>
     </section>
 
-    <section class="feedhead"><div><span class="eyebrow">RESULT FEED</span><h3>Relevant openings</h3></div><div class="meta"><span id="resultCount" role="status" aria-live="polite" aria-atomic="true">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div></section>
+    <section class="feedhead">
+      <div>
+        <span class="eyebrow">RESULT FEED</span>
+        <h3>Relevant openings</h3>
+      </div>
+      <div class="meta"><span id="resultCount" role="status" aria-live="polite" aria-atomic="true">—</span> · <span id="updated">Feed updated —</span> · <span id="next">Next refresh —</span></div>
+    </section>
+
     <section id="grid" class="grid"></section>
-    <section id="empty" class="empty" hidden><h3 id="emptyTitle">No jobs in this feed yet</h3><p id="emptyBody">The dashboard is working — the feed is simply empty. Openings appear here once the trades job scout publishes them to this dashboard’s API (POST /api/upsert on jobs.fluxology.ca); nothing has been published yet.</p><button class="smallbtn" id="clear" hidden>Clear filters</button></section>
+
+    <section id="empty" class="empty panel" hidden>
+      <h3 id="emptyTitle">No jobs in this feed yet</h3>
+      <p id="emptyBody">The dashboard is working — the feed is simply empty. Openings appear here once the trades job scout publishes them to this dashboard’s API (POST /api/upsert on jobs.fluxology.ca); nothing has been published yet.</p>
+      <button class="smallbtn" id="clear" hidden>Clear filters</button>
+    </section>
   </main>
 
   <footer><span>Fluxology Jobs v3</span><span>Feed refreshes every hour while this tab is open.</span></footer>
 </div>
+
 <dialog id="dialog"><div class="ds"><button class="close" id="close" aria-label="Close listing details">×</button><div id="detail"></div></div></dialog>
+
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
 <script src="./app.js"></script>
 </body>
 </html>
