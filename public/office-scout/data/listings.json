@@ -1,7 +1,7 @@
 {
   "schemaVersion": "2.5",
   "appVersion": "2.5.0",
-  "generatedAt": "2026-08-09T08:03:00-04:00",
+  "generatedAt": "2026-08-22T16:20:00-04:00",
   "searchName": "Fluxology GTA private office scout",
   "hardAllInCeilingCad": 850,
   "listings": [
@@ -30,28 +30,43 @@
       "signageRights": "Unknown",
       "shortCommitment": true,
       "term": "Flexible / month-to-month offered",
-      "amenities": ["meeting/common areas", "concierge", "complimentary parking"],
+      "amenities": [
+        "meeting/common areas",
+        "concierge",
+        "complimentary parking"
+      ],
       "parking": "Complimentary",
       "transitConnection": "MiWay · Rathburn Rd / Sherwoodtowne Blvd",
       "finalWalkMinutes": 4,
       "skateboardPractical": true,
       "skateboardNote": "Short ordinary urban sidewalk segment; highly practical",
       "summary": "Strong Mississauga lead with 24/7 access, mail rights and a lockable furnished office; recurring-fee verification still required.",
-      "notes": "Keep in the high-priority queue until the operator confirms that internet, cleaning and all mandatory service fees keep the total at or below $850 including HST.",
-      "sourceUrl": "https://venturexcanada.ca/locations/mississauga/sherwoodtowne/",
-      "lastVerified": "2026-08-08",
-      "lastChanged": "2026-08-08",
-      "active": true,
-      "priceHistory": [{"date":"2026-08-08","askingRent":650,"estimatedAllInMonthly":734.5}]
+      "notes": "Recategorized out of Deliverable A: Venture X is a managed-office network already tracked under managed-providers.json (id venture-x-canada), so it cannot also stand as a non-managed listing here without violating the never-merge rule. Live re-check this run (LiquidSpace) confirms the location is still open and now signals a 1-person private office from ~C$600/month (down from C$650), 1-month minimum term, 24/7 access, lockable door, furnished, mail extra fee — folded into the provider profile.",
+      "sourceUrl": "https://liquidspace.com/ca/on/mississauga/venture-x-sherwoodtowne/private-office",
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
+      "active": false,
+      "priceHistory": [
+        {
+          "date": "2026-08-08",
+          "askingRent": 650,
+          "estimatedAllInMonthly": 734.5
+        },
+        {
+          "date": "2026-08-22",
+          "askingRent": 600,
+          "estimatedAllInMonthly": 678.0
+        }
+      ]
     },
     {
       "id": "village-hive-duncan-mill",
       "operator": "The Village Hive",
       "address": "150 Duncan Mill Rd",
       "municipality": "Toronto",
-      "askingRent": 650,
-      "estimatedAllInMonthly": 734.5,
-      "costStatus": "plausible",
+      "askingRent": 950,
+      "estimatedAllInMonthly": 1073.5,
+      "costStatus": "over",
       "mandatoryFeesKnown": false,
       "hstStatus": "13% HST produces $734.50 before any undisclosed mandatory fee",
       "tmiStatus": "No separate TMI identified in membership pricing",
@@ -69,58 +84,95 @@
       "signageRights": "Unknown",
       "shortCommitment": true,
       "term": "Month-to-month or annual",
-      "amenities": ["meeting-room hours", "Wi-Fi", "printers", "kitchen", "free parking"],
+      "amenities": [
+        "meeting-room hours",
+        "Wi-Fi",
+        "printers",
+        "kitchen",
+        "free parking"
+      ],
       "parking": "Free",
       "transitConnection": "TTC bus service via Don Mills / York Mills area",
       "finalWalkMinutes": null,
       "skateboardPractical": true,
       "skateboardNote": "Suburban office-park sidewalks; final distance should be route-checked from the selected TTC stop",
       "summary": "Very attractive $650-class option with 24/7 access and business mailing address included.",
-      "notes": "The main unresolved issue is real-time availability at the advertised starting rate and confirmation that there is no mandatory service surcharge.",
-      "sourceUrl": "https://thevillagehive.ca/",
-      "lastVerified": "2026-08-07",
-      "lastChanged": "2026-08-07",
-      "active": true,
-      "priceHistory": [{"date":"2026-08-07","askingRent":650,"estimatedAllInMonthly":734.5}]
+      "notes": "Retired: (1) The Village Hive is a managed-office network already tracked under managed-providers.json (id village-hive) and should not also be a non-managed listing. (2) Live re-check this run (members.duncanmillhive.ca / current aggregator listings) shows Duncan Mill private offices now start at C$950/month, well above the prior C$650 record and above the $850 non-managed ceiling; the North York location is also flagged [INACTIVE] on one aggregator. Folded current pricing into the provider profile.",
+      "sourceUrl": "https://duncanmillhive.ca/coworking-spaces-north-york/",
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
+      "active": false,
+      "priceHistory": [
+        {
+          "date": "2026-08-07",
+          "askingRent": 650,
+          "estimatedAllInMonthly": 734.5
+        },
+        {
+          "date": "2026-08-22",
+          "askingRent": 950,
+          "estimatedAllInMonthly": 1073.5
+        }
+      ]
     },
     {
       "id": "humbold-1120-finch",
-      "operator": "Humbold Properties / Office Hub listing",
+      "operator": "Humbold Business Centre (listed via Office Hub)",
       "address": "1120 Finch Ave W",
       "municipality": "Toronto",
-      "askingRent": 652,
-      "estimatedAllInMonthly": 736.76,
+      "askingRent": 650,
+      "estimatedAllInMonthly": 734.5,
       "costStatus": "plausible",
       "mandatoryFeesKnown": false,
-      "hstStatus": "13% HST produces $736.76 before unknown recurring charges",
+      "hstStatus": "13% HST produces $734.50 before any undisclosed mandatory fee; HST treatment not stated on the listing",
       "tmiStatus": "Unknown",
-      "utilitiesStatus": "Unknown",
-      "internetStatus": "Unknown",
-      "cleaningStatus": "Unknown",
-      "mandatoryFeeNotes": "Internet, utilities, cleaning, mail handling and other recurring charges were not clearly disclosed",
-      "size": "1–2 desk private office; exact sq. ft. not disclosed",
+      "utilitiesStatus": "Not itemized separately; office is advertised fully furnished",
+      "internetStatus": "Not explicitly itemized in this listing",
+      "cleaningStatus": "Office cleaning listed as an included service",
+      "mandatoryFeeNotes": "humbold.ca no longer resolves (DNS failure) — the operator's own domain appears dead. The building and inventory are still live via an Office Hub aggregator listing verified this run. This is now a 2-person-capacity private office (1-2 desks); no 1-person-only SKU is currently listed, so per-person economics are weaker than a dedicated 1-person office.",
+      "size": "2-person private office (1-2 desks); exact sq ft not disclosed",
       "leaseType": "Private office / office-centre inventory",
       "lockableDoor": true,
-      "access24h": null,
-      "furnished": null,
-      "mailRights": null,
+      "access24h": true,
+      "furnished": true,
+      "mailRights": true,
       "directoryRights": null,
       "signageRights": "Unknown",
       "shortCommitment": null,
       "term": "Unknown",
-      "amenities": ["after-hours security", "elevators", "retail/café access", "free parking"],
+      "amenities": [
+        "free parking",
+        "24/7 access",
+        "meeting rooms",
+        "office cleaning",
+        "shared kitchen",
+        "reception",
+        "mail handling",
+        "printing"
+      ],
       "parking": "Free",
       "transitConnection": "TTC · Finch West Station / local bus",
       "finalWalkMinutes": 19,
       "skateboardPractical": true,
       "skateboardNote": "Within stated tolerance; straightforward urban/suburban sidewalk route",
       "summary": "Interesting conventional-office lead with excellent budget headroom, but too many recurring costs remain unverified.",
-      "notes": "Do not upgrade this to verified unless the landlord/operator confirms total mandatory recurring cost including HST, TMI, utilities, internet and cleaning.",
-      "sourceUrl": "https://www.humbold.ca/",
-      "lastVerified": "2026-08-07",
-      "lastChanged": "2026-08-07",
+      "notes": "Original humbold.ca source is dead (DNS failure); re-sourced via a live Office Hub aggregator listing for the same building this run. CLARIFICATION REQUIRED: confirm whether a genuine 1-person office is available (this SKU is 1-2 desks), exact sq ft, lockable-door status, and whether HST/internet are already included in the $650 figure.",
+      "sourceUrl": "https://www.office-hub.com/ca/listings/2-person-private-office-1120-finch-avenue-west-toronto-ontario-m3j3h7-a0tQg00000KMjHVIA1",
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
       "active": true,
-      "priceHistory": [{"date":"2026-08-07","askingRent":652,"estimatedAllInMonthly":736.76}]
+      "priceHistory": [
+        {
+          "date": "2026-08-07",
+          "askingRent": 652,
+          "estimatedAllInMonthly": 736.76
+        },
+        {
+          "date": "2026-08-22",
+          "askingRent": 650,
+          "estimatedAllInMonthly": 734.5
+        }
+      ]
     },
     {
       "id": "gtec-2985-drew",
@@ -147,19 +199,30 @@
       "signageRights": "Unknown",
       "shortCommitment": true,
       "term": "Flexible serviced-office terms",
-      "amenities": ["reception", "shared kitchen/lounge", "meeting rooms", "complimentary parking"],
+      "amenities": [
+        "reception",
+        "shared kitchen/lounge",
+        "meeting rooms",
+        "complimentary parking"
+      ],
       "parking": "Complimentary",
       "transitConnection": "MiWay · Airport Rd / Slough St; Malton GO nearby",
       "finalWalkMinutes": 3,
       "skateboardPractical": true,
       "skateboardNote": "Very short final segment from local transit",
       "summary": "Excellent transit and amenities, but the currently observed one-person price fails the $850 all-in ceiling.",
-      "notes": "Keep only as a price-drop watch. It becomes relevant again if a genuine $650-class room is confirmed available.",
+      "notes": "Recategorized out of Deliverable A: Greater Toronto Executive Centre operates as a multi-location serviced-office chain with membership-style access, which fits the managed-office definition rather than an independent non-managed listing. Added as a new provider record in managed-providers.json this run. Locations page confirmed live this run but does not publish price online; prior $797 one-person figure (pre-tax) not reconfirmed.",
       "sourceUrl": "https://gtexecutivecentre.com/locations/",
-      "lastVerified": "2026-08-08",
-      "lastChanged": "2026-08-08",
-      "active": true,
-      "priceHistory": [{"date":"2026-08-08","askingRent":797,"estimatedAllInMonthly":900.61}]
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
+      "active": false,
+      "priceHistory": [
+        {
+          "date": "2026-08-08",
+          "askingRent": 797,
+          "estimatedAllInMonthly": 900.61
+        }
+      ]
     },
     {
       "id": "office146-1p-597",
@@ -186,19 +249,33 @@
       "signageRights": "Unknown",
       "shortCommitment": true,
       "term": "1 month; promotional terms apply",
-      "amenities": ["24/7 secure access", "Bell Fibre Wi-Fi", "daily cleaning", "mail service", "meeting-room credits", "printing/scanning", "free parking"],
+      "amenities": [
+        "24/7 secure access",
+        "Bell Fibre Wi-Fi",
+        "daily cleaning",
+        "mail service",
+        "meeting-room credits",
+        "printing/scanning",
+        "free parking"
+      ],
       "parking": "Free for members and guests",
       "transitConnection": "TTC and Long Branch GO in the surrounding area",
       "finalWalkMinutes": null,
       "skateboardPractical": true,
       "skateboardNote": "South Etobicoke street network makes a short final skateboard leg plausible; exact stop-to-door time should be route-checked.",
       "summary": "High-priority Toronto West lead: secure 1-person office, 24/7 access, internet, cleaning and mail service at a $597 promotional base rate.",
-      "notes": "Do not mark verified until HST, post-promotion rate and every mandatory fee are confirmed in writing.",
+      "notes": "Retired per CRITICAL LINK RULE: the specific 1-person Spacelist listing (ID 948585) could not be verified live this run (source blocked the fetch with HTTP 403, and a fresh search of current Office146 inventory surfaces only 2/3/4/10-person SKUs, suggesting this exact 1-person promo rotated out). Office146 is also already tracked as a managed-office provider (managed-providers.json id office146), so it should not simultaneously carry a non-managed listing record. Re-verify directly with Office146 before re-surfacing.",
       "sourceUrl": "https://www.spacelist.ca/listings/948585/on/toronto/for-lease/coworking/1-person_private_office_at_office146-146_thirtieth_street",
-      "lastVerified": "2026-08-09",
-      "lastChanged": "2026-08-09",
-      "active": true,
-      "priceHistory": [{"date":"2026-08-09","askingRent":597,"estimatedAllInMonthly":674.61}]
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
+      "active": false,
+      "priceHistory": [
+        {
+          "date": "2026-08-09",
+          "askingRent": 597,
+          "estimatedAllInMonthly": 674.61
+        }
+      ]
     },
     {
       "id": "kijiji-1720342996",
@@ -225,19 +302,38 @@
       "signageRights": "Unknown",
       "shortCommitment": true,
       "term": "Month-to-month or 1-year lease",
-      "amenities": ["own key", "24-hour access", "free Wi-Fi", "utilities included", "free parking", "security", "client waiting area"],
+      "amenities": [
+        "own key",
+        "24-hour access",
+        "free Wi-Fi",
+        "utilities included",
+        "free parking",
+        "security",
+        "client waiting area"
+      ],
       "parking": "Free",
       "transitConnection": "Consumers Road / Fairview Mall area; TTC service nearby",
       "finalWalkMinutes": null,
       "skateboardPractical": true,
       "skateboardNote": "Urban office-park streets and sidewalks; exact route should be checked from the selected TTC stop.",
       "summary": "Very strong North York budget lead: lockable private room with 24/7 access, Wi-Fi and utilities included at $499.99 + HST.",
-      "notes": "High priority for direct verification of room availability, cleaning, mail/directory rights and any undisclosed recurring fee.",
+      "notes": "Re-verified live this run at the same terms; still a high-priority North York budget lead pending direct confirmation of cleaning/mail/directory rights and any undisclosed fee.",
       "sourceUrl": "https://www.kijiji.ca/v-commercial-office-space/city-of-toronto/private-office-room-no-last-month-scarborough-no-credit-check/1720342996",
-      "lastVerified": "2026-08-09",
+      "lastVerified": "2026-08-22",
       "lastChanged": "2026-08-09",
       "active": true,
-      "priceHistory": [{"date":"2026-08-09","askingRent":499.99,"estimatedAllInMonthly":564.99}]
+      "priceHistory": [
+        {
+          "date": "2026-08-09",
+          "askingRent": 499.99,
+          "estimatedAllInMonthly": 564.99
+        },
+        {
+          "date": "2026-08-22",
+          "askingRent": 499.99,
+          "estimatedAllInMonthly": 564.99
+        }
+      ]
     },
     {
       "id": "kijiji-1741067556",
@@ -264,19 +360,227 @@
       "signageRights": "Unknown",
       "shortCommitment": true,
       "term": "Month-to-month",
-      "amenities": ["24/7 access", "security alarm", "internet", "utilities", "TMI", "light weekly common-area janitorial", "free parking"],
+      "amenities": [
+        "24/7 access",
+        "security alarm",
+        "internet",
+        "utilities",
+        "TMI",
+        "light weekly common-area janitorial",
+        "free parking"
+      ],
       "parking": "Lots of free parking",
       "transitConnection": "Steeles & Dixie area; listing says about 5 minutes to a GO station",
       "finalWalkMinutes": null,
       "skateboardPractical": true,
       "skateboardNote": "Industrial-area final leg may be skateboard-practical, but exact address is required for a route check.",
       "summary": "Exceptionally cheap office-room lead with TMI, utilities and internet stated as included.",
-      "notes": "Potentially excellent, but exact address, HST and private-room cleaning responsibility must be resolved before verification.",
+      "notes": "Retired per CRITICAL LINK RULE: the ad URL no longer resolves to a specific listing this run — it redirects to a generic Kijiji category search page (3,182 results), the standard signature of an expired/removed ad. No live replacement found for this exact unit.",
       "sourceUrl": "https://www.kijiji.ca/v-commercial-office-space/mississauga-peel-region/big-private-office-room-for-month-to-month-rental-tmi-inc/1741067556",
-      "lastVerified": "2026-08-09",
-      "lastChanged": "2026-08-09",
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
+      "active": false,
+      "priceHistory": [
+        {
+          "date": "2026-08-09",
+          "askingRent": 549,
+          "estimatedAllInMonthly": null
+        }
+      ]
+    },
+    {
+      "id": "westmore-205-etobicoke",
+      "operator": "Private owner (Jeffrey Ledger, Kijiji)",
+      "address": "101 Westmore Drive, Unit 205",
+      "municipality": "Etobicoke",
+      "askingRent": 550,
+      "estimatedAllInMonthly": 621.5,
+      "costStatus": "plausible",
+      "mandatoryFeesKnown": false,
+      "hstStatus": "Not stated; 13% HST would produce $621.50",
+      "tmiStatus": "Not stated",
+      "utilitiesStatus": "Wi-Fi and utilities stated as included",
+      "internetStatus": "Wi-Fi stated as included",
+      "cleaningStatus": "Not stated",
+      "mandatoryFeeNotes": "Listing states Wi-Fi and utilities included with common washroom and small kitchenette; lockable-door status, 24/7 access, cleaning and mail rights are not stated.",
+      "size": "150 sq ft",
+      "leaseType": "Private office room, private landlord",
+      "lockableDoor": null,
+      "access24h": null,
+      "furnished": false,
+      "mailRights": null,
+      "directoryRights": null,
+      "signageRights": "Unknown",
+      "shortCommitment": null,
+      "term": "Unknown",
+      "amenities": [
+        "Wi-Fi",
+        "utilities included",
+        "shared washroom",
+        "small kitchenette"
+      ],
+      "parking": "Unknown",
+      "transitConnection": "Etobicoke; nearest TTC stop not yet confirmed",
+      "finalWalkMinutes": null,
+      "skateboardPractical": null,
+      "skateboardNote": "Requires a route check from the nearest TTC stop before scoring skateboard practicality.",
+      "summary": "CLARIFICATION REQUIRED: cheap unfurnished private room with utilities/Wi-Fi included, but lockable-door status, 24/7 access, cleaning and mail rights are all unconfirmed.",
+      "notes": "Two rooms available at this address per the ad. Verify lockable door, access hours, and whether HST is additional before treating as a real candidate.",
+      "sourceUrl": "https://www.kijiji.ca/v-commercial-office-space/mississauga-peel-region/office-room/1624093844",
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
       "active": true,
-      "priceHistory": [{"date":"2026-08-09","askingRent":549,"estimatedAllInMonthly":null}]
+      "priceHistory": [
+        {
+          "date": "2026-08-22",
+          "askingRent": 550,
+          "estimatedAllInMonthly": 621.5
+        }
+      ]
+    },
+    {
+      "id": "britannia-hwy10-meadowvale",
+      "operator": "Private owner (Kijiji)",
+      "address": "Britannia Rd / Highway 10, Meadowvale Village",
+      "municipality": "Mississauga",
+      "askingRent": 575,
+      "estimatedAllInMonthly": 649.75,
+      "costStatus": "plausible",
+      "mandatoryFeesKnown": false,
+      "hstStatus": "Listing says 'ALL INCLUDED' but does not explicitly confirm HST treatment",
+      "tmiStatus": "Stated as included ('ALL INCLUDED')",
+      "utilitiesStatus": "Stated as included",
+      "internetStatus": "Not itemized separately",
+      "cleaningStatus": "Not stated",
+      "mandatoryFeeNotes": "Listing restricts tenancy to professionals only; common boardroom and kitchen included. Advertised square footage rendered as '1 sqft', almost certainly a listing data-entry error requiring direct confirmation.",
+      "size": "CLARIFICATION REQUIRED — advertised size field appears to be a data-entry error",
+      "leaseType": "Private office room, private landlord",
+      "lockableDoor": null,
+      "access24h": null,
+      "furnished": null,
+      "mailRights": null,
+      "directoryRights": null,
+      "signageRights": "Unknown",
+      "shortCommitment": null,
+      "term": "Unknown",
+      "amenities": [
+        "common boardroom",
+        "common kitchen"
+      ],
+      "parking": "Unknown",
+      "transitConnection": "Meadowvale Village; aggregator-reported transit score is very low (3/10) — final-mile connection needs direct verification",
+      "finalWalkMinutes": null,
+      "skateboardPractical": null,
+      "skateboardNote": "Low reported transit score raises a real risk this location fails the 20-minute-walk-from-transit requirement; verify the nearest usable stop before proceeding.",
+      "summary": "CLARIFICATION REQUIRED: cheap all-inclusive private room, but size field is corrupted and transit connectivity looks weak.",
+      "notes": "Do not advance without the landlord confirming true square footage, lockable-door status, access hours, and the nearest practical transit stop.",
+      "sourceUrl": "https://www.kijiji.ca/v-commercial-office-space/mississauga-peel-region/office-room-for-rent/1741549540",
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
+      "active": true,
+      "priceHistory": [
+        {
+          "date": "2026-08-22",
+          "askingRent": 575,
+          "estimatedAllInMonthly": 649.75
+        }
+      ]
+    },
+    {
+      "id": "brockhouse-105-etobicoke",
+      "operator": "Thombar Property Management",
+      "address": "105 Brockhouse Rd",
+      "municipality": "Etobicoke",
+      "askingRent": 600,
+      "estimatedAllInMonthly": 678.0,
+      "costStatus": "plausible",
+      "mandatoryFeesKnown": false,
+      "hstStatus": "Not stated; 13% HST would produce $678.00",
+      "tmiStatus": "Not stated",
+      "utilitiesStatus": "Not stated",
+      "internetStatus": "Not stated",
+      "cleaningStatus": "Not stated",
+      "mandatoryFeeNotes": "Landlord-managed listing (Thombar Property Management); furnished studio office, but utilities/internet/cleaning/HST are not itemized.",
+      "size": "150 sq ft",
+      "leaseType": "Private office / small landlord-managed suite",
+      "lockableDoor": null,
+      "access24h": null,
+      "furnished": true,
+      "mailRights": null,
+      "directoryRights": null,
+      "signageRights": "Unknown",
+      "shortCommitment": null,
+      "term": "Unknown",
+      "amenities": [
+        "furnished"
+      ],
+      "parking": "Unknown",
+      "transitConnection": "Etobicoke; nearest TTC stop not yet confirmed",
+      "finalWalkMinutes": null,
+      "skateboardPractical": null,
+      "skateboardNote": "Requires a route check from the nearest TTC stop.",
+      "summary": "CLARIFICATION REQUIRED: compact furnished studio office at a reasonable price, but access hours, lockable door and mandatory-fee status are all unconfirmed.",
+      "notes": "Contact Thombar Property Management directly to confirm lockable door, 24/7 access, HST treatment and any additional fees.",
+      "sourceUrl": "https://www.kijiji.ca/v-commercial-office-space/mississauga-peel-region/studio-office-for-lease-efficient-affordable/1739075853",
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
+      "active": true,
+      "priceHistory": [
+        {
+          "date": "2026-08-22",
+          "askingRent": 600,
+          "estimatedAllInMonthly": 678.0
+        }
+      ]
+    },
+    {
+      "id": "hurontario-qew-mississauga",
+      "operator": "Thombar Property Management",
+      "address": "Hurontario St & QEW (exact unit not disclosed)",
+      "municipality": "Mississauga",
+      "askingRent": 725,
+      "estimatedAllInMonthly": 819.25,
+      "costStatus": "plausible",
+      "mandatoryFeesKnown": false,
+      "hstStatus": "Not stated; 13% HST would produce $819.25, still under the $850 ceiling",
+      "tmiStatus": "Not stated",
+      "utilitiesStatus": "Not stated",
+      "internetStatus": "Not stated",
+      "cleaningStatus": "Not stated",
+      "mandatoryFeeNotes": "Advertised '1 month free rent' promotion; ample parking mentioned; HST/utilities/internet/cleaning not itemized.",
+      "size": "215 sq ft",
+      "leaseType": "Private office / small landlord-managed suite",
+      "lockableDoor": null,
+      "access24h": true,
+      "furnished": false,
+      "mailRights": null,
+      "directoryRights": null,
+      "signageRights": "Unknown",
+      "shortCommitment": null,
+      "term": "Unknown",
+      "amenities": [
+        "24/7 access",
+        "ample parking",
+        "1 month free rent promotion"
+      ],
+      "parking": "Ample, free",
+      "transitConnection": "Hurontario St & QEW, Mississauga; MiWay service on Hurontario corridor, final stop not yet confirmed",
+      "finalWalkMinutes": null,
+      "skateboardPractical": null,
+      "skateboardNote": "Requires a route check from the nearest MiWay stop; Hurontario corridor sidewalks are generally skateboard-practical.",
+      "summary": "Best new lead this run: largest usable space among new candidates (215 sq ft, $3.81/usable-sq-ft/month all-in) with explicit 24/7 access and a current 1-month-free promotion, still under the $850 ceiling even after HST.",
+      "notes": "Contact Thombar Property Management to confirm lockable door, 24/7 HVAC (separate from 24/7 access), HST treatment, cleaning/mail rights and whether the free-rent promotion survives if paid upfront.",
+      "sourceUrl": "https://www.kijiji.ca/v-commercial-office-space/mississauga-peel-region/1-month-free-rent-desirable-office-space-for-lease/1742297266",
+      "lastVerified": "2026-08-22",
+      "lastChanged": "2026-08-22",
+      "active": true,
+      "priceHistory": [
+        {
+          "date": "2026-08-22",
+          "askingRent": 725,
+          "estimatedAllInMonthly": 819.25
+        }
+      ]
     }
   ]
 }

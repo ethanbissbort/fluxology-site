@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-16T17:21:00Z",
+  "generatedAt": "2026-08-22T16:20:00Z",
   "searchName": "Fluxology Inc. Managed Office Watchlist",
   "scoreModel": {
     "allInEconomics": 22,
@@ -27,7 +27,15 @@
       "foodBeverage": "Daily breakfast, craft coffee and snacks are advertised; generic membership materials also describe tea and sparkling water.",
       "network": "Home-location 24/7 access plus a large multi-city network; exact reciprocal/global-access entitlement should be confirmed for the quoted plan.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["exact one-person private-office price and all mandatory fees", "HST treatment", "24/7 access and after-hours HVAC", "network access included with the quoted office", "meeting-room credits", "overnight equipment policy", "current incentives/free months"],
+      "outreachQuestions": [
+        "exact one-person private-office price and all mandatory fees",
+        "HST treatment",
+        "24/7 access and after-hours HVAC",
+        "network access included with the quoted office",
+        "meeting-room credits",
+        "overnight equipment policy",
+        "current incentives/free months"
+      ],
       "website": "https://www.industriousoffice.com/locations/33-bloor-street-east"
     },
     {
@@ -42,7 +50,16 @@
       "foodBeverage": "Coffee, beverage and snack bar; public materials advertise free tea and coffee and member testimonials mention hot coffee and snacks.",
       "network": "Single Toronto location; no reciprocal international network identified.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["actual one-seat enclosed office availability and monthly price", "all mandatory fees/HST", "furniture included", "cleaning", "mail/package handling details", "after-hours HVAC", "overnight equipment policy", "term and deposit"],
+      "outreachQuestions": [
+        "actual one-seat enclosed office availability and monthly price",
+        "all mandatory fees/HST",
+        "furniture included",
+        "cleaning",
+        "mail/package handling details",
+        "after-hours HVAC",
+        "overnight equipment policy",
+        "term and deposit"
+      ],
       "website": "https://startuptive.com/"
     },
     {
@@ -51,13 +68,21 @@
       "status": "watch",
       "priority": 1,
       "preliminaryScore": 85,
-      "scoreConfidence": "medium",
+      "scoreConfidence": "medium-high",
       "gtaRelevant": true,
-      "priceSignal": "Etobicoke advertises private offices from C$750/month; Mississauga Heartland has been advertised from about C$850/month.",
+      "priceSignal": "Sherwoodtowne (Mississauga) 1-person private office re-verified live this run via LiquidSpace at 4230 Sherwoodtowne Blvd #200: signals ~C$600/month (down from ~C$650 previously recorded), 1-month minimum term, 24/7 access, lockable door, furnished, Wi-Fi, coffee/tea, mail service at extra charge. Etobicoke (5343 Dundas St W) previously advertised private offices from ~C$750/month.",
       "foodBeverage": "Unlimited coffee and tea is advertised; some locations describe a cafe-style kitchen with unlimited beverages.",
       "network": "Multi-location franchise network; exact reciprocal access rights for Canadian private-office members require confirmation.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["best one-person quote at Etobicoke and Mississauga locations", "all fees/HST", "reciprocal location access", "after-hours HVAC", "meeting-room credits/rates", "mail/package handling", "current promotions"],
+      "outreachQuestions": [
+        "best one-person quote at Etobicoke and Mississauga locations",
+        "all fees/HST",
+        "reciprocal location access",
+        "after-hours HVAC",
+        "meeting-room credits/rates",
+        "mail/package handling",
+        "current promotions"
+      ],
       "website": "https://venturexcanada.ca/"
     },
     {
@@ -72,7 +97,15 @@
       "foodBeverage": "Cafe lounge with coffee, tea and filtered water; some current materials also mention soft drinks.",
       "network": "ABCN partner network advertised at 650+ locations in 40 countries, with meeting-space benefits described for office clients.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["current C$850 inventory and promotion eligibility", "all mandatory fees/HST", "exact ABCN reciprocal benefits", "mail/package services", "meeting-room hours", "deposit/retainer", "renewal and cancellation terms"],
+      "outreachQuestions": [
+        "current C$850 inventory and promotion eligibility",
+        "all mandatory fees/HST",
+        "exact ABCN reciprocal benefits",
+        "mail/package services",
+        "meeting-room hours",
+        "deposit/retainer",
+        "renewal and cancellation terms"
+      ],
       "website": "https://www.telsec.net/"
     },
     {
@@ -80,15 +113,24 @@
       "name": "IWG — Regus / HQ / Spaces",
       "status": "watch",
       "priority": 1,
-      "preliminaryScore": 88,
-      "scoreConfidence": "medium",
+      "preliminaryScore": 95,
+      "scoreConfidence": "high",
       "gtaRelevant": true,
-      "priceSignal": "Marketplace inventory currently shows multiple one-person Toronto offices within the target range; exact IWG proposal and mandatory charges must be obtained directly.",
+      "priceSignal": "CONFIRMED THIS RUN: HQ (IWG brand) at 1300 Britannia Rd East, 2nd Floor, Mississauga advertises a fully enclosed, lockable 1-person private office from C$369/month, corroborated on hq.com — furniture, fiber internet, IT support, reception/mail handling, meeting-room/lounge access, and utilities/cleaning/security/HVAC all stated as included. Separately, Regus (IWG brand) at 2425 Matheson Blvd East, Mississauga advertises a comparable 1-person enclosed private office around C$611-649/month (aggregators vary), also all-in serviced. Both were surfaced via third-party marketplace resale listings (not IWG's own site directly) — first-party confirmation of the exact current price and fees is still required before treating either as verified.",
       "foodBeverage": "Tea/coffee facilities are common and some locations advertise cafe/barista coffee; offering is location-specific.",
       "network": "Very large global network. IWG/HQ materials state office customers can access locations globally; access-plan entitlements and any incremental charges must be confirmed.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["best one-person private-office proposals across GTA under roughly C$850 before value adjustments", "complete mandatory fee schedule", "setup/restoration/retainer terms", "global lounge/coworking access included", "after-hours HVAC by location", "F&B by location", "meeting-room credits", "current promotions"],
-      "website": "https://www.hq.com/en/canada/ontario/toronto"
+      "outreachQuestions": [
+        "confirm the exact current 1-person all-in price and every mandatory fee for both 1300 Britannia Rd East (HQ) and 2425 Matheson Blvd East (Regus)",
+        "HST treatment",
+        "24/7 access and true 24/7 HVAC at each specific location",
+        "global/network lounge access included with the quoted office",
+        "meeting-room credits",
+        "overnight equipment policy",
+        "6/12/18-month prepayment discount",
+        "current incentives/free months"
+      ],
+      "website": "https://www.hq.com/en/canada/3682"
     },
     {
       "id": "office146",
@@ -102,7 +144,15 @@
       "foodBeverage": "Unlimited coffee, tea, filtered water and kombucha advertised.",
       "network": "Single-location value proposition; no reciprocal office network identified.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["current office availability and promo", "all mandatory fees/HST", "mail/package rights", "after-hours HVAC", "boardroom credits", "overnight equipment policy", "term/deposit"],
+      "outreachQuestions": [
+        "current office availability and promo",
+        "all mandatory fees/HST",
+        "mail/package rights",
+        "after-hours HVAC",
+        "boardroom credits",
+        "overnight equipment policy",
+        "term/deposit"
+      ],
       "website": null
     },
     {
@@ -113,11 +163,20 @@
       "preliminaryScore": 81,
       "scoreConfidence": "medium",
       "gtaRelevant": true,
-      "priceSignal": "Mississauga private-office inventory has been advertised around C$850/month, with some promotions describing up to two months free.",
+      "priceSignal": "6660 Kennedy Rd, Unit 203, Mississauga confirmed live via Office Hub this run: 2-person private office at C$763/month (1-2 desk capacity; no 1-person-only SKU currently listed), free parking, 24/7 access. Building also separately shows executive offices advertised from ~C$700 and virtual office at C$199/month via other aggregators — needs first-party confirmation of current 1-person inventory and price.",
       "foodBeverage": "Kitchen/lounge amenities advertised; exact included beverage/snack program is location-specific and requires confirmation.",
       "network": "Multiple GTA locations; reciprocal use within the network should be confirmed.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["best one-person offer across GTA locations", "promotion eligibility", "all fees/HST", "24/7 access", "F&B inclusions", "reciprocal GTA-location access", "meeting-room credits", "after-hours HVAC"],
+      "outreachQuestions": [
+        "best one-person offer across GTA locations",
+        "promotion eligibility",
+        "all fees/HST",
+        "24/7 access",
+        "F&B inclusions",
+        "reciprocal GTA-location access",
+        "meeting-room credits",
+        "after-hours HVAC"
+      ],
       "website": "https://www.zemlar.ca/"
     },
     {
@@ -132,7 +191,15 @@
       "foodBeverage": "Unlimited coffee and tea advertised at Toronto locations; location-specific extras vary.",
       "network": "Large international network; exact private-office member access to other locations should be quoted explicitly.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["lowest one-person private-office offers in Toronto", "all mandatory fees/HST", "global access included with private office", "24/7 access", "meeting-room credits", "mail/package services", "current discounts"],
+      "outreachQuestions": [
+        "lowest one-person private-office offers in Toronto",
+        "all mandatory fees/HST",
+        "global access included with private office",
+        "24/7 access",
+        "meeting-room credits",
+        "mail/package services",
+        "current discounts"
+      ],
       "website": "https://www.wework.com/l/office-space/toronto--ON"
     },
     {
@@ -147,7 +214,15 @@
       "foodBeverage": "Strong offering: complimentary snacks and beverages at several Toronto locations; 302 Bay advertises a staffed barista bar with hot and cold beverages.",
       "network": "Multiple premium Canadian locations; reciprocal access rules require confirmation.",
       "outreachPriority": "immediate",
-      "outreachQuestions": ["one-person private-office pricing at Toronto locations", "all fees/HST", "reciprocal location access", "F&B by location", "meeting credits", "24/7 access/after-hours HVAC", "mail/package services"],
+      "outreachQuestions": [
+        "one-person private-office pricing at Toronto locations",
+        "all fees/HST",
+        "reciprocal location access",
+        "F&B by location",
+        "meeting credits",
+        "24/7 access/after-hours HVAC",
+        "mail/package services"
+      ],
       "website": "https://www.iqoffices.com/"
     },
     {
@@ -155,14 +230,21 @@
       "name": "The Village Hive",
       "status": "watch",
       "priority": 2,
-      "preliminaryScore": 75,
-      "scoreConfidence": "low",
+      "preliminaryScore": 60,
+      "scoreConfidence": "medium",
       "gtaRelevant": true,
-      "priceSignal": "Private-office pricing requires inquiry.",
+      "priceSignal": "Re-verified this run: Duncan Mill (North York) private offices now start at C$950/month (up sharply from ~C$650 previously recorded); Eglinton location starts at C$1,450/month. Both now sit well above the C$750-850 managed-office target band; one aggregator flags the North York property [INACTIVE]. Demote outreach priority pending a fresh quote.",
       "foodBeverage": "Complimentary coffee is advertised.",
       "network": "Several GTA locations; reciprocal member access requires confirmation.",
       "outreachPriority": "second-wave",
-      "outreachQuestions": ["one-person office price", "all fees", "24/7 access", "reciprocal-location access", "F&B", "mail/package handling"],
+      "outreachQuestions": [
+        "one-person office price",
+        "all fees",
+        "24/7 access",
+        "reciprocal-location access",
+        "F&B",
+        "mail/package handling"
+      ],
       "website": "https://thevillagehive.ca/"
     },
     {
@@ -177,7 +259,14 @@
       "foodBeverage": "Shared kitchen advertised; included beverage/snack program not confirmed.",
       "network": "Single-location proposition.",
       "outreachPriority": "second-wave",
-      "outreachQuestions": ["current availability", "all fees/HST", "24/7 access and HVAC", "mail rights", "included beverages", "boardroom credits"],
+      "outreachQuestions": [
+        "current availability",
+        "all fees/HST",
+        "24/7 access and HVAC",
+        "mail rights",
+        "included beverages",
+        "boardroom credits"
+      ],
       "website": null
     },
     {
@@ -192,7 +281,14 @@
       "foodBeverage": "Lounge amenities advertised; detailed F&B inclusions require confirmation.",
       "network": "Local North York operation; no international reciprocal network identified.",
       "outreachPriority": "second-wave",
-      "outreachQuestions": ["one-person private office", "all fees", "24/7 access", "F&B", "meeting credits", "mail/package services"],
+      "outreachQuestions": [
+        "one-person private office",
+        "all fees",
+        "24/7 access",
+        "F&B",
+        "meeting credits",
+        "mail/package services"
+      ],
       "website": null
     },
     {
@@ -207,7 +303,14 @@
       "foodBeverage": "Tea/coffee and lounge amenities are reported at locations; confirm current inclusions directly.",
       "network": "Multiple Toronto locations; reciprocal member access should be confirmed.",
       "outreachPriority": "second-wave",
-      "outreachQuestions": ["lowest one-person private-office options", "all fees", "reciprocal access", "24/7 access", "F&B", "mail services"],
+      "outreachQuestions": [
+        "lowest one-person private-office options",
+        "all fees",
+        "reciprocal access",
+        "24/7 access",
+        "F&B",
+        "mail services"
+      ],
       "website": "https://workhaus.ca/"
     },
     {
@@ -222,7 +325,14 @@
       "foodBeverage": "Strong published beverage program at Peter Street, including coffee, tea, espresso and sparkling water.",
       "network": "Multiple Toronto locations; reciprocal access requires confirmation.",
       "outreachPriority": "second-wave",
-      "outreachQuestions": ["one-person office price", "all fees", "F&B by location", "24/7 access", "reciprocal-location access", "mail/package handling"],
+      "outreachQuestions": [
+        "one-person office price",
+        "all fees",
+        "F&B by location",
+        "24/7 access",
+        "reciprocal-location access",
+        "mail/package handling"
+      ],
       "website": "https://workplaceone.com/"
     },
     {
@@ -237,7 +347,12 @@
       "foodBeverage": "Beverages are advertised on some plans/locations.",
       "network": "Multi-location provider; relevant reciprocal rights require confirmation.",
       "outreachPriority": "monitor",
-      "outreachQuestions": ["discounted solo-office inventory", "all fees", "network rights", "current promotions"],
+      "outreachQuestions": [
+        "discounted solo-office inventory",
+        "all fees",
+        "network rights",
+        "current promotions"
+      ],
       "website": "https://www.intelligentoffice.com/"
     },
     {
@@ -252,7 +367,12 @@
       "foodBeverage": "Unlimited gourmet coffee and tea advertised.",
       "network": "Multiple Studio locations but reciprocal entitlement must be confirmed.",
       "outreachPriority": "monitor",
-      "outreachQuestions": ["promotional solo-office pricing", "all fees", "network access", "current incentives"],
+      "outreachQuestions": [
+        "promotional solo-office pricing",
+        "all fees",
+        "network access",
+        "current incentives"
+      ],
       "website": "https://studio.staples.ca/"
     },
     {
@@ -267,7 +387,13 @@
       "foodBeverage": "Requires direct verification.",
       "network": "Local Toronto provider; no international reciprocal network identified.",
       "outreachPriority": "monitor",
-      "outreachQuestions": ["one-person private office", "all fees", "24/7/HVAC", "F&B", "mail/package services"],
+      "outreachQuestions": [
+        "one-person private office",
+        "all fees",
+        "24/7/HVAC",
+        "F&B",
+        "mail/package services"
+      ],
       "website": null
     },
     {
@@ -282,7 +408,13 @@
       "foodBeverage": "Requires direct verification.",
       "network": "Local Scarborough provider; no international reciprocal network identified.",
       "outreachPriority": "monitor",
-      "outreachQuestions": ["one-person private office", "all fees", "24/7/HVAC", "F&B", "mail/package services"],
+      "outreachQuestions": [
+        "one-person private office",
+        "all fees",
+        "24/7/HVAC",
+        "F&B",
+        "mail/package services"
+      ],
       "website": null
     },
     {
@@ -299,6 +431,29 @@
       "outreachPriority": "none",
       "outreachQuestions": [],
       "website": "https://varispace.com/"
+    },
+    {
+      "id": "gtec",
+      "name": "Greater Toronto Executive Centre",
+      "status": "watch",
+      "priority": 2,
+      "preliminaryScore": 70,
+      "scoreConfidence": "low",
+      "gtaRelevant": true,
+      "priceSignal": "Recategorized in from Deliverable A this run: multi-location GTA serviced-office chain. 2985 Drew Rd, Mississauga previously showed a one-person office at C$797/month pre-tax (~C$900.61 with HST), which fails the managed-office target band; current pricing not republished on the operator's own locations page (quote-only). 24/7 access and complimentary parking previously confirmed at that location.",
+      "foodBeverage": "Shared kitchen/lounge reported; exact program not confirmed.",
+      "network": "Small multi-location GTA chain; no confirmed reciprocal national/international network.",
+      "outreachPriority": "second-wave",
+      "outreachQuestions": [
+        "current one-person private-office pricing across all GTA locations",
+        "all mandatory fees/HST",
+        "24/7 access and 24/7 HVAC by location",
+        "F&B program",
+        "meeting-room credits",
+        "mail/package handling",
+        "prepayment discount options"
+      ],
+      "website": "https://gtexecutivecentre.com/locations/"
     }
   ]
 }
