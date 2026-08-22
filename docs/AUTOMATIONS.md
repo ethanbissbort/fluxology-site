@@ -1,11 +1,34 @@
 # Fluxology scheduled automations (Claude Routines)
 
 The three ChatGPT dashboard automations were taken over by Claude Routines
-on 2026-08-18. Each Routine fires a fresh Claude session in the
-fluxology-site environment with a self-contained prompt (mirrored by the
-skills in `.claude/skills/`), and every run must end with a user-visible
-completion report + coverage audit (NO-SILENCE) delivered via the Routine's
-push/email completion notification.
+on 2026-08-18. Each Routine fires a **fresh Claude session with no
+repository attached** — the Default Cloud Environment carries no sources —
+so every prompt begins with a mandatory bootstrap step (see below) before
+following the matching skill in `.claude/skills/`. Every run must end with
+a user-visible completion report + coverage audit (NO-SILENCE) delivered
+via the Routine's push/email completion notification.
+
+## Fire-time bootstrap (added 2026-08-22)
+
+The original prompts assumed a fluxology-site checkout existed at fire
+time; it never did, and every scheduled run failed with "no repo attached"
+until the prompts were repaired on 2026-08-22. Step 1 of every Routine
+prompt is now:
+
+1. `add_repo {owner: "ethanbissbort", repo: "fluxology-site", access: "push"}`
+   (claude-code-remote MCP; called directly, no `git ls-remote`/`gh`
+   pre-checks — unauthenticated probes 404 on private repos),
+2. run the returned clone command, then `register_repo_root` so the repo's
+   skills load,
+3. work from the fresh `main` clone — the skills live on `main`, so the old
+   `claude/repo-audit-readiness-gedoji` recovery clause is gone.
+
+If the bootstrap fails after 3 retries the run stops research and reports
+the exact error — it never fabricates repository content or coverage.
+
+The canonical prompt texts installed on the triggers are version-controlled
+in `docs/routines/*.prompt.txt`. When a skill changes materially, update
+both the prompt file and the live trigger (`update_trigger`).
 
 ## Schedule
 
@@ -29,6 +52,12 @@ times become 07:00/19:00 EST until the cron is updated (`update_trigger`).
   that fires without them reports the missing capability and completes what
   it can — it must never fabricate coverage.
 - **Jobs** has no bridge dependency and runs from day one.
+- **Connector grants cannot be stored on Routines** for this org
+  (`create_trigger`'s `connectors` parameter is rejected), so headless
+  fires arrive with no claude.ai connectors: no Indeed, no Browser Bridge,
+  no dashboard tools. Every prompt therefore ToolSearch-probes for each
+  optional tool, uses it when present, and otherwise degrades to the
+  GitHub fallback while reporting the exact coverage impact.
 - Dashboard writes ride the bridge's `dashboard.feed`/`dashboard.upsert`
   (ingest tokens live in the gateway env on the VPS). Until the bridge is
   deployed, runs use the GitHub fallback: single-file merge-by-id commits to
